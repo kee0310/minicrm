@@ -1,0 +1,128 @@
+<x-app-layout>
+  <x-slot name="header">
+    <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+      {{ __('Leads / Create') }}
+    </h2>
+  </x-slot>
+
+  <div class="py-12">
+    <div class="max-w-7x1 mx-auto sm:px-6 lg:px-8" align="center">
+      <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-10 max-w-2xl m-5" align="left">
+
+        <form method="POST" action="{{ route('leads.store') }}">
+          @csrf
+
+          <!-- Name -->
+          <div>
+            <x-input-label for="name" :value="__('Name')" />
+            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required
+              autofocus autocomplete="name" />
+            <x-input-error :messages="$errors->get('name')" class="mt-2" />
+          </div>
+
+          <!-- Email Address -->
+          <div class="mt-4">
+            <x-input-label for="email" :value="__('Email')" />
+            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required
+              autocomplete="username" />
+            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+          </div>
+
+          <!-- Phone -->
+          <div class="mt-4">
+            <x-input-label for="phone" :value="__('Phone')" />
+            <x-text-input id="phone" class="block mt-1 w-full" type="text" name="phone" :value="old('phone')" required
+              autocomplete="tel" />
+            <x-input-error :messages="$errors->get('phone')" class="mt-2" />
+          </div>
+
+          <!-- Source -->
+          <div class="mt-4">
+            <x-input-label for="source" :value="__('Source')" />
+            <select id="source" name="source"
+              class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              required>
+              @php
+                $options = [
+                  'Facebook' => 'Facebook',
+                  'Friend Referral' => 'Friend Referral',
+                  'Exhibition/Fair' => 'Exhibition/Fair',
+                  'Company Assigned' => 'Company Assigned',
+                  'Old Client Referral' => 'Old Client Referral',
+                ];
+              @endphp
+
+              @foreach($options as $value => $label)
+                <option value="{{ $value }}" {{ old('source') == $value ? 'selected' : '' }}>
+                  {{ $label }}
+                </option>
+              @endforeach
+            </select>
+            <x-input-error :messages="$errors->get('source')" class="mt-2" />
+          </div>
+
+          <!-- Assigned To -->
+          <div class="mt-4">
+            <x-input-label for="assigned_to" :value="__('Assigned To')" />
+            <select id="assigned_to" name="assigned_to"
+              class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              required>
+              <option value="">Select a user</option>
+              @foreach($users as $user)
+                <option value="{{ $user->name }}" {{ old('assigned_to') == $user->name ? 'selected' : '' }}>
+                  {{ $user->name }}
+                </option>
+              @endforeach
+            </select>
+            <x-input-error :messages="$errors->get('assigned_to')" class="mt-2" />
+          </div>
+
+          <!-- Leader -->
+          <div class="mt-4">
+            <x-input-label for="leader" :value="__('Leader')" />
+            <select id="leader" name="leader"
+              class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+              <option value="">-- None --</option>
+              @foreach($leaders as $user)
+                <option value="{{ $user->name }}" {{ old('leader') == $user->name ? 'selected' : '' }}>{{ $user->name }}
+                </option>
+              @endforeach
+            </select>
+            <x-input-error :messages="$errors->get('leader')" class="mt-2" />
+          </div>
+
+          <!-- Status -->
+          <div class="mt-4">
+            <x-input-label for="status" :value="__('Status')" />
+            <select id="status" name="status"
+              class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              required>
+              @php
+                $options = [
+                  'New' => 'New',
+                  'Contacted' => 'Contacted',
+                  'Scheduled' => 'Scheduled',
+                  'Deal' => 'Deal',
+                  'Lost' => 'Lost',
+                ];
+              @endphp
+              @foreach($options as $value => $label)
+                <option value="{{ $value }}" {{ old('status') == $value ? 'selected' : '' }}>
+                  {{ $label }}
+                </option>
+              @endforeach
+            </select>
+            <x-input-error :messages="$errors->get('status')" class="mt-2" />
+          </div>
+
+          <div class="flex items-center justify-end mt-4">
+            <x-primary-button class="ms-4 bg-green-600 hover:bg-green-800">
+              {{ __('Register') }}
+            </x-primary-button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</x-app-layout>
