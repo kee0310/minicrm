@@ -62,57 +62,60 @@
             </form>
           </div>
 
-          @if(isset($leads) && $leads->count())
-            <div class="overflow-x-auto">
+          <div id="live-table-container">
+            @if(isset($leads) && $leads->count())
+              <div class="overflow-x-auto">
 
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <tr>
-                    <th class="px-6 py-3">Name</th>
-                    <th class="px-6 py-3">Email</th>
-                    <th class="px-6 py-3 ">Phone</th>
-                    <th class="px-6 py-3">Source</th>
-                    <th class="px-6 py-3">Salesperson</th>
-                    <th class="px-6 py-3">Leader</th>
-                    <th class="px-6 py-3">Status</th>
-                    <th class="px-6 py-3">Actions</th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200 text-sm text-gray-500 whitespace-nowrap">
-                  @foreach($leads as $lead)
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <tr>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $lead->name }}</td>
-                      <td class="px-6 py-4">{{ $lead->email }}</td>
-                      <td class="px-6 py-4">{{ $lead->phone }}</td>
-                      <td class="px-6 py-4">{{ $lead->source }}</td>
-                      <td class="px-6 py-4">{{ $lead->salesperson?->name }}</td>
-                      <td class="px-6 py-4">{{ $lead->leader?->name }}</td>
-                      <td class="px-6 py-4">
-                        <span class="{{ $lead->status->badge() }}">
-                          {{ $lead->status->value }}
-                        </span>
-                      </td>
-                      <td class="px-6 py-4">
-                        <a href="{{ route('leads.edit', $lead) }}" class="text-indigo-600 hover:underline">Edit</a> |
-                        <form method="POST" action="{{ route('leads.destroy', $lead) }}" class="inline"
-                          onsubmit="return confirm('Confirm to delete lead {{ $lead->name }}?');">
-                          @method('DELETE')
-                          @csrf
-                          <button type="submit" class="text-red-600 hover:underline">Delete</button>
-                        </form>
-                      </td>
+                      <th class="px-6 py-3">Name</th>
+                      <th class="px-6 py-3">Email</th>
+                      <th class="px-6 py-3 ">Phone</th>
+                      <th class="px-6 py-3">Source</th>
+                      <th class="px-6 py-3">Salesperson</th>
+                      <th class="px-6 py-3">Leader</th>
+                      <th class="px-6 py-3">Status</th>
+                      <th class="px-6 py-3">Actions</th>
                     </tr>
-                  @endforeach
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200 text-sm text-gray-500 whitespace-nowrap">
+                    @foreach($leads as $lead)
+                      <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $lead->name }}</td>
+                        <td class="px-6 py-4">{{ $lead->email }}</td>
+                        <td class="px-6 py-4">{{ $lead->phone }}</td>
+                        <td class="px-6 py-4">{{ $lead->source }}</td>
+                        <td class="px-6 py-4">{{ $lead->salesperson?->name }}</td>
+                        <td class="px-6 py-4">{{ $lead->leader?->name }}</td>
+                        <td class="px-6 py-4">
+                          <span class="{{ $lead->status->badge() }}">
+                            {{ $lead->status->value }}
+                          </span>
+                        </td>
+                        <td class="px-6 py-4">
+                          <a href="{{ route('leads.edit', $lead) }}" class="text-indigo-600 hover:underline">Edit</a> |
+                          <form method="POST" action="{{ route('leads.destroy', $lead) }}" class="inline"
+                            onsubmit="return confirm('Confirm to delete lead {{ $lead->name }}?');">
+                            @method('DELETE')
+                            @csrf
+                            <button type="submit" class="text-red-600 hover:underline">Delete</button>
+                          </form>
+                        </td>
+                      </tr>
+                    @endforeach
+                  </tbody>
+                </table>
+              </div>
 
-            <div class="mt-4">
-              {{ $leads->links() }}
-            </div>
-          @else
-            <div class="text-gray-600">{{ __('No leads found.') }}</div>
-          @endif
+              <div class="mt-4">
+                {{ $leads->links() }}
+              </div>
+            @else
+              <div class="text-gray-600">{{ __('No leads found.') }}</div>
+            @endif
+          </div>
+
 
         </div>
       </div>

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Enums\LeadStatusEnum;
 use App\Enums\PipelineEnum;
 use App\Enums\RoleEnum;
-use App\Events\CrmDataChanged;
 use App\Models\Deal;
 use App\Models\Lead;
 use App\Http\Requests\StoreDealRequest;
@@ -31,14 +30,29 @@ class DealController extends Controller
         }
 
         if ($search = $request->input('search')) {
-            $query->whereHas('lead', function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->where('deal_id', 'like', "%{$search}%")
+                    ->orWhere('project_name', 'like', "%{$search}%")
+                    ->orWhereHas('lead', function ($leadQuery) use ($search) {
+                        $leadQuery->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('salesperson', function ($salespersonQuery) use ($search) {
+                        $salespersonQuery->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('leader', function ($leaderQuery) use ($search) {
+                        $leaderQuery->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
-        $deals = $query->latest()->paginate(20)->withQueryString();
+        if ($stage = $request->input('stage')) {
+            $query->where('pipeline', $stage);
+        }
 
-        return view('deals.index', compact('deals'));
+        $deals = $query->latest()->paginate(20)->withQueryString();
+        $stages = PipelineEnum::values();
+
+        return view('deals.index', compact('deals', 'stages'));
     }
 
     /*************  ✨ Windsurf Command ⭐  *************/
@@ -62,8 +76,7 @@ class DealController extends Controller
         $data['salesperson_id'] = $lead->salesperson_id;
         $data['leader_id'] = $lead->leader_id;
 
-        $deal = Deal::create($data);
-        rescue(fn () => event(new CrmDataChanged('deals', 'created', $deal->id)), report: false);
+        Deal::create($data);
         return redirect()->route('deals.index')->with('success', 'Deal created successfully.');
     }
 
@@ -83,15 +96,12 @@ class DealController extends Controller
         $data['leader_id'] = $lead->leader_id;
 
         $deal->update($data);
-        rescue(fn () => event(new CrmDataChanged('deals', 'updated', $deal->id)), report: false);
         return redirect()->route('deals.index')->with('success', 'Deal updated successfully.');
     }
 
     public function destroy(Deal $deal)
     {
-        $dealId = $deal->id;
         $deal->delete();
-        rescue(fn () => event(new CrmDataChanged('deals', 'deleted', $dealId)), report: false);
         return redirect()->route('deals.index')->with('success', 'Deal deleted successfully.');
     }
 }

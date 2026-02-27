@@ -52,47 +52,49 @@
             </form>
           </div>
 
-          @if(isset($users) && $users->count())
-            <div class="overflow-x-auto">
+          <div id="live-table-container">
+            @if(isset($users) && $users->count())
+              <div class="overflow-x-auto">
 
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <tr>
-                    <th class="px-6 py-3">Name</th>
-                    <th class="px-6 py-3">Email</th>
-                    <th class="px-6 py-3">Role</th>
-                    <th class="px-6 py-3 ">Created</th>
-                    <th class="px-6 py-3">Actions</th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200 text-sm text-gray-500 whitespace-nowrap">
-                  @foreach($users as $user)
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <tr>
-                      <td class="px-6 py-4 text-gray-900">{{ $user->name }}</td>
-                      <td class="px-6 py-4">{{ $user->email }}</td>
-                      <td class="px-6 py-4">{{ $user->getRoleNames()->join(', ') }}</td>
-                      <td class="px-6 py-4">{{ optional($user->created_at)->format('Y-m-d') }}</td>
-                      <td class="px-6 py-4">
-                        <a href="{{ route('users.edit', $user) }}" class="text-indigo-600 hover:underline">Edit</a> |
-                        <form method="POST" action="{{ route('users.destroy', $user) }}" class="inline"
-                          onsubmit="return confirm('Confirm to delete user {{ $user->name }}?');">
-                          @method('DELETE')
-                          @csrf
-                          <button type="submit" class="text-red-600 hover:underline">Delete</button>
-                        </form>
-                      </td>
+                      <th class="px-6 py-3">Name</th>
+                      <th class="px-6 py-3">Email</th>
+                      <th class="px-6 py-3">Role</th>
+                      <th class="px-6 py-3 ">Created</th>
+                      <th class="px-6 py-3">Actions</th>
                     </tr>
-                  @endforeach
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200 text-sm text-gray-500 whitespace-nowrap">
+                    @foreach($users as $user)
+                      <tr>
+                        <td class="px-6 py-4 text-gray-900">{{ $user->name }}</td>
+                        <td class="px-6 py-4">{{ $user->email }}</td>
+                        <td class="px-6 py-4">{{ $user->getRoleNames()->join(', ') }}</td>
+                        <td class="px-6 py-4">{{ optional($user->created_at)->format('Y-m-d') }}</td>
+                        <td class="px-6 py-4">
+                          <a href="{{ route('users.edit', $user) }}" class="text-indigo-600 hover:underline">Edit</a> |
+                          <form method="POST" action="{{ route('users.destroy', $user) }}" class="inline"
+                            onsubmit="return confirm('Confirm to delete user {{ $user->name }}?');">
+                            @method('DELETE')
+                            @csrf
+                            <button type="submit" class="text-red-600 hover:underline">Delete</button>
+                          </form>
+                        </td>
+                      </tr>
+                    @endforeach
+                  </tbody>
+                </table>
+              </div>
 
-            <div class="mt-4">
-              {{ $users->links() }}
-            </div>
-          @else
-            <div class="text-gray-600">{{ __('No users found.') }}</div>
-          @endif
+              <div class="mt-4">
+                {{ $users->links() }}
+              </div>
+            @else
+              <div class="text-gray-600">{{ __('No users found.') }}</div>
+            @endif
+          </div>
 
         </div>
       </div>

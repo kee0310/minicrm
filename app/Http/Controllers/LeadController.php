@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Enums\LeadStatusEnum;
 use App\Models\Lead;
-use App\Events\CrmDataChanged;
 use App\Http\Requests\StoreLeadRequest;
 use App\Http\Requests\UpdateLeadRequest;
 use Illuminate\Http\Request;
@@ -66,8 +65,7 @@ class LeadController extends Controller
      */
     public function store(StoreLeadRequest $request)
     {
-        $lead = Lead::create($request->validated());
-        rescue(fn () => event(new CrmDataChanged('leads', 'created', $lead->id)), report: false);
+        Lead::create($request->validated());
         return redirect()->route('leads.index')->with('success', 'Lead created successfully.');
     }
 
@@ -96,7 +94,6 @@ class LeadController extends Controller
     public function update(UpdateLeadRequest $request, Lead $lead)
     {
         $lead->update($request->validated());
-        rescue(fn () => event(new CrmDataChanged('leads', 'updated', $lead->id)), report: false);
         return redirect()->route('leads.index')->with('success', 'Lead updated successfully.');
     }
 
@@ -105,9 +102,7 @@ class LeadController extends Controller
      */
     public function destroy(Lead $lead)
     {
-        $leadId = $lead->id;
         $lead->delete();
-        rescue(fn () => event(new CrmDataChanged('leads', 'deleted', $leadId)), report: false);
         return redirect()->route('leads.index')->with('success', 'Lead deleted successfully.');
     }
 }

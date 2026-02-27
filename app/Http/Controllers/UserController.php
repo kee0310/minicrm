@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\CrmDataChanged;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
@@ -48,7 +47,6 @@ class UserController extends Controller
         if ($request->filled('role')) {
             $user->assignRole($request->input('role'));
         }
-        rescue(fn () => event(new CrmDataChanged('users', 'created', $user->id)), report: false);
         return redirect()->route('users.index')->with('success', 'User created successfully.');
     }
 
@@ -78,7 +76,6 @@ class UserController extends Controller
         if ($request->filled('role')) {
             $user->syncRoles([$request->input('role')]);
         }
-        rescue(fn () => event(new CrmDataChanged('users', 'updated', $user->id)), report: false);
         return redirect()->route('users.index')->with('success', 'User updated successfully.');
     }
 
@@ -99,9 +96,7 @@ class UserController extends Controller
             return redirect()->back()->with('warning', 'Cannot delete user: they have leads assigned.');
         }
 
-        $userId = $user->id;
         $user->delete();
-        rescue(fn () => event(new CrmDataChanged('users', 'deleted', $userId)), report: false);
 
         return redirect()->back()->with('success', 'User deleted successfully.');
     }
