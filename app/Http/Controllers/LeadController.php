@@ -98,6 +98,10 @@ class LeadController extends Controller
      */
     public function edit(Lead $lead)
     {
+        if ($this->isLockedDealLead($lead)) {
+            return redirect()->route('leads.index')->with('warning', 'Lead with Deal status cannot be edited.');
+        }
+
         $users = \App\Models\User::orderBy('name')->get();
         $leaders = \App\Models\User::role([\App\Enums\RoleEnum::LEADER->value, \App\Enums\RoleEnum::ADMIN->value])->orderBy('name')->get();
         $statuses = LeadStatusEnum::values();
@@ -109,6 +113,10 @@ class LeadController extends Controller
      */
     public function update(UpdateLeadRequest $request, Lead $lead)
     {
+        if ($this->isLockedDealLead($lead)) {
+            return redirect()->route('leads.index')->with('warning', 'Lead with Deal status cannot be edited.');
+        }
+
         $lead->update($request->validated());
         return redirect()->route('leads.index')->with('success', 'Lead updated successfully.');
     }
@@ -118,7 +126,16 @@ class LeadController extends Controller
      */
     public function destroy(Lead $lead)
     {
+        if ($this->isLockedDealLead($lead)) {
+            return redirect()->route('leads.index')->with('warning', 'Lead with Deal status cannot be deleted.');
+        }
+
         $lead->delete();
         return redirect()->route('leads.index')->with('success', 'Lead deleted successfully.');
+    }
+
+    protected function isLockedDealLead(Lead $lead): bool
+    {
+        return ($lead->status?->value ?? $lead->status) === LeadStatusEnum::DEAL->value;
     }
 }

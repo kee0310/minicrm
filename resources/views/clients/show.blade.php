@@ -23,8 +23,6 @@
               <p><span class="font-semibold">Company:</span> {{ $client->company ?? '-' }}</p>
               <p><span class="font-semibold">Monthly Income:</span> {{ $client->monthly_income ?? '-' }}</p>
               <p><span class="font-semibold">Status:</span> {{ $client->status ?? '-' }}</p>
-              <p><span class="font-semibold">Salesperson:</span> {{ $client->lead?->salesperson?->name ?? '-' }}</p>
-              <p><span class="font-semibold">Leader:</span> {{ $client->lead?->leader?->name ?? '-' }}</p>
             </div>
           </div>
         </div>

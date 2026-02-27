@@ -12,6 +12,13 @@
     </div>
   @endif
 
+  @if(session('warning'))
+    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)"
+      class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4 transition duration-500 ease-in-out">
+      <p>{{ session('warning') }}</p>
+    </div>
+  @endif
+
   <div class="py-12">
     <div class="max-w-7x1 mx-auto sm:px-6 lg:px-8">
       <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -49,8 +56,6 @@
                     <th class="px-6 py-3">Name</th>
                     <th class="px-6 py-3">Email</th>
                     <th class="px-6 py-3">Phone</th>
-                    <th class="px-6 py-3">Salesperson</th>
-                    <th class="px-6 py-3">Leader</th>
                     <th class="px-6 py-3">Status</th>
                     <th class="px-6 py-3">Actions</th>
                   </tr>
@@ -66,8 +71,6 @@
                       </td>
                       <td class="px-6 py-4">{{ $client->email }}</td>
                       <td class="px-6 py-4">{{ $client->phone }}</td>
-                      <td class="px-6 py-4">{{ $client->lead?->salesperson?->name }}</td>
-                      <td class="px-6 py-4">{{ $client->lead?->leader?->name }}</td>
                       <td class="px-6 py-4">{{ $client->status }}</td>
                       <td class="px-6 py-4">
                         <a href="{{ route('clients.edit', $client) }}" class="text-indigo-600 hover:underline">Edit</a> |

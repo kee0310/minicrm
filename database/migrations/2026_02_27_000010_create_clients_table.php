@@ -13,7 +13,9 @@ return new class extends Migration {
     {
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('lead_id')->unique()->constrained('leads')->cascadeOnDelete();
+            // human readable code, filled later
+            $table->string('client_id')->nullable()->unique();
+
             $table->string('name');
             $table->string('email')->unique();
             $table->string('phone')->nullable();
@@ -24,34 +26,31 @@ return new class extends Migration {
             $table->decimal('monthly_income', 15, 2)->nullable();
             $table->string('status')->default('New');
             $table->unsignedTinyInteger('completeness_rate')->default(0);
+
             $table->timestamps();
+
+            // indexes for large scale
+            $table->index(['status']);
         });
 
+        // bootstrap clients from existing leads that are already in Deal status
         $now = now();
-        $dealLeads = DB::table('leads')
+        $rows = DB::table('leads')
             ->where('status', \App\Enums\LeadStatusEnum::DEAL->value)
-            ->whereNotExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('clients')
-                    ->whereColumn('clients.lead_id', 'leads.id');
-            })
-            ->select('id as lead_id', 'name', 'email', 'phone')
-            ->get();
-
-        if ($dealLeads->isNotEmpty()) {
-            $rows = $dealLeads->map(function ($lead) use ($now) {
+            ->select('name', 'email', 'phone')
+            ->get()
+            ->map(function ($lead) use ($now) {
                 return [
-                    'lead_id' => $lead->lead_id,
                     'name' => $lead->name,
                     'email' => $lead->email,
                     'phone' => $lead->phone,
-                    'status' => 'New',
-                    'completeness_rate' => 0,
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
-            })->all();
+            })
+            ->all();
 
+        if (!empty($rows)) {
             DB::table('clients')->insert($rows);
         }
     }

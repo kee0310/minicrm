@@ -105,13 +105,17 @@
                           </span>
                         </td>
                         <td class="px-6 py-4">
-                          <a href="{{ route('leads.edit', $lead) }}" class="text-indigo-600 hover:underline">Edit</a> |
-                          <form method="POST" action="{{ route('leads.destroy', $lead) }}" class="inline"
-                            onsubmit="return confirm('Confirm to delete lead {{ $lead->name }}?');">
-                            @method('DELETE')
-                            @csrf
-                            <button type="submit" class="text-red-600 hover:underline">Delete</button>
-                          </form>
+                          @if($lead->status->value === \App\Enums\LeadStatusEnum::DEAL->value)
+                            
+                          @else
+                            <a href="{{ route('leads.edit', $lead) }}" class="text-indigo-600 hover:underline">Edit</a> |
+                            <form method="POST" action="{{ route('leads.destroy', $lead) }}" class="inline"
+                              onsubmit="return confirm('Confirm to delete lead {{ $lead->name }}?');">
+                              @method('DELETE')
+                              @csrf
+                              <button type="submit" class="text-red-600 hover:underline">Delete</button>
+                            </form>
+                          @endif
                         </td>
                       </tr>
                     @endforeach

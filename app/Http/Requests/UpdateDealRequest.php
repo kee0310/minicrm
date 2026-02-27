@@ -21,10 +21,10 @@ class UpdateDealRequest extends FormRequest
         $isPipelineLocked = $deal?->pipeline?->isLockedForManualEdit() ?? false;
 
         return [
-            'lead_id' => [
+            'client_id' => [
                 'required',
                 'integer',
-                Rule::exists('leads', 'id')->where(fn ($query) => $query->whereNotNull('leader_id')),
+                Rule::exists('clients', 'id'),
             ],
             'project_name' => ['required', 'string', 'max:255'],
             'developer' => ['nullable', 'string', 'max:255'],
@@ -47,7 +47,7 @@ class UpdateDealRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'lead_id.exists' => 'Selected lead must have a leader assigned.',
+            'client_id.exists' => 'Selected client does not exist.',
         ];
     }
 }

@@ -3,8 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
-
 class StoreClientRequest extends FormRequest
 {
     public function authorize(): bool
@@ -15,9 +13,8 @@ class StoreClientRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'lead_id' => ['nullable', 'integer', Rule::exists('leads', 'id')],
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('clients', 'email')],
+            'email' => ['required', 'email', 'max:255', 'unique:clients,email'],
             'phone' => ['required', 'string', 'max:20'],
             'age' => ['nullable', 'integer', 'min:0', 'max:120'],
             'ic_passport' => ['nullable', 'string', 'max:100'],

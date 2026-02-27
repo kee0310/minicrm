@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\RoleEnum;
 use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
 use App\Models\Client;
 use App\Models\Deal;
+use App\Models\Lead;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ClientController extends Controller
 {
     public function index(Request $request)
     {
-        $query = $this->scopedClientsQuery()->with(['lead.salesperson', 'lead.leader']);
+        $query = Client::query();
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -49,15 +50,12 @@ class ClientController extends Controller
     public function show(Client $client)
     {
         $this->authorizeClientAccess($client);
-        $client->load(['lead.salesperson', 'lead.leader']);
-
-        $deals = collect();
-        if (!is_null($client->lead_id)) {
-            $deals = Deal::with(['lead', 'salesperson', 'leader'])
-                ->where('lead_id', $client->lead_id)
-                ->latest()
-                ->get();
-        }
+        $deals = Deal::with(['lead', 'salesperson', 'leader'])
+            ->whereHas('lead', function ($query) use ($client) {
+                $query->where('email', $client->email);
+            })
+            ->latest()
+            ->get();
 
         return view('clients.show', compact('client', 'deals'));
     }
@@ -67,7 +65,6 @@ class ClientController extends Controller
         $data = $request->validated();
 
         $client = Client::create([
-            'lead_id' => $data['lead_id'] ?? null,
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'],
@@ -88,7 +85,6 @@ class ClientController extends Controller
     public function edit(Client $client)
     {
         $this->authorizeClientAccess($client);
-        $client->load(['lead.salesperson', 'lead.leader']);
         return view('clients.edit', compact('client'));
     }
 
@@ -116,34 +112,21 @@ class ClientController extends Controller
     public function destroy(Client $client)
     {
         $this->authorizeClientAccess($client);
-        $client->delete();
 
-        return redirect()->route('clients.index')->with('success', 'Client deleted successfully.');
-    }
+        $hasDeals = Deal::whereHas('lead', function ($query) use ($client) {
+            $query->where('email', $client->email);
+        })->exists();
 
-    protected function scopedClientsQuery()
-    {
-        $query = Client::query();
-        $user = auth()->user();
-
-        if ($user && !$user->hasRole(RoleEnum::ADMIN->value)) {
-            if ($user->hasRole(RoleEnum::LEADER->value)) {
-                $query->where(function ($scopedQuery) use ($user) {
-                    $scopedQuery->whereHas('lead', function ($q) use ($user) {
-                        $q->where('salesperson_id', $user->id)
-                            ->orWhere('leader_id', $user->id);
-                    })->orWhereNull('lead_id');
-                });
-            } else {
-                $query->where(function ($scopedQuery) use ($user) {
-                    $scopedQuery->whereHas('lead', function ($q) use ($user) {
-                        $q->where('salesperson_id', $user->id);
-                    })->orWhereNull('lead_id');
-                });
-            }
+        if ($hasDeals) {
+            return redirect()->route('clients.index')->with('warning', 'Client cannot be deleted because deals already exist.');
         }
 
-        return $query;
+        DB::transaction(function () use ($client) {
+            Lead::where('email', $client->email)->delete();
+            $client->delete();
+        });
+
+        return redirect()->route('clients.index')->with('success', 'Client deleted successfully.');
     }
 
     protected function authorizeClientAccess(Client $client): void
@@ -153,23 +136,5 @@ class ClientController extends Controller
         if (!$user) {
             abort(403);
         }
-
-        if ($user->hasRole(RoleEnum::ADMIN->value)) {
-            return;
-        }
-
-        $lead = $client->lead;
-        if (!$lead) {
-            return;
-        }
-        if ($user->hasRole(RoleEnum::LEADER->value)) {
-            abort_unless(
-                $lead && ($lead->salesperson_id === $user->id || $lead->leader_id === $user->id),
-                403
-            );
-            return;
-        }
-
-        abort_unless($lead && $lead->salesperson_id === $user->id, 403);
     }
 }

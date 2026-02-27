@@ -66,7 +66,7 @@ class DealController extends Controller
     public function create()
     {
         $clients = Client::whereHas('lead', function ($query) {
-            $query->where('status', LeadStatusEnum::DEAL->value);
+            $query->where('status', LeadStatusEnum::DEAL->value)->whereNotNull('leader_id');
         })->orderBy('name')->get();
         $pipelines = PipelineEnum::creatableCases();
         return view('deals.create', compact('clients', 'pipelines'));
@@ -75,9 +75,15 @@ class DealController extends Controller
     public function store(StoreDealRequest $request)
     {
         $data = $request->validated();
-        $lead = Lead::findOrFail($data['lead_id']);
+        $client = Client::findOrFail($data['client_id']);
+        $lead = Lead::where('email', $client->email)
+            ->where('status', LeadStatusEnum::DEAL->value)
+            ->whereNotNull('leader_id')
+            ->firstOrFail();
+        $data['lead_id'] = $lead->id;
         $data['salesperson_id'] = $lead->salesperson_id;
         $data['leader_id'] = $lead->leader_id;
+        unset($data['client_id']);
 
         Deal::create($data);
         return redirect()->route('deals.index')->with('success', 'Deal created successfully.');
@@ -85,18 +91,26 @@ class DealController extends Controller
 
     public function edit(Deal $deal)
     {
-        $clients = Client::orderBy('name')->get();
+        $clients = Client::whereHas('lead', function ($query) {
+            $query->whereNotNull('leader_id');
+        })->orderBy('name')->get();
+        $selectedClientId = Client::where('email', $deal->lead?->email)->value('id');
         $pipelines = PipelineEnum::creatableCases();
         $isPipelineLocked = $deal->pipeline?->isLockedForManualEdit() ?? false;
-        return view('deals.edit', compact('deal', 'clients', 'pipelines', 'isPipelineLocked'));
+        return view('deals.edit', compact('deal', 'clients', 'selectedClientId', 'pipelines', 'isPipelineLocked'));
     }
 
     public function update(UpdateDealRequest $request, Deal $deal)
     {
         $data = $request->validated();
-        $lead = Lead::findOrFail($data['lead_id']);
+        $client = Client::findOrFail($data['client_id']);
+        $lead = Lead::where('email', $client->email)
+            ->whereNotNull('leader_id')
+            ->firstOrFail();
+        $data['lead_id'] = $lead->id;
         $data['salesperson_id'] = $lead->salesperson_id;
         $data['leader_id'] = $lead->leader_id;
+        unset($data['client_id']);
 
         $deal->update($data);
         return redirect()->route('deals.index')->with('success', 'Deal updated successfully.');

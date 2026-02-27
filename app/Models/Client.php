@@ -11,7 +11,6 @@ class Client extends Model
 
     protected $fillable = [
         'client_id',
-        'lead_id',
         'name',
         'email',
         'phone',
@@ -42,7 +41,7 @@ class Client extends Model
 
     public function lead()
     {
-        return $this->belongsTo(Lead::class, 'lead_id');
+        return $this->hasOne(Lead::class, 'email', 'email');
     }
 
     public function financialCondition()

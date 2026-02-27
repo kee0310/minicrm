@@ -59,16 +59,15 @@ class Lead extends Model
 
     public function client()
     {
-        return $this->hasOne(Client::class, 'lead_id');
+        return $this->hasOne(Client::class, 'email', 'email');
     }
 
     protected function ensureClientProfile(): void
     {
-        $client = $this->client()->firstOrCreate(
-            ['lead_id' => $this->id],
+        $this->client()->firstOrCreate(
+            ['email' => $this->email],
             [
                 'name' => $this->name,
-                'email' => $this->email,
                 'phone' => $this->phone,
             ]
         );

@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\LeadStatusEnum;
 use App\Enums\PipelineEnum;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -17,13 +16,10 @@ class StoreDealRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'lead_id' => [
+            'client_id' => [
                 'required',
                 'integer',
-                Rule::exists('leads', 'id')->where(fn ($query) => $query
-                    ->where('status', LeadStatusEnum::DEAL->value)
-                    ->whereNotNull('leader_id')
-                ),
+                Rule::exists('clients', 'id'),
             ],
             'project_name' => ['required', 'string', 'max:255'],
             'developer' => ['nullable', 'string', 'max:255'],
@@ -40,7 +36,7 @@ class StoreDealRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'lead_id.exists' => 'Selected lead must be in Deal status and have a leader assigned.',
+            'client_id.exists' => 'Selected client does not exist.',
         ];
     }
 }

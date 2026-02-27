@@ -15,17 +15,17 @@
 
           <!-- Linked Client -->
           <div>
-            <x-input-label for="lead_id" :value="__('Linked Client')" />
-            <select id="lead_id" name="lead_id" required
+            <x-input-label for="client_id" :value="__('Linked Client')" />
+            <select id="client_id" name="client_id" required
               class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
               <option value="">Select a client</option>
               @foreach($clients as $client)
-                <option value="{{ $client->lead_id }}" {{ old('lead_id', $deal->lead_id) == $client->lead_id ? 'selected' : '' }}>
+                <option value="{{ $client->id }}" {{ old('client_id', $selectedClientId) == $client->id ? 'selected' : '' }}>
                   {{ $client->client_id ? $client->client_id . ' - ' : '' }}{{ $client->name }}
                 </option>
               @endforeach
             </select>
-            <x-input-error :messages="$errors->get('lead_id')" class="mt-2" />
+            <x-input-error :messages="$errors->get('client_id')" class="mt-2" />
           </div>
 
           <!-- Project Name -->
