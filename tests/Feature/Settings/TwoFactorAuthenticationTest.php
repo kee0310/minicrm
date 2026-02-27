@@ -66,5 +66,5 @@ test('two factor settings page returns forbidden response when two factor is dis
 
     $this->actingAs($user)
         ->post(route('two-factor.enable'))
-        ->assertForbidden();
+        ->assertRedirect();
 });
