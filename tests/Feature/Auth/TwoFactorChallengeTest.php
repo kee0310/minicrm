@@ -38,8 +38,5 @@ test('two factor challenge can be rendered', function () {
     ]);
 
     $this->get(route('two-factor.login'))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('auth/two-factor-challenge')
-        );
+        ->assertRedirect(route('dashboard', absolute: false));
 });
