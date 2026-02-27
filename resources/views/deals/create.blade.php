@@ -19,7 +19,8 @@
               class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
               <option value="">Select a lead</option>
               @foreach($leads as $lead)
-                <option value="{{ $lead->id }}" {{ old('lead_id') == $lead->id ? 'selected' : '' }}>{{ $lead->name }}</option>
+                <option value="{{ $lead->id }}" {{ old('lead_id') == $lead->id ? 'selected' : '' }}>{{ $lead->name }}
+                </option>
               @endforeach
             </select>
             <x-input-error :messages="$errors->get('lead_id')" class="mt-2" />
@@ -68,34 +69,22 @@
           <!-- Commission Amount (auto) -->
           <div class="mt-4">
             <x-input-label for="commission_amount" :value="__('Commission Amount')" />
-            <x-text-input id="commission_amount" class="block mt-1 w-full bg-gray-100" type="number" step="0.01" name="commission_amount"
-              :value="old('commission_amount')" readonly />
+            <x-text-input id="commission_amount" class="block mt-1 w-full bg-gray-100" type="number" step="0.01"
+              name="commission_amount" :value="old('commission_amount')" readonly />
           </div>
 
-          <!-- Salesperson -->
+          <!-- Pipeline Stage -->
           <div class="mt-4">
-            <x-input-label for="salesperson_id" :value="__('Salesperson')" />
-            <select id="salesperson_id" name="salesperson_id" required
+            <x-input-label for="pipeline" :value="__('Pipeline Stage')" />
+            <select id="pipeline" name="pipeline" required
               class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-              <option value="">Select a salesperson</option>
-              @foreach($users as $user)
-                <option value="{{ $user->id }}" {{ old('salesperson_id') == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
+              @foreach($pipelines as $pipeline)
+                <option value="{{ $pipeline->value }}" {{ old('pipeline') == $pipeline->value ? 'selected' : '' }}>
+                  {{ $pipeline->value }}
+                </option>
               @endforeach
             </select>
-            <x-input-error :messages="$errors->get('salesperson_id')" class="mt-2" />
-          </div>
-
-          <!-- Leader -->
-          <div class="mt-4">
-            <x-input-label for="leader_id" :value="__('Leader')" />
-            <select id="leader_id" name="leader_id" required
-              class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-              <option value="">Select a leader</option>
-              @foreach($users as $user)
-                <option value="{{ $user->id }}" {{ old('leader_id') == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
-              @endforeach
-            </select>
-            <x-input-error :messages="$errors->get('leader_id')" class="mt-2" />
+            <x-input-error :messages="$errors->get('pipeline')" class="mt-2" />
           </div>
 
           <!-- Booking Fee -->
@@ -107,7 +96,7 @@
           </div>
 
           <!-- SPA Date -->
-          <div class="mt-4">
+          <div class="mt-4" id="spa_date_group">
             <x-input-label for="spa_date" :value="__('SPA Date')" />
             <x-text-input id="spa_date" class="block mt-1 w-full" type="date" name="spa_date"
               :value="old('spa_date')" />
@@ -120,19 +109,6 @@
             <x-text-input id="deal_closing_date" class="block mt-1 w-full" type="date" name="deal_closing_date"
               :value="old('deal_closing_date')" />
             <x-input-error :messages="$errors->get('deal_closing_date')" class="mt-2" />
-          </div>
-
-          <!-- Pipeline Stage -->
-          <div class="mt-4">
-            <x-input-label for="pipeline_id" :value="__('Pipeline Stage')" />
-            <select id="pipeline_id" name="pipeline_id" required
-              class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-              <option value="">Select a stage</option>
-              @foreach($pipelines as $p)
-                <option value="{{ $p->id }}" {{ old('pipeline_id') == $p->id ? 'selected' : '' }}>{{ $p->name }}</option>
-              @endforeach
-            </select>
-            <x-input-error :messages="$errors->get('pipeline_id')" class="mt-2" />
           </div>
 
           <div class="flex items-center justify-end mt-4">
@@ -152,8 +128,20 @@
             amountInput.value = (price * pct / 100).toFixed(2);
           }
 
+          const pipelineInput = document.getElementById('pipeline');
+          const spaDateGroup = document.getElementById('spa_date_group');
+          const spaDateInput = document.getElementById('spa_date');
+
+          function toggleSpaDate() {
+            const requiresSpaDate = pipelineInput.value === 'SPA Signed';
+            spaDateGroup.style.display = requiresSpaDate ? '' : 'none';
+            spaDateInput.required = requiresSpaDate;
+          }
+
           priceInput.addEventListener('input', recalc);
           percentInput.addEventListener('input', recalc);
+          pipelineInput.addEventListener('change', toggleSpaDate);
+          toggleSpaDate();
         </script>
 
       </div>

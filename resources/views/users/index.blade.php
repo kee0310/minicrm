@@ -5,6 +5,20 @@
     </h2>
   </x-slot>
 
+  @if(session('warning'))
+    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)"
+      class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4 transition duration-500 ease-in-out">
+      <p>{{ session('warning') }}</p>
+    </div>
+  @endif
+
+  @if(session('success'))
+    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)"
+      class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 transition duration-500 ease-in-out">
+      <p>{{ session('success') }}</p>
+    </div>
+  @endif
+
   <div class="py-12">
     <div class="max-w-7x1 mx-auto sm:px-6 lg:px-8">
       <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">

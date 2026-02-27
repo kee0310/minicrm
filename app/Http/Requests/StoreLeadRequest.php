@@ -2,12 +2,13 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\LeadStatusEnum;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\RoleEnum;
+use App\Enums\RoleEnum;
 use App\Models\User;
 
-class StoreLeadsRequest extends FormRequest
+class StoreLeadRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -29,26 +30,25 @@ class StoreLeadsRequest extends FormRequest
             'email' => 'required|email|unique:leads,email',
             'phone' => 'required|string|max:20',
             'source' => 'required|string|max:255',
-            'assigned_to' => [
+            'salesperson_id' => [
                 'required',
-                'string',
-                'max:255',
-                Rule::exists('users', 'name')->whereNull('deleted_at'),
+                'integer',
+                Rule::exists('users', 'id'),
             ],
-            'leader' => function () {
-                $leaderNames = User::role(RoleEnum::LEADER->value)->whereNull('deleted_at')->pluck('name')->toArray();
-                return ['nullable', 'string', 'max:255', Rule::in($leaderNames)];
+            'leader_id' => function () {
+                $leaderIds = User::role([RoleEnum::LEADER->value, RoleEnum::ADMIN->value])->pluck('id')->toArray();
+                return ['nullable', 'integer', Rule::in($leaderIds)];
             },
-            'status' => 'required|string|max:50',
+            'status' => ['required', 'string', Rule::in(LeadStatusEnum::values())],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'assigned_to.exists' => 'Selected user does not exist.',
-            'leader.exists' => 'Selected user does not exist.',
-            'leader.in' => 'Selected user does not exist.',
+            'salesperson_id.exists' => 'Selected user does not exist.',
+            'leader_id.exists' => 'Selected user does not exist.',
+            'leader_id.in' => 'Selected user does not exist.',
         ];
     }
 }

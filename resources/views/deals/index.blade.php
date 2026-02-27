@@ -5,10 +5,24 @@
     </h2>
   </x-slot>
 
+  @if(session('warning'))
+    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)"
+      class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4 transition duration-500 ease-in-out">
+      <p>{{ session('warning') }}</p>
+    </div>
+  @endif
+
+  @if(session('success'))
+    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)"
+      class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 transition duration-500 ease-in-out">
+      <p>{{ session('success') }}</p>
+    </div>
+  @endif
+
   <div class="py-12">
     <div class="max-w-7x1 mx-auto sm:px-6 lg:px-8">
       <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-        <div class="p-6 text-gray-900">
+        <div class="p-6 text-gray-900" x-data="{ showLeadModal: false, selectedLead: null }">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-medium">{{ __('List of deals') }}</h3>
 
@@ -47,6 +61,7 @@
                     <th class="px-6 py-3">Commission</th>
                     <th class="px-6 py-3">Stage</th>
                     <th class="px-6 py-3">Salesperson</th>
+                    <th class="px-6 py-3">Leader</th>
                     <th class="px-6 py-3">Created</th>
                     <th class="px-6 py-3">Actions</th>
                   </tr>
@@ -55,12 +70,22 @@
                   @foreach($deals as $deal)
                     <tr>
                       <td class="px-6 py-4 text-gray-900">{{ $deal->deal_id }}</td>
-                      <td class="px-6 py-4">{{ $deal->lead->name }}</td>
+                      <td class="px-6 py-4">
+                        <button type="button" class="text-indigo-600 hover:underline" data-lead='@json($deal->lead)'
+                          @click="selectedLead = JSON.parse($el.dataset.lead); showLeadModal = true">
+                          {{ $deal->lead?->name }}
+                        </button>
+                      </td>
                       <td class="px-6 py-4">{{ $deal->project_name }}</td>
-                      <td class="px-6 py-4">{{ number_format($deal->selling_price,2) }}</td>
-                      <td class="px-6 py-4">{{ number_format($deal->commission_amount,2) }}</td>
-                      <td class="px-6 py-4">{{ $deal->pipeline->name }}</td>
-                      <td class="px-6 py-4">{{ $deal->salesperson->name }}</td>
+                      <td class="px-6 py-4">{{ number_format($deal->selling_price, 2) }}</td>
+                      <td class="px-6 py-4">{{ number_format($deal->commission_amount, 2) }}</td>
+                      <td class="px-6 py-4">
+                        <span class="{{ $deal->pipeline->badge() }}">
+                          {{ $deal->pipeline->value }}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4">{{ $deal->salesperson?->name }}</td>
+                      <td class="px-6 py-4">{{ $deal->leader?->name }}</td>
                       <td class="px-6 py-4">{{ optional($deal->created_at)->format('Y-m-d') }}</td>
                       <td class="px-6 py-4">
                         <a href="{{ route('deals.edit', $deal) }}" class="text-indigo-600 hover:underline">Edit</a> |
@@ -83,6 +108,30 @@
           @else
             <div class="text-gray-600">{{ __('No deals found.') }}</div>
           @endif
+
+          <div x-show="showLeadModal" x-cloak x-transition:enter="transition ease-in-out duration-200"
+            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in-out duration-150" x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+            @click.self="showLeadModal = false">
+            <div x-transition:enter="transition ease-in-out duration-200"
+              x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+              x-transition:leave="transition ease-in-out duration-150" x-transition:leave-start="opacity-100 scale-100"
+              x-transition:leave-end="opacity-0 scale-95" class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+              <div class="mb-4 flex items-center justify-between">
+                <h4 class="text-lg font-semibold text-gray-900">Lead Details</h4>
+                <button type="button" class="text-gray-500 hover:text-gray-700"
+                  @click="showLeadModal = false">X</button>
+              </div>
+
+              <div class="space-y-2 text-sm text-gray-700">
+                <p><span class="font-semibold">Name:</span> <span x-text="selectedLead?.name ?? '-'"></span></p>
+                <p><span class="font-semibold">Email:</span> <span x-text="selectedLead?.email ?? '-'"></span></p>
+                <p><span class="font-semibold">Phone:</span> <span x-text="selectedLead?.phone ?? '-'"></span></p>
+                <p><span class="font-semibold">Source:</span> <span x-text="selectedLead?.source ?? '-'"></span></p>
+              </div>
+            </div>
+          </div>
 
         </div>
       </div>

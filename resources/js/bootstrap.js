@@ -1,4 +1,14 @@
-// Load Bootstrap, Axios, or other JS dependencies here if needed
-// For example, Breeze default bootstrap.js:
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
 
-import './bootstrap'; // optional if you want to add axios, laravel-echo, etc.
+window.Pusher = Pusher;
+
+window.Echo = new Echo({
+    broadcaster: 'reverb',
+    key: import.meta.env.VITE_REVERB_APP_KEY,
+    wsHost: import.meta.env.VITE_REVERB_HOST,
+    wsPort: import.meta.env.VITE_REVERB_PORT ?? 80,
+    wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
+    forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
+    enabledTransports: ['ws', 'wss'],
+});

@@ -16,9 +16,9 @@ return new class extends Migration {
             $table->string('email')->unique();
             $table->string('phone')->nullable();
             $table->string('source')->nullable();
-            $table->string('assigned_to');
-            $table->string('leader')->nullable();
-            $table->text('status')->default('New');
+            $table->foreignId('salesperson_id')->constrained('users')->restrictOnDelete();
+            $table->foreignId('leader_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->text('status')->default(\App\Enums\LeadStatusEnum::NEW->value);
             $table->timestamps();
         });
     }

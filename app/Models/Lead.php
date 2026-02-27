@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Enums\LeadStatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 
-class Leads extends Model
+class Lead extends Model
 {
-    /** @use HasFactory<\Database\Factories\LeadsFactory> */
+    /** @use HasFactory<\Database\Factories\LeadFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -16,19 +17,23 @@ class Leads extends Model
         'email',
         'phone',
         'source',
-        'assigned_to',
-        'leader',
+        'salesperson_id',
+        'leader_id',
         'status',
     ];
 
-    public function assignedTo()
+    protected $casts = [
+        'status' => LeadStatusEnum::class,
+    ];
+
+    public function salesperson()
     {
-        return $this->belongsTo(User::class, 'assigned_to', 'name');
+        return $this->belongsTo(User::class, 'salesperson_id');
     }
 
     public function leader()
     {
-        return $this->belongsTo(User::class, 'leader', 'name');
+        return $this->belongsTo(User::class, 'leader_id');
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\CrmDataChanged;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
@@ -47,6 +48,7 @@ class UserController extends Controller
         if ($request->filled('role')) {
             $user->assignRole($request->input('role'));
         }
+        rescue(fn () => event(new CrmDataChanged('users', 'created', $user->id)), report: false);
         return redirect()->route('users.index')->with('success', 'User created successfully.');
     }
 
@@ -76,6 +78,7 @@ class UserController extends Controller
         if ($request->filled('role')) {
             $user->syncRoles([$request->input('role')]);
         }
+        rescue(fn () => event(new CrmDataChanged('users', 'updated', $user->id)), report: false);
         return redirect()->route('users.index')->with('success', 'User updated successfully.');
     }
 
@@ -84,7 +87,22 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
+        // Check if user has deals
+        if ($user->salesDeals()->exists()) {
+            // Redirect back with a message
+            return redirect()->back()->with('warning', 'Cannot delete user: they have deals assigned.');
+        }
+
+        // Check if user has leads
+        if ($user->salesLeads()->exists()) {
+            // Redirect back with a message
+            return redirect()->back()->with('warning', 'Cannot delete user: they have leads assigned.');
+        }
+
+        $userId = $user->id;
         $user->delete();
-        return redirect()->route('users.index')->with('success', 'User deleted successfully.');
+        rescue(fn () => event(new CrmDataChanged('users', 'deleted', $userId)), report: false);
+
+        return redirect()->back()->with('success', 'User deleted successfully.');
     }
 }

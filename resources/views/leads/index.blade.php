@@ -5,6 +5,20 @@
     </h2>
   </x-slot>
 
+  @if(session('warning'))
+    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)"
+      class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4 transition duration-500 ease-in-out">
+      <p>{{ session('warning') }}</p>
+    </div>
+  @endif
+
+  @if(session('success'))
+    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)"
+      class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 transition duration-500 ease-in-out">
+      <p>{{ session('success') }}</p>
+    </div>
+  @endif
+
   <div class="py-12">
     <div class="max-w-7x1 mx-auto sm:px-6 lg:px-8">
       <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -58,7 +72,7 @@
                     <th class="px-6 py-3">Email</th>
                     <th class="px-6 py-3 ">Phone</th>
                     <th class="px-6 py-3">Source</th>
-                    <th class="px-6 py-3">Assigned To</th>
+                    <th class="px-6 py-3">Salesperson</th>
                     <th class="px-6 py-3">Leader</th>
                     <th class="px-6 py-3">Status</th>
                     <th class="px-6 py-3">Actions</th>
@@ -71,9 +85,13 @@
                       <td class="px-6 py-4">{{ $lead->email }}</td>
                       <td class="px-6 py-4">{{ $lead->phone }}</td>
                       <td class="px-6 py-4">{{ $lead->source }}</td>
-                      <td class="px-6 py-4">{{ $lead->assigned_to }}</td>
-                      <td class="px-6 py-4">{{ $lead->leader }}</td>
-                      <td class="px-6 py-4">{{ $lead->status }}</td>
+                      <td class="px-6 py-4">{{ $lead->salesperson?->name }}</td>
+                      <td class="px-6 py-4">{{ $lead->leader?->name }}</td>
+                      <td class="px-6 py-4">
+                        <span class="{{ $lead->status->badge() }}">
+                          {{ $lead->status->value }}
+                        </span>
+                      </td>
                       <td class="px-6 py-4">
                         <a href="{{ route('leads.edit', $lead) }}" class="text-indigo-600 hover:underline">Edit</a> |
                         <form method="POST" action="{{ route('leads.destroy', $lead) }}" class="inline"

@@ -62,55 +62,45 @@
             <x-input-error :messages="$errors->get('source')" class="mt-2" />
           </div>
 
-          <!-- Assigned To -->
+          <!-- Salesperson -->
           <div class="mt-4">
-            <x-input-label for="assigned_to" :value="__('Assigned To')" />
-            <select id="assigned_to" name="assigned_to"
+            <x-input-label for="salesperson_id" :value="__('Salesperson')" />
+            <select id="salesperson_id" name="salesperson_id"
               class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
               required>
               <option value="">Select a user</option>
               @foreach($users as $user)
-                <option value="{{ $user->name }}" {{ old('assigned_to', $lead->assigned_to) == $user->name ? 'selected' : '' }}>{{ $user->name }}</option>
+                <option value="{{ $user->id }}" {{ old('salesperson_id', $lead->salesperson_id) == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
               @endforeach
             </select>
-            <x-input-error :messages="$errors->get('assigned_to')" class="mt-2" />
+            <x-input-error :messages="$errors->get('salesperson_id')" class="mt-2" />
           </div>
 
           <!-- Leader -->
           <div class="mt-4">
-            <x-input-label for="leader" :value="__('Leader')" />
-            <select id="leader" name="leader"
+            <x-input-label for="leader_id" :value="__('Leader')" />
+            <select id="leader_id" name="leader_id"
               class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
               <option value="">-- None --</option>
               @foreach($leaders as $user)
-                <option value="{{ $user->name }}" {{ old('leader', $lead->leader) == $user->name ? 'selected' : '' }}>
+                <option value="{{ $user->id }}" {{ old('leader_id', $lead->leader_id) == $user->id ? 'selected' : '' }}>
                   {{ $user->name }}
                 </option>
               @endforeach
             </select>
-            <x-input-error :messages="$errors->get('leader')" class="mt-2" />
+            <x-input-error :messages="$errors->get('leader_id')" class="mt-2" />
           </div>
 
           <!-- Status -->
           <div class="mt-4">
             <x-input-label for="status" :value="__('Status')" />
 
-            @php
-              $options = [
-                'New' => 'New',
-                'Contacted' => 'Contacted',
-                'Scheduled' => 'Scheduled',
-                'Deal' => 'Deal',
-                'Lost' => 'Lost',
-              ];
-            @endphp
-
             <select id="status" name="status"
               class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
               required>
-              @foreach($options as $value => $label)
-                <option value="{{ $value }}" {{ old('status', $lead->status) == $value ? 'selected' : '' }}>
-                  {{ $label }}
+              @foreach($statuses as $status)
+                <option value="{{ $status }}" {{ old('status', $lead->status?->value) == $status ? 'selected' : '' }}>
+                  {{ $status }}
                 </option>
               @endforeach
             </select>

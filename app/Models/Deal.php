@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PipelineEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -23,7 +24,7 @@ class Deal extends Model
         'booking_fee',
         'spa_date',
         'deal_closing_date',
-        'pipeline_id',
+        'pipeline',
     ];
 
     protected $casts = [
@@ -33,6 +34,7 @@ class Deal extends Model
         'booking_fee' => 'decimal:2',
         'spa_date' => 'date',
         'deal_closing_date' => 'date',
+        'pipeline' => PipelineEnum::class,
     ];
 
     protected static function booted()
@@ -56,7 +58,7 @@ class Deal extends Model
 
     public function lead()
     {
-        return $this->belongsTo(Leads::class, 'lead_id');
+        return $this->belongsTo(Lead::class, 'lead_id');
     }
 
     public function salesperson()
@@ -67,10 +69,5 @@ class Deal extends Model
     public function leader()
     {
         return $this->belongsTo(User::class, 'leader_id');
-    }
-
-    public function pipeline()
-    {
-        return $this->belongsTo(Pipeline::class, 'pipeline_id');
     }
 }

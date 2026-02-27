@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
-use App\RoleEnum;
+use App\Enums\RoleEnum;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -15,7 +15,7 @@ Route::get('/dashboard', function () {
 
 Route::middleware('auth')->group(function () {
     Route::resource('users', UserController::class)->middleware('role:' . RoleEnum::ADMIN->value); // Only admin can manage users
-    Route::resource('leads', \App\Http\Controllers\LeadsController::class);
+    Route::resource('leads', \App\Http\Controllers\LeadController::class);
     Route::resource('deals', \App\Http\Controllers\DealController::class);
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

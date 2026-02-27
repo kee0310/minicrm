@@ -2,12 +2,14 @@
 
 namespace Database\Factories;
 
+use App\Enums\LeadStatusEnum;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Leads>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Lead>
  */
-class LeadsFactory extends Factory
+class LeadFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -21,9 +23,9 @@ class LeadsFactory extends Factory
             'email' => $this->faker->unique()->safeEmail(),
             'phone' => $this->faker->phoneNumber(),
             'source' => $this->faker->randomElement(['Facebook', 'Friend Referral', 'Exhibition/Fair', 'Company Assigned', 'Old Client Referral']),
-            'assigned_to' => $this->faker->name(),
-            'leader' => $this->faker->name(),
-            'status' => $this->faker->randomElement(['New', 'Contacted', 'Scheduled', 'Deal', 'Lost']),
+            'salesperson_id' => User::query()->inRandomOrder()->value('id') ?? User::factory(),
+            'leader_id' => User::query()->inRandomOrder()->value('id'),
+            'status' => $this->faker->randomElement(LeadStatusEnum::values()),
         ];
     }
 }

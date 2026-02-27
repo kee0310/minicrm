@@ -27,7 +27,7 @@ return new class extends Migration {
             $table->decimal('booking_fee', 15, 2)->nullable();
             $table->date('spa_date')->nullable();
             $table->date('deal_closing_date')->nullable();
-            $table->foreignId('pipeline_id')->constrained('pipelines')->restrictOnDelete();
+            $table->string('pipeline')->default('Lead');
 
             $table->timestamps();
 
@@ -35,7 +35,7 @@ return new class extends Migration {
             $table->index(['lead_id']);
             $table->index(['salesperson_id']);
             $table->index(['leader_id']);
-            $table->index(['pipeline_id']);
+            $table->index(['pipeline']);
         });
     }
 
