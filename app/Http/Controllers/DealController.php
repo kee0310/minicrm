@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\LeadStatusEnum;
 use App\Enums\PipelineEnum;
 use App\Enums\RoleEnum;
+use App\Models\Client;
 use App\Models\Deal;
 use App\Models\Lead;
 use App\Http\Requests\StoreDealRequest;
@@ -15,7 +16,7 @@ class DealController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Deal::with(['lead', 'salesperson', 'leader']);
+        $query = Deal::with(['lead.client.financialCondition', 'salesperson', 'leader']);
         $user = auth()->user();
 
         if ($user && !$user->hasRole(RoleEnum::ADMIN->value)) {
@@ -64,9 +65,11 @@ class DealController extends Controller
     /*******  78d48508-1fc4-45f3-8f0b-6e90c580d1fa  *******/
     public function create()
     {
-        $leads = Lead::where('status', LeadStatusEnum::DEAL->value)->orderBy('name')->get();
+        $clients = Client::whereHas('lead', function ($query) {
+            $query->where('status', LeadStatusEnum::DEAL->value);
+        })->orderBy('name')->get();
         $pipelines = PipelineEnum::creatableCases();
-        return view('deals.create', compact('leads', 'pipelines'));
+        return view('deals.create', compact('clients', 'pipelines'));
     }
 
     public function store(StoreDealRequest $request)
@@ -82,10 +85,10 @@ class DealController extends Controller
 
     public function edit(Deal $deal)
     {
-        $leads = Lead::orderBy('name')->get();
+        $clients = Client::orderBy('name')->get();
         $pipelines = PipelineEnum::creatableCases();
         $isPipelineLocked = $deal->pipeline?->isLockedForManualEdit() ?? false;
-        return view('deals.edit', compact('deal', 'leads', 'pipelines', 'isPipelineLocked'));
+        return view('deals.edit', compact('deal', 'clients', 'pipelines', 'isPipelineLocked'));
     }
 
     public function update(UpdateDealRequest $request, Deal $deal)

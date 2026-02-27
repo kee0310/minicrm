@@ -38,7 +38,7 @@
           <div class="mb-4">
             <form method="GET" action="{{ route('leads.index') }}" class="flex items-center space-x-2 text-xs">
               <div>
-                <input type="search" name="search" placeholder="Search" value="{{ request('search') }}"
+                <input type="search" name="search" placeholder="Search..." value="{{ request('search') }}"
                   class="w-full rounded-md border-gray-300 shadow-sm px-3 py-2 text-xs" />
               </div>
 
@@ -53,9 +53,20 @@
                 </select>
               </div>
 
+              <div>
+                <select name="source" class="rounded-md border-gray-300 shadow-sm px-3 py-2 pr-8 text-xs">
+                  <option value="">All Sources</option>
+                  @if(!empty($sources))
+                    @foreach($sources as $source)
+                      <option value="{{ $source }}" @selected(request('source') == $source)>{{ $source }}</option>
+                    @endforeach
+                  @endif
+                </select>
+              </div>
+
               <div class="flex items-center space-x-2 text-[0.6rem]">
                 <button type="submit"
-                  class="inline-flex items-center px-3 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-white uppercase tracking-wider hover:bg-indigo-700 focus:outline-none">Search</button>
+                  class="inline-flex items-center px-3 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-white uppercase tracking-wider hover:bg-indigo-700 focus:outline-none">Filter</button>
                 <a href="{{ route('leads.index') }}"
                   class="inline-flex items-center px-3 py-2 bg-gray-200 border border-transparent rounded-md font-semibold text-gray-700 hover:bg-gray-300">Clear</a>
               </div>

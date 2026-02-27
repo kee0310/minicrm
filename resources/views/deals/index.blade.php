@@ -22,7 +22,7 @@
   <div class="py-12">
     <div class="max-w-7x1 mx-auto sm:px-6 lg:px-8">
       <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-        <div class="p-6 text-gray-900" x-data="{ showLeadModal: false, selectedLead: null }">
+        <div class="p-6 text-gray-900" x-data="{ showClientModal: false, selectedClient: null }">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-medium">{{ __('List of deals') }}</h3>
 
@@ -37,8 +37,7 @@
           <div class="mb-4">
             <form method="GET" action="{{ route('deals.index') }}" class="flex items-center space-x-2 text-xs">
               <div>
-                <input type="search" name="search"
-                  placeholder="Search lead, deal ID, project, salesperson, leader" value="{{ request('search') }}"
+                <input type="search" name="search" placeholder="Search..." value="{{ request('search') }}"
                   class="w-full rounded-md border-gray-300 shadow-sm px-3 py-2 text-xs" />
               </div>
               <div>
@@ -65,7 +64,7 @@
                   <thead class="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <tr>
                       <th class="px-6 py-3">Deal ID</th>
-                      <th class="px-6 py-3">Lead</th>
+                      <th class="px-6 py-3">Client</th>
                       <th class="px-6 py-3">Project</th>
                       <th class="px-6 py-3">Selling Price</th>
                       <th class="px-6 py-3">Commission</th>
@@ -80,10 +79,33 @@
                     @foreach($deals as $deal)
                       <tr>
                         <td class="px-6 py-4 text-gray-900">{{ $deal->deal_id }}</td>
+                        @php
+                          $client = $deal->lead?->client;
+                          $financial = $client?->financialCondition;
+                          $clientPayload = [
+                            'client_id' => $client?->client_id,
+                            'name' => $client?->name,
+                            'email' => $client?->email,
+                            'phone' => $client?->phone,
+                            'age' => $client?->age,
+                            'ic_passport' => $client?->ic_passport,
+                            'occupation' => $client?->occupation,
+                            'company' => $client?->company,
+                            'monthly_income' => $client?->monthly_income,
+                            'status' => $client?->status,
+                            'existing_loans' => $financial?->existing_loans,
+                            'monthly_commitments' => $financial?->monthly_commitments,
+                            'credit_card_limits' => $financial?->credit_card_limits,
+                            'credit_card_utilization' => $financial?->credit_card_utilization,
+                            'ccris' => $financial?->ccris,
+                            'ctos' => $financial?->ctos,
+                            'risk_grade' => $financial?->risk_grade,
+                          ];
+                        @endphp
                         <td class="px-6 py-4">
-                          <button type="button" class="text-indigo-600 hover:underline" data-lead='@json($deal->lead)'
-                            @click="selectedLead = JSON.parse($el.dataset.lead); showLeadModal = true">
-                            {{ $deal->lead?->name }}
+                          <button type="button" class="text-indigo-600 hover:underline" data-client='@json($clientPayload)'
+                            @click="selectedClient = JSON.parse($el.dataset.client); showClientModal = true">
+                            {{ $client?->name ?? '-' }}
                           </button>
                         </td>
                         <td class="px-6 py-4">{{ $deal->project_name }}</td>
@@ -121,26 +143,39 @@
           </div>
 
 
-          <div x-show="showLeadModal" x-cloak x-transition:enter="transition ease-in-out duration-200"
+          <div x-show="showClientModal" x-cloak x-transition:enter="transition ease-in-out duration-200"
             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
             x-transition:leave="transition ease-in-out duration-150" x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-            @click.self="showLeadModal = false">
-            <div x-transition:enter="transition ease-in-out duration-200"
-              x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-              x-transition:leave="transition ease-in-out duration-150" x-transition:leave-start="opacity-100 scale-100"
-              x-transition:leave-end="opacity-0 scale-95" class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            @click.self="showClientModal = false">
+            <div x-transition:enter="transition ease-in-out duration-200" x-transition:enter-start="opacity-0 scale-95"
+              x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in-out duration-150"
+              x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+              class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl">
               <div class="mb-4 flex items-center justify-between">
-                <h4 class="text-lg font-semibold text-gray-900">Lead Details</h4>
+                <h4 class="text-lg font-semibold text-gray-900">Client Details</h4>
                 <button type="button" class="text-gray-500 hover:text-gray-700"
-                  @click="showLeadModal = false">X</button>
+                  @click="showClientModal = false">X</button>
               </div>
 
-              <div class="space-y-2 text-sm text-gray-700">
-                <p><span class="font-semibold">Name:</span> <span x-text="selectedLead?.name ?? '-'"></span></p>
-                <p><span class="font-semibold">Email:</span> <span x-text="selectedLead?.email ?? '-'"></span></p>
-                <p><span class="font-semibold">Phone:</span> <span x-text="selectedLead?.phone ?? '-'"></span></p>
-                <p><span class="font-semibold">Source:</span> <span x-text="selectedLead?.source ?? '-'"></span></p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-6 text-sm text-gray-700">
+                <p><span class="font-semibold">Client ID:</span> <span x-text="selectedClient?.client_id ?? '-'"></span></p>
+                <p><span class="font-semibold">Status:</span> <span x-text="selectedClient?.status ?? '-'"></span></p>
+                <p><span class="font-semibold">Name:</span> <span x-text="selectedClient?.name ?? '-'"></span></p>
+                <p><span class="font-semibold">Email:</span> <span x-text="selectedClient?.email ?? '-'"></span></p>
+                <p><span class="font-semibold">Phone:</span> <span x-text="selectedClient?.phone ?? '-'"></span></p>
+                <p><span class="font-semibold">Age:</span> <span x-text="selectedClient?.age ?? '-'"></span></p>
+                <p><span class="font-semibold">IC/Passport:</span> <span x-text="selectedClient?.ic_passport ?? '-'"></span></p>
+                <p><span class="font-semibold">Occupation:</span> <span x-text="selectedClient?.occupation ?? '-'"></span></p>
+                <p><span class="font-semibold">Company:</span> <span x-text="selectedClient?.company ?? '-'"></span></p>
+                <p><span class="font-semibold">Monthly Income:</span> <span x-text="selectedClient?.monthly_income ?? '-'"></span></p>
+                <p><span class="font-semibold">Existing Loans:</span> <span x-text="selectedClient?.existing_loans ?? '-'"></span></p>
+                <p><span class="font-semibold">Monthly Commitments:</span> <span x-text="selectedClient?.monthly_commitments ?? '-'"></span></p>
+                <p><span class="font-semibold">Credit Card Limits:</span> <span x-text="selectedClient?.credit_card_limits ?? '-'"></span></p>
+                <p><span class="font-semibold">Credit Card Utilization:</span> <span x-text="selectedClient?.credit_card_utilization ?? '-'"></span></p>
+                <p><span class="font-semibold">CCRIS:</span> <span x-text="selectedClient?.ccris ?? '-'"></span></p>
+                <p><span class="font-semibold">CTOS:</span> <span x-text="selectedClient?.ctos ?? '-'"></span></p>
+                <p><span class="font-semibold">Risk Grade:</span> <span x-text="selectedClient?.risk_grade ?? '-'"></span></p>
               </div>
             </div>
           </div>

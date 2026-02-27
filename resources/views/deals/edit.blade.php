@@ -13,15 +13,15 @@
           @method('PUT')
           @csrf
 
-          <!-- Linked Lead -->
+          <!-- Linked Client -->
           <div>
-            <x-input-label for="lead_id" :value="__('Linked Lead')" />
+            <x-input-label for="lead_id" :value="__('Linked Client')" />
             <select id="lead_id" name="lead_id" required
               class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-              <option value="">Select a lead</option>
-              @foreach($leads as $lead)
-                <option value="{{ $lead->id }}" {{ old('lead_id', $deal->lead_id) == $lead->id ? 'selected' : '' }}>
-                  {{ $lead->name }}
+              <option value="">Select a client</option>
+              @foreach($clients as $client)
+                <option value="{{ $client->lead_id }}" {{ old('lead_id', $deal->lead_id) == $client->lead_id ? 'selected' : '' }}>
+                  {{ $client->client_id ? $client->client_id . ' - ' : '' }}{{ $client->name }}
                 </option>
               @endforeach
             </select>
@@ -109,14 +109,6 @@
             <x-text-input id="spa_date" class="block mt-1 w-full" type="date" name="spa_date"
               :value="old('spa_date', optional($deal->spa_date)->format('Y-m-d'))" />
             <x-input-error :messages="$errors->get('spa_date')" class="mt-2" />
-          </div>
-
-          <!-- Deal Closing Date -->
-          <div class="mt-4">
-            <x-input-label for="deal_closing_date" :value="__('Deal Closing Date')" />
-            <x-text-input id="deal_closing_date" class="block mt-1 w-full" type="date" name="deal_closing_date"
-              :value="old('deal_closing_date', optional($deal->deal_closing_date)->format('Y-m-d'))" />
-            <x-input-error :messages="$errors->get('deal_closing_date')" class="mt-2" />
           </div>
 
           <div class="flex items-center justify-end mt-4">

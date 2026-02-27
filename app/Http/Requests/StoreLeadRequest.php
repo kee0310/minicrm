@@ -27,7 +27,12 @@ class StoreLeadRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:leads,email',
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('leads', 'email'),
+                Rule::unique('clients', 'email'),
+            ],
             'phone' => 'required|string|max:20',
             'source' => 'required|string|max:255',
             'salesperson_id' => [
@@ -49,6 +54,7 @@ class StoreLeadRequest extends FormRequest
             'salesperson_id.exists' => 'Selected user does not exist.',
             'leader_id.exists' => 'Selected user does not exist.',
             'leader_id.in' => 'Selected user does not exist.',
+            'email.unique' => 'This email already exists.',
         ];
     }
 }

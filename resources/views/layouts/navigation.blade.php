@@ -18,6 +18,9 @@
                     <x-nav-link :href="route('leads.index')" :active="request()->routeIs('leads.*')">
                         {{ __('Leads') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.*')">
+                        {{ __('Clients') }}
+                    </x-nav-link>
                     <x-nav-link :href="route('deals.index')" :active="request()->routeIs('deals.*')">
                         {{ __('Deals') }}
                     </x-nav-link>
@@ -92,6 +95,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('leads.index')" :active="request()->routeIs('leads.*')">
                 {{ __('Leads') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.*')">
+                {{ __('Clients') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('deals.index')" :active="request()->routeIs('deals.*')">
                 {{ __('Deals') }}

@@ -34,7 +34,13 @@ class LeadController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%");
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhereHas('salesperson', function ($salespersonQuery) use ($search) {
+                        $salespersonQuery->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('leader', function ($leaderQuery) use ($search) {
+                        $leaderQuery->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -42,11 +48,21 @@ class LeadController extends Controller
             $query->where('status', $status);
         }
 
+        if ($source = $request->input('source')) {
+            $query->where('source', $source);
+        }
+
         $statuses = LeadStatusEnum::values();
+        $sources = (clone $query)->select('source')
+            ->whereNotNull('source')
+            ->where('source', '!=', '')
+            ->distinct()
+            ->orderBy('source')
+            ->pluck('source');
 
         $leads = $query->latest()->paginate(20)->withQueryString();
 
-        return view('leads.index', compact('leads', 'statuses'));
+        return view('leads.index', compact('leads', 'statuses', 'sources'));
     }
 
     /**

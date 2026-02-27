@@ -26,6 +26,19 @@ class Lead extends Model
         'status' => LeadStatusEnum::class,
     ];
 
+    protected static function booted()
+    {
+        static::saved(function (Lead $lead) {
+            $leadStatus = $lead->status instanceof LeadStatusEnum
+                ? $lead->status
+                : LeadStatusEnum::tryFrom((string) $lead->status);
+
+            if ($leadStatus === LeadStatusEnum::DEAL) {
+                $lead->ensureClientProfile();
+            }
+        });
+    }
+
     public function salesperson()
     {
         return $this->belongsTo(User::class, 'salesperson_id');
@@ -42,5 +55,22 @@ class Lead extends Model
     public function deals()
     {
         return $this->hasMany(Deal::class, 'lead_id');
+    }
+
+    public function client()
+    {
+        return $this->hasOne(Client::class, 'lead_id');
+    }
+
+    protected function ensureClientProfile(): void
+    {
+        $client = $this->client()->firstOrCreate(
+            ['lead_id' => $this->id],
+            [
+                'name' => $this->name,
+                'email' => $this->email,
+                'phone' => $this->phone,
+            ]
+        );
     }
 }

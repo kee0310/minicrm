@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\UserController;
 use App\Enums\RoleEnum;
 use Illuminate\Support\Facades\Route;
@@ -17,6 +18,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('users', UserController::class)->middleware('role:' . RoleEnum::ADMIN->value); // Only admin can manage users
     Route::resource('leads', \App\Http\Controllers\LeadController::class);
     Route::resource('deals', \App\Http\Controllers\DealController::class);
+    Route::resource('clients', ClientController::class);
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
