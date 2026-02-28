@@ -49,14 +49,6 @@ class Lead extends Model
         return $this->belongsTo(User::class, 'leader_id');
     }
 
-    /**
-     * Deals associated with this lead
-     */
-    public function deals()
-    {
-        return $this->hasMany(Deal::class, 'lead_id');
-    }
-
     public function client()
     {
         return $this->hasOne(Client::class, 'email', 'email');
@@ -64,11 +56,13 @@ class Lead extends Model
 
     protected function ensureClientProfile(): void
     {
-        $this->client()->firstOrCreate(
+        $this->client()->updateOrCreate(
             ['email' => $this->email],
             [
                 'name' => $this->name,
                 'phone' => $this->phone,
+                'salesperson_id' => $this->salesperson_id,
+                'leader_id' => $this->leader_id,
             ]
         );
     }

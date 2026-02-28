@@ -20,7 +20,7 @@
   @endif
 
   <div class="py-12">
-    <div class="max-w-7x1 mx-auto sm:px-6 lg:px-8">
+    <div class="mx-auto sm:px-6 lg:px-8">
       <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
         <div class="p-6 text-gray-900">
           <div class="flex items-center justify-between mb-4">
@@ -43,7 +43,7 @@
               </div>
 
               <div>
-                <select name="status" class="rounded-md border-gray-300 shadow-sm px-3 py-2 pr-8 text-xs">
+                <select name="status" type="filter" class="rounded-md border-gray-300 shadow-sm px-3 py-2 pr-8 text-xs">
                   <option value="">All Statuses</option>
                   @if(!empty($statuses))
                     @foreach($statuses as $s)
@@ -54,7 +54,7 @@
               </div>
 
               <div>
-                <select name="source" class="rounded-md border-gray-300 shadow-sm px-3 py-2 pr-8 text-xs">
+                <select name="source" type="filter" class="rounded-md border-gray-300 shadow-sm px-3 py-2 pr-8 text-xs">
                   <option value="">All Sources</option>
                   @if(!empty($sources))
                     @foreach($sources as $source)
@@ -106,7 +106,7 @@
                         </td>
                         <td class="px-6 py-4">
                           @if($lead->status->value === \App\Enums\LeadStatusEnum::DEAL->value)
-                            
+
                           @else
                             <a href="{{ route('leads.edit', $lead) }}" class="text-indigo-600 hover:underline">Edit</a> |
                             <form method="POST" action="{{ route('leads.destroy', $lead) }}" class="inline"

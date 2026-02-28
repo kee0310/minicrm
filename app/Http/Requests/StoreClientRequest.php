@@ -13,6 +13,8 @@ class StoreClientRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'salesperson_id' => ['required', 'integer', 'exists:users,id'],
+            'leader_id' => ['required', 'integer', 'exists:users,id'],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:clients,email'],
             'phone' => ['required', 'string', 'max:20'],

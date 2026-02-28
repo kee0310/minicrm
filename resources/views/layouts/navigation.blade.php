@@ -1,6 +1,6 @@
 <nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
     <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex">
                 <!-- Logo -->
@@ -24,6 +24,11 @@
                     <x-nav-link :href="route('deals.index')" :active="request()->routeIs('deals.*')">
                         {{ __('Deals') }}
                     </x-nav-link>
+                    @if(auth()->user()->hasRole(\App\Enums\RoleEnum::ADMIN->value) || auth()->user()->hasRole(\App\Enums\RoleEnum::LOAN_OFFICER->value))
+                        <x-nav-link :href="route('loans.borrower-profile')" :active="request()->routeIs('loans.*')">
+                            {{ __('Loans') }}
+                        </x-nav-link>
+                    @endif
 
                     @role(\App\Enums\RoleEnum::ADMIN->value)
                     <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
@@ -102,6 +107,11 @@
             <x-responsive-nav-link :href="route('deals.index')" :active="request()->routeIs('deals.*')">
                 {{ __('Deals') }}
             </x-responsive-nav-link>
+            @if(auth()->user()->hasRole(\App\Enums\RoleEnum::ADMIN->value) || auth()->user()->hasRole(\App\Enums\RoleEnum::LOAN_OFFICER->value))
+                <x-responsive-nav-link :href="route('loans.borrower-profile')" :active="request()->routeIs('loans.*')">
+                    {{ __('Loans') }}
+                </x-responsive-nav-link>
+            @endif
 
             @role(\App\Enums\RoleEnum::ADMIN->value)
             <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">

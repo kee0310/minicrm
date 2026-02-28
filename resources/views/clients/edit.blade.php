@@ -6,7 +6,7 @@
   </x-slot>
 
   <div class="py-12">
-    <div class="max-w-7x1 mx-auto sm:px-6 lg:px-8" align="center">
+    <div class="max-w-6xl mx-auto sm:px-6 lg:px-8" align="center">
       <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-10 max-w-3xl m-5" align="left">
         <form method="POST" action="{{ route('clients.update', $client) }}">
           @method('PUT')
@@ -24,6 +24,34 @@
               <x-input-label for="name" :value="__('Name')" />
               <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name', $client->name)" required />
               <x-input-error :messages="$errors->get('name')" class="mt-2" />
+            </div>
+
+            <div>
+              <x-input-label for="salesperson_id" :value="__('Salesperson')" />
+              <select id="salesperson_id" name="salesperson_id" required
+                class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                <option value="">Select salesperson</option>
+                @foreach($salespersons as $salesperson)
+                  <option value="{{ $salesperson->id }}" {{ old('salesperson_id', $client->salesperson_id) == $salesperson->id ? 'selected' : '' }}>
+                    {{ $salesperson->name }}
+                  </option>
+                @endforeach
+              </select>
+              <x-input-error :messages="$errors->get('salesperson_id')" class="mt-2" />
+            </div>
+
+            <div>
+              <x-input-label for="leader_id" :value="__('Leader')" />
+              <select id="leader_id" name="leader_id" required
+                class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                <option value="">Select leader</option>
+                @foreach($leaders as $leader)
+                  <option value="{{ $leader->id }}" {{ old('leader_id', $client->leader_id) == $leader->id ? 'selected' : '' }}>
+                    {{ $leader->name }}
+                  </option>
+                @endforeach
+              </select>
+              <x-input-error :messages="$errors->get('leader_id')" class="mt-2" />
             </div>
 
             <div>
@@ -80,3 +108,4 @@
     </div>
   </div>
 </x-app-layout>
+

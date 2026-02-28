@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\LeadStatusEnum;
 use App\Enums\PipelineEnum;
 use App\Enums\RoleEnum;
 use App\Models\Client;
 use App\Models\Deal;
-use App\Models\Lead;
 use App\Http\Requests\StoreDealRequest;
 use App\Http\Requests\UpdateDealRequest;
 use Illuminate\Http\Request;
@@ -16,7 +14,7 @@ class DealController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Deal::with(['lead.client.financialCondition', 'salesperson', 'leader']);
+        $query = Deal::with(['client.financialCondition', 'salesperson', 'leader']);
         $user = auth()->user();
 
         if ($user && !$user->hasRole(RoleEnum::ADMIN->value)) {
@@ -34,8 +32,8 @@ class DealController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('deal_id', 'like', "%{$search}%")
                     ->orWhere('project_name', 'like', "%{$search}%")
-                    ->orWhereHas('lead', function ($leadQuery) use ($search) {
-                        $leadQuery->where('name', 'like', "%{$search}%");
+                    ->orWhereHas('client', function ($clientQuery) use ($search) {
+                        $clientQuery->where('name', 'like', "%{$search}%");
                     })
                     ->orWhereHas('salesperson', function ($salespersonQuery) use ($search) {
                         $salespersonQuery->where('name', 'like', "%{$search}%");
@@ -65,9 +63,7 @@ class DealController extends Controller
     /*******  78d48508-1fc4-45f3-8f0b-6e90c580d1fa  *******/
     public function create()
     {
-        $clients = Client::whereHas('lead', function ($query) {
-            $query->where('status', LeadStatusEnum::DEAL->value)->whereNotNull('leader_id');
-        })->orderBy('name')->get();
+        $clients = Client::orderBy('name')->get();
         $pipelines = PipelineEnum::creatableCases();
         return view('deals.create', compact('clients', 'pipelines'));
     }
@@ -76,14 +72,15 @@ class DealController extends Controller
     {
         $data = $request->validated();
         $client = Client::findOrFail($data['client_id']);
-        $lead = Lead::where('email', $client->email)
-            ->where('status', LeadStatusEnum::DEAL->value)
-            ->whereNotNull('leader_id')
-            ->firstOrFail();
-        $data['lead_id'] = $lead->id;
-        $data['salesperson_id'] = $lead->salesperson_id;
-        $data['leader_id'] = $lead->leader_id;
-        unset($data['client_id']);
+
+        if (!$client->salesperson_id || !$client->leader_id) {
+            return back()
+                ->withInput()
+                ->withErrors(['client_id' => 'Selected client must have salesperson and leader assigned.']);
+        }
+
+        $data['salesperson_id'] = $client->salesperson_id;
+        $data['leader_id'] = $client->leader_id;
 
         Deal::create($data);
         return redirect()->route('deals.index')->with('success', 'Deal created successfully.');
@@ -91,10 +88,8 @@ class DealController extends Controller
 
     public function edit(Deal $deal)
     {
-        $clients = Client::whereHas('lead', function ($query) {
-            $query->whereNotNull('leader_id');
-        })->orderBy('name')->get();
-        $selectedClientId = Client::where('email', $deal->lead?->email)->value('id');
+        $clients = Client::orderBy('name')->get();
+        $selectedClientId = $deal->client_id;
         $pipelines = PipelineEnum::creatableCases();
         $isPipelineLocked = $deal->pipeline?->isLockedForManualEdit() ?? false;
         return view('deals.edit', compact('deal', 'clients', 'selectedClientId', 'pipelines', 'isPipelineLocked'));
@@ -104,13 +99,15 @@ class DealController extends Controller
     {
         $data = $request->validated();
         $client = Client::findOrFail($data['client_id']);
-        $lead = Lead::where('email', $client->email)
-            ->whereNotNull('leader_id')
-            ->firstOrFail();
-        $data['lead_id'] = $lead->id;
-        $data['salesperson_id'] = $lead->salesperson_id;
-        $data['leader_id'] = $lead->leader_id;
-        unset($data['client_id']);
+
+        if (!$client->salesperson_id || !$client->leader_id) {
+            return back()
+                ->withInput()
+                ->withErrors(['client_id' => 'Selected client must have salesperson and leader assigned.']);
+        }
+
+        $data['salesperson_id'] = $client->salesperson_id;
+        $data['leader_id'] = $client->leader_id;
 
         $deal->update($data);
         return redirect()->route('deals.index')->with('success', 'Deal updated successfully.');

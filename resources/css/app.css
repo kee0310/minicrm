@@ -3,5 +3,18 @@
 @tailwind utilities;
 
 [x-cloak] {
-  display: none !important;
+    display: none !important;
+}
+
+input:not([type='search']),
+select:not([type='filter']),
+textarea {
+    font-size: 0.9rem !important;
+    padding: 2px 8px !important;
+}
+
+table td,
+table th {
+    padding: 8px !important;
+    border: 1 black solid !important;
 }

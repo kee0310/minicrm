@@ -19,6 +19,8 @@ return new class extends Migration {
             $table->string('name');
             $table->string('email')->unique();
             $table->string('phone')->nullable();
+            $table->foreignId('salesperson_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('leader_id')->nullable()->constrained('users')->nullOnDelete();
             $table->unsignedTinyInteger('age')->nullable();
             $table->string('ic_passport')->nullable();
             $table->string('occupation')->nullable();
@@ -30,6 +32,8 @@ return new class extends Migration {
             $table->timestamps();
 
             // indexes for large scale
+            $table->index(['salesperson_id']);
+            $table->index(['leader_id']);
             $table->index(['status']);
         });
 
@@ -37,13 +41,15 @@ return new class extends Migration {
         $now = now();
         $rows = DB::table('leads')
             ->where('status', \App\Enums\LeadStatusEnum::DEAL->value)
-            ->select('name', 'email', 'phone')
+            ->select('name', 'email', 'phone', 'salesperson_id', 'leader_id')
             ->get()
             ->map(function ($lead) use ($now) {
                 return [
                     'name' => $lead->name,
                     'email' => $lead->email,
                     'phone' => $lead->phone,
+                    'salesperson_id' => $lead->salesperson_id,
+                    'leader_id' => $lead->leader_id,
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];

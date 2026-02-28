@@ -17,6 +17,8 @@ class UpdateClientRequest extends FormRequest
         $client = $this->route('client');
 
         return [
+            'salesperson_id' => ['required', 'integer', 'exists:users,id'],
+            'leader_id' => ['required', 'integer', 'exists:users,id'],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('clients', 'email')->ignore($client?->id)],
             'phone' => ['required', 'string', 'max:20'],

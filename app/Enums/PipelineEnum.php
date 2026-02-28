@@ -20,15 +20,15 @@ enum PipelineEnum: string
   public function color(): string
   {
     return match ($this) {
-      self::NEW => 'bg-gray-100 text-gray-800',
-      self::VIEWING => 'bg-blue-100 text-blue-800',
-      self::BOOKING => 'bg-yellow-100 text-yellow-800',
-      self::SPA_SIGNED => 'bg-purple-100 text-purple-800',
-      self::LOAN_SUBMITTED => 'bg-orange-100 text-orange-800',
-      self::LOAN_APPROVED => 'bg-green-100 text-green-800',
-      self::LEGAL_PROCESSING => 'bg-indigo-100 text-indigo-800',
-      self::COMPLETED => 'bg-emerald-100 text-emerald-800',
-      self::COMMISSION_PAID => 'bg-teal-100 text-teal-800',
+      self::NEW => 'bg-gray-100 text-gray-800 text-xs',
+      self::VIEWING => 'bg-blue-100 text-blue-800 text-xs',
+      self::BOOKING => 'bg-yellow-100 text-yellow-800 text-xs',
+      self::SPA_SIGNED => 'bg-purple-100 text-purple-800 text-xs',
+      self::LOAN_SUBMITTED => 'bg-orange-100 text-orange-800 text-xs',
+      self::LOAN_APPROVED => 'bg-green-100 text-green-800 text-xs',
+      self::LEGAL_PROCESSING => 'bg-indigo-100 text-indigo-800 text-xs',
+      self::COMPLETED => 'bg-emerald-100 text-emerald-800 text-xs',
+      self::COMMISSION_PAID => 'bg-teal-100 text-teal-800 text-xs',
     };
   }
 
@@ -37,7 +37,7 @@ enum PipelineEnum: string
    */
   public function badge(): string
   {
-    return "px-2 py-1 text-xs font-semibold rounded-full " . $this->color();
+    return "px-2 py-1 font-semibold rounded-full " . $this->color();
   }
 
   /**
@@ -54,7 +54,7 @@ enum PipelineEnum: string
   public static function creatableCases(): array
   {
     return [
-      self::NEW,
+      self::NEW ,
       self::VIEWING,
       self::BOOKING,
       self::SPA_SIGNED,

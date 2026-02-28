@@ -6,14 +6,27 @@
   </x-slot>
 
   <div class="py-12">
-    <div class="max-w-7x1 mx-auto sm:px-6 lg:px-8" align="center">
+    <div class="max-w-6xl mx-auto sm:px-6 lg:px-8" align="center">
       <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-10 max-w-2xl m-5" align="left">
 
         <form method="POST" action="{{ route('deals.store') }}">
           @csrf
+          <!-- Pipeline Stage -->
+          <div>
+            <x-input-label for="pipeline" :value="__('Pipeline Stage')" />
+            <select id="pipeline" name="pipeline" required
+              class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+              @foreach($pipelines as $pipeline)
+                <option value="{{ $pipeline->value }}" {{ old('pipeline') == $pipeline->value ? 'selected' : '' }}>
+                  {{ $pipeline->value }}
+                </option>
+              @endforeach
+            </select>
+            <x-input-error :messages="$errors->get('pipeline')" class="mt-2" />
+          </div>
 
           <!-- Linked Client -->
-          <div>
+          <div class="mt-4">
             <x-input-label for="client_id" :value="__('Linked Client')" />
             <select id="client_id" name="client_id" required
               class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
@@ -72,20 +85,6 @@
             <x-input-label for="commission_amount" :value="__('Commission Amount')" />
             <x-text-input id="commission_amount" class="block mt-1 w-full bg-gray-100" type="number" step="0.01"
               name="commission_amount" :value="old('commission_amount')" readonly />
-          </div>
-
-          <!-- Pipeline Stage -->
-          <div class="mt-4">
-            <x-input-label for="pipeline" :value="__('Pipeline Stage')" />
-            <select id="pipeline" name="pipeline" required
-              class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-              @foreach($pipelines as $pipeline)
-                <option value="{{ $pipeline->value }}" {{ old('pipeline') == $pipeline->value ? 'selected' : '' }}>
-                  {{ $pipeline->value }}
-                </option>
-              @endforeach
-            </select>
-            <x-input-error :messages="$errors->get('pipeline')" class="mt-2" />
           </div>
 
           <!-- Booking Fee -->

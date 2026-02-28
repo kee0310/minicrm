@@ -2,9 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Enums\LeadStatusEnum;
 use App\Enums\PipelineEnum;
-use App\Models\Lead;
+use App\Models\Client;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -28,9 +27,9 @@ class DealFactory extends Factory
 
         return [
             'deal_id' => null,
-            'lead_id' => Lead::query()->where('status', LeadStatusEnum::DEAL->value)->inRandomOrder()->value('id')
-                ?? Lead::factory()->state(['status' => LeadStatusEnum::DEAL->value]),
-            'project_name' => $this->faker->words(3, true),
+            'client_id' => Client::query()->inRandomOrder()->value('id') ?? Client::factory(),
+            'project_name' => $this->faker->city() . ' ' .
+                $this->faker->randomElement(['Residences', 'Tower', 'Heights', 'Gardens']),
             'developer' => $this->faker->optional()->company(),
             'unit_number' => $this->faker->optional()->bothify('##-##-###'),
             'selling_price' => $sellingPrice,
@@ -41,7 +40,12 @@ class DealFactory extends Factory
             'booking_fee' => $bookingFee,
             'spa_date' => $spaDate?->format('Y-m-d'),
             'deal_closing_date' => $closingDate?->format('Y-m-d'),
-            'pipeline' => $this->faker->randomElement(PipelineEnum::values()),
+            'pipeline' => $this->faker->randomElement([
+                PipelineEnum::NEW ,
+                PipelineEnum::VIEWING,
+                PipelineEnum::BOOKING,
+                PipelineEnum::SPA_SIGNED,
+            ]),
         ];
     }
 }

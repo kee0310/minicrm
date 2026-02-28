@@ -14,6 +14,8 @@ class Client extends Model
         'name',
         'email',
         'phone',
+        'salesperson_id',
+        'leader_id',
         'age',
         'ic_passport',
         'occupation',
@@ -24,6 +26,8 @@ class Client extends Model
     ];
 
     protected $casts = [
+        'salesperson_id' => 'integer',
+        'leader_id' => 'integer',
         'age' => 'integer',
         'monthly_income' => 'decimal:2',
         'completeness_rate' => 'integer',
@@ -42,6 +46,21 @@ class Client extends Model
     public function lead()
     {
         return $this->hasOne(Lead::class, 'email', 'email');
+    }
+
+    public function deals()
+    {
+        return $this->hasMany(Deal::class, 'client_id');
+    }
+
+    public function salesperson()
+    {
+        return $this->belongsTo(User::class, 'salesperson_id');
+    }
+
+    public function leader()
+    {
+        return $this->belongsTo(User::class, 'leader_id');
     }
 
     public function financialCondition()
@@ -80,5 +99,15 @@ class Client extends Model
             'completeness_rate' => $rate,
             'status' => $status,
         ])->save();
+    }
+
+    public function riskScore(): int
+    {
+        return $this->financialCondition?->riskScore() ?? 0;
+    }
+
+    public function riskGrade(): string
+    {
+        return $this->financialCondition?->riskGrade() ?? 'A';
     }
 }

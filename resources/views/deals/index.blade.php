@@ -20,7 +20,7 @@
   @endif
 
   <div class="py-12">
-    <div class="max-w-7x1 mx-auto sm:px-6 lg:px-8">
+    <div class="mx-auto sm:px-6 lg:px-8">
       <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
         <div class="p-6 text-gray-900" x-data="{ showClientModal: false, selectedClient: null }">
           <div class="flex items-center justify-between mb-4">
@@ -41,7 +41,7 @@
                   class="w-full rounded-md border-gray-300 shadow-sm px-3 py-2 text-xs" />
               </div>
               <div>
-                <select name="stage" class="rounded-md border-gray-300 shadow-sm px-3 py-2 pr-8 text-xs">
+                <select name="stage" type="filter" class="rounded-md border-gray-300 shadow-sm px-3 py-2 pr-8 text-xs">
                   <option value="">All Stages</option>
                   @foreach($stages as $stage)
                     <option value="{{ $stage }}" @selected(request('stage') == $stage)>{{ $stage }}</option>
@@ -80,7 +80,7 @@
                       <tr>
                         <td class="px-6 py-4 text-gray-900">{{ $deal->deal_id }}</td>
                         @php
-                          $client = $deal->lead?->client;
+                          $client = $deal->client;
                           $financial = $client?->financialCondition;
                           $clientPayload = [
                             'client_id' => $client?->client_id,
@@ -92,7 +92,7 @@
                             'occupation' => $client?->occupation,
                             'company' => $client?->company,
                             'monthly_income' => $client?->monthly_income,
-                            'status' => $client?->status,
+                            'completeness_rate' => $client?->completeness_rate,
                             'existing_loans' => $financial?->existing_loans,
                             'monthly_commitments' => $financial?->monthly_commitments,
                             'credit_card_limits' => $financial?->credit_card_limits,
@@ -159,23 +159,34 @@
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-6 text-sm text-gray-700">
-                <p><span class="font-semibold">Client ID:</span> <span x-text="selectedClient?.client_id ?? '-'"></span></p>
-                <p><span class="font-semibold">Status:</span> <span x-text="selectedClient?.status ?? '-'"></span></p>
+                <p><span class="font-semibold">Client ID:</span> <span x-text="selectedClient?.client_id ?? '-'"></span>
+                </p>
+                <p><span class="font-semibold">Data Completeness:</span> <span
+                    x-text="selectedClient?.completeness_rate != null ? (selectedClient.completeness_rate + '%') : '-'"></span>
+                </p>
                 <p><span class="font-semibold">Name:</span> <span x-text="selectedClient?.name ?? '-'"></span></p>
                 <p><span class="font-semibold">Email:</span> <span x-text="selectedClient?.email ?? '-'"></span></p>
                 <p><span class="font-semibold">Phone:</span> <span x-text="selectedClient?.phone ?? '-'"></span></p>
                 <p><span class="font-semibold">Age:</span> <span x-text="selectedClient?.age ?? '-'"></span></p>
-                <p><span class="font-semibold">IC/Passport:</span> <span x-text="selectedClient?.ic_passport ?? '-'"></span></p>
-                <p><span class="font-semibold">Occupation:</span> <span x-text="selectedClient?.occupation ?? '-'"></span></p>
+                <p><span class="font-semibold">IC/Passport:</span> <span
+                    x-text="selectedClient?.ic_passport ?? '-'"></span></p>
+                <p><span class="font-semibold">Occupation:</span> <span
+                    x-text="selectedClient?.occupation ?? '-'"></span></p>
                 <p><span class="font-semibold">Company:</span> <span x-text="selectedClient?.company ?? '-'"></span></p>
-                <p><span class="font-semibold">Monthly Income:</span> <span x-text="selectedClient?.monthly_income ?? '-'"></span></p>
-                <p><span class="font-semibold">Existing Loans:</span> <span x-text="selectedClient?.existing_loans ?? '-'"></span></p>
-                <p><span class="font-semibold">Monthly Commitments:</span> <span x-text="selectedClient?.monthly_commitments ?? '-'"></span></p>
-                <p><span class="font-semibold">Credit Card Limits:</span> <span x-text="selectedClient?.credit_card_limits ?? '-'"></span></p>
-                <p><span class="font-semibold">Credit Card Utilization:</span> <span x-text="selectedClient?.credit_card_utilization ?? '-'"></span></p>
+                <p><span class="font-semibold">Monthly Income:</span> <span
+                    x-text="selectedClient?.monthly_income ?? '-'"></span></p>
+                <p><span class="font-semibold">Existing Loans:</span> <span
+                    x-text="selectedClient?.existing_loans ?? '-'"></span></p>
+                <p><span class="font-semibold">Monthly Commitments:</span> <span
+                    x-text="selectedClient?.monthly_commitments ?? '-'"></span></p>
+                <p><span class="font-semibold">Credit Card Limits:</span> <span
+                    x-text="selectedClient?.credit_card_limits ?? '-'"></span></p>
+                <p><span class="font-semibold">Credit Card Utilization:</span> <span
+                    x-text="selectedClient?.credit_card_utilization ?? '-'"></span></p>
                 <p><span class="font-semibold">CCRIS:</span> <span x-text="selectedClient?.ccris ?? '-'"></span></p>
                 <p><span class="font-semibold">CTOS:</span> <span x-text="selectedClient?.ctos ?? '-'"></span></p>
-                <p><span class="font-semibold">Risk Grade:</span> <span x-text="selectedClient?.risk_grade ?? '-'"></span></p>
+                <p><span class="font-semibold">Risk Grade:</span> <span
+                    x-text="selectedClient?.risk_grade ?? '-'"></span></p>
               </div>
             </div>
           </div>

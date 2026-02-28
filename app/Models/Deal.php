@@ -12,7 +12,7 @@ class Deal extends Model
 
     protected $fillable = [
         'deal_id',
-        'lead_id',
+        'client_id',
         'project_name',
         'developer',
         'unit_number',
@@ -56,9 +56,9 @@ class Deal extends Model
         });
     }
 
-    public function lead()
+    public function client()
     {
-        return $this->belongsTo(Lead::class, 'lead_id');
+        return $this->belongsTo(Client::class, 'client_id');
     }
 
     public function salesperson()
@@ -69,5 +69,35 @@ class Deal extends Model
     public function leader()
     {
         return $this->belongsTo(User::class, 'leader_id');
+    }
+
+    public function preQualification()
+    {
+        return $this->hasOne(LoanPreQualification::class, 'deal_id');
+    }
+
+    public function bankSubmissions()
+    {
+        return $this->hasMany(LoanBankSubmission::class, 'deal_id');
+    }
+
+    public function approvalAnalysis()
+    {
+        return $this->hasOne(LoanApprovalAnalysis::class, 'deal_id')->latestOfMany();
+    }
+
+    public function approvalAnalyses()
+    {
+        return $this->hasMany(LoanApprovalAnalysis::class, 'deal_id');
+    }
+
+    public function disbursement()
+    {
+        return $this->hasOne(LoanDisbursement::class, 'deal_id')->latestOfMany();
+    }
+
+    public function disbursements()
+    {
+        return $this->hasMany(LoanDisbursement::class, 'deal_id');
     }
 }

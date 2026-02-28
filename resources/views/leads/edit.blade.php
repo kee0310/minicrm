@@ -6,7 +6,7 @@
   </x-slot>
 
   <div class="py-12">
-    <div class="max-w-7x1 mx-auto sm:px-6 lg:px-8" align="center">
+    <div class="max-w-6xl mx-auto sm:px-6 lg:px-8" align="center">
       <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-10 max-w-2xl m-5" align="left">
 
         <form method="POST" action="{{ route('leads.update', $lead) }}">
@@ -119,3 +119,4 @@
     </div>
   </div>
 </x-app-layout>
+

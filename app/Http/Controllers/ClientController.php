@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\RoleEnum;
 use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
 use App\Models\Client;
 use App\Models\Deal;
 use App\Models\Lead;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -26,14 +28,7 @@ class ClientController extends Controller
         }
 
         $clients = $query
-            ->orderByRaw("
-                CASE
-                    WHEN status = 'New' THEN 0
-                    WHEN status = 'Completed' THEN 100
-                    WHEN status LIKE '%\\%%' THEN CAST(REPLACE(status, '%', '') AS UNSIGNED)
-                    ELSE 999
-                END ASC
-            ")
+            ->orderBy('completeness_rate', 'asc')
             ->latest()
             ->paginate(20)
             ->withQueryString();
@@ -44,16 +39,24 @@ class ClientController extends Controller
     public function create()
     {
         $nextClientId = sprintf('CL-%06d', (Client::max('id') ?? 0) + 1);
-        return view('clients.create', compact('nextClientId'));
+        $salespersons = User::role([
+            RoleEnum::USER->value,
+            RoleEnum::LEADER->value,
+            RoleEnum::ADMIN->value,
+        ])->orderBy('name')->get();
+        $leaders = User::role([
+            RoleEnum::LEADER->value,
+            RoleEnum::ADMIN->value,
+        ])->orderBy('name')->get();
+
+        return view('clients.create', compact('nextClientId', 'salespersons', 'leaders'));
     }
 
     public function show(Client $client)
     {
         $this->authorizeClientAccess($client);
-        $deals = Deal::with(['lead', 'salesperson', 'leader'])
-            ->whereHas('lead', function ($query) use ($client) {
-                $query->where('email', $client->email);
-            })
+        $deals = Deal::with(['client', 'salesperson', 'leader'])
+            ->where('client_id', $client->id)
             ->latest()
             ->get();
 
@@ -65,6 +68,8 @@ class ClientController extends Controller
         $data = $request->validated();
 
         $client = Client::create([
+            'salesperson_id' => $data['salesperson_id'],
+            'leader_id' => $data['leader_id'],
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'],
@@ -85,7 +90,17 @@ class ClientController extends Controller
     public function edit(Client $client)
     {
         $this->authorizeClientAccess($client);
-        return view('clients.edit', compact('client'));
+        $salespersons = User::role([
+            RoleEnum::USER->value,
+            RoleEnum::LEADER->value,
+            RoleEnum::ADMIN->value,
+        ])->orderBy('name')->get();
+        $leaders = User::role([
+            RoleEnum::LEADER->value,
+            RoleEnum::ADMIN->value,
+        ])->orderBy('name')->get();
+
+        return view('clients.edit', compact('client', 'salespersons', 'leaders'));
     }
 
     public function update(UpdateClientRequest $request, Client $client)
@@ -94,6 +109,8 @@ class ClientController extends Controller
         $data = $request->validated();
 
         $clientData = [
+            'salesperson_id' => $data['salesperson_id'],
+            'leader_id' => $data['leader_id'],
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'],
@@ -113,9 +130,7 @@ class ClientController extends Controller
     {
         $this->authorizeClientAccess($client);
 
-        $hasDeals = Deal::whereHas('lead', function ($query) use ($client) {
-            $query->where('email', $client->email);
-        })->exists();
+        $hasDeals = Deal::where('client_id', $client->id)->exists();
 
         if ($hasDeals) {
             return redirect()->route('clients.index')->with('warning', 'Client cannot be deleted because deals already exist.');

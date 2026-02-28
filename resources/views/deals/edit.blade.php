@@ -6,15 +6,35 @@
   </x-slot>
 
   <div class="py-12">
-    <div class="max-w-7x1 mx-auto sm:px-6 lg:px-8" align="center">
+    <div class="max-w-6xl mx-auto sm:px-6 lg:px-8" align="center">
       <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-10 max-w-2xl m-5" align="left">
 
         <form method="POST" action="{{ route('deals.update', $deal) }}">
           @method('PUT')
           @csrf
 
-          <!-- Linked Client -->
+          <!-- Pipeline Stage -->
           <div>
+            <x-input-label for="pipeline" :value="__('Pipeline Stage')" />
+            @if($isPipelineLocked)
+              <x-text-input id="pipeline" class="block mt-1 w-full bg-gray-100" type="text"
+                :value="$deal->pipeline?->value" readonly />
+              <p class="mt-2 text-xs text-gray-500">This stage cannot be edited after SPA Signed.</p>
+            @else
+              <select id="pipeline" name="pipeline" required
+                class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                @foreach($pipelines as $pipeline)
+                  <option value="{{ $pipeline->value }}" {{ old('pipeline', $deal->pipeline?->value) == $pipeline->value ? 'selected' : '' }}>
+                    {{ $pipeline->value }}
+                  </option>
+                @endforeach
+              </select>
+              <x-input-error :messages="$errors->get('pipeline')" class="mt-2" />
+            @endif
+          </div>
+
+          <!-- Linked Client -->
+          <div class="mt-4">
             <x-input-label for="client_id" :value="__('Linked Client')" />
             <select id="client_id" name="client_id" required
               class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
@@ -75,26 +95,6 @@
               name="commission_amount" :value="old('commission_amount', $deal->commission_amount)" readonly />
           </div>
 
-          <!-- Pipeline Stage -->
-          <div class="mt-4">
-            <x-input-label for="pipeline" :value="__('Pipeline Stage')" />
-            @if($isPipelineLocked)
-              <x-text-input id="pipeline" class="block mt-1 w-full bg-gray-100" type="text"
-                :value="$deal->pipeline?->value" readonly />
-              <p class="mt-2 text-xs text-gray-500">This stage cannot be edited after SPA Signed.</p>
-            @else
-              <select id="pipeline" name="pipeline" required
-                class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                @foreach($pipelines as $pipeline)
-                  <option value="{{ $pipeline->value }}" {{ old('pipeline', $deal->pipeline?->value) == $pipeline->value ? 'selected' : '' }}>
-                    {{ $pipeline->value }}
-                  </option>
-                @endforeach
-              </select>
-              <x-input-error :messages="$errors->get('pipeline')" class="mt-2" />
-            @endif
-          </div>
-
           <!-- Booking Fee -->
           <div class="mt-4">
             <x-input-label for="booking_fee" :value="__('Booking Fee')" />
@@ -106,8 +106,7 @@
           <!-- SPA Date -->
           <div class="mt-4" id="spa_date_group">
             <x-input-label for="spa_date" :value="__('SPA Date')" />
-            <x-text-input id="spa_date" class="block mt-1 w-full" type="date" name="spa_date"
-              :value="old('spa_date', optional($deal->spa_date)->format('Y-m-d'))" />
+            <x-text-input id="spa_date" class="block mt-1 w-full" type="date" name="spa_date" :value="old('spa_date', optional($deal->spa_date)->format('Y-m-d'))" />
             <x-input-error :messages="$errors->get('spa_date')" class="mt-2" />
           </div>
 

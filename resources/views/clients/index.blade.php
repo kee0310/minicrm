@@ -20,7 +20,7 @@
   @endif
 
   <div class="py-12">
-    <div class="max-w-7x1 mx-auto sm:px-6 lg:px-8">
+    <div class="mx-auto sm:px-6 lg:px-8">
       <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
         <div class="p-6 text-gray-900">
           <div class="flex items-center justify-between mb-4">
@@ -56,7 +56,9 @@
                     <th class="px-6 py-3">Name</th>
                     <th class="px-6 py-3">Email</th>
                     <th class="px-6 py-3">Phone</th>
-                    <th class="px-6 py-3">Status</th>
+                    <th class="px-6 py-3">Salesperson</th>
+                    <th class="px-6 py-3">Leader</th>
+                    <th class="px-6 py-3">Data Completeness</th>
                     <th class="px-6 py-3">Actions</th>
                   </tr>
                 </thead>
@@ -71,7 +73,11 @@
                       </td>
                       <td class="px-6 py-4">{{ $client->email }}</td>
                       <td class="px-6 py-4">{{ $client->phone }}</td>
-                      <td class="px-6 py-4">{{ $client->status }}</td>
+                      <td class="px-6 py-4">{{ $client->salesperson ? $client->salesperson->name : '-' }}</td>
+                      <td class="px-6 py-4">{{ $client->leader ? $client->leader->name : '-' }}</td>
+                      <td class="px-6 py-4">
+                        {{ is_null($client->completeness_rate) ? '-' : $client->completeness_rate . '%' }}
+                      </td>
                       <td class="px-6 py-4">
                         <a href="{{ route('clients.edit', $client) }}" class="text-indigo-600 hover:underline">Edit</a> |
                         <form method="POST" action="{{ route('clients.destroy', $client) }}" class="inline"

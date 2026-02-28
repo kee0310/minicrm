@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Enums\LeadStatusEnum;
 use App\Enums\RoleEnum;
+use App\Models\Client;
 use App\Models\Deal;
 use App\Models\Lead;
 use App\Models\User;
@@ -16,15 +17,11 @@ class DealSeeder extends Seeder
    */
   public function run(): void
   {
-    $leadIds = Lead::query()
-      ->where('status', LeadStatusEnum::DEAL->value)
-      ->pluck('id');
+    $clientIds = Client::query()->pluck('id');
 
-    if ($leadIds->isEmpty()) {
+    if ($clientIds->isEmpty()) {
       Lead::factory(10)->create(['status' => LeadStatusEnum::DEAL->value]);
-      $leadIds = Lead::query()
-        ->where('status', LeadStatusEnum::DEAL->value)
-        ->pluck('id');
+      $clientIds = Client::query()->pluck('id');
     }
 
     $salespersonIds = User::role([
@@ -38,11 +35,12 @@ class DealSeeder extends Seeder
       RoleEnum::ADMIN->value,
     ])->pluck('id');
 
-    Deal::factory(10)->make()->each(function (Deal $deal) use ($leadIds, $salespersonIds, $leaderIds) {
-      $deal->lead_id = $leadIds->random();
+    Deal::factory(10)->make()->each(function (Deal $deal) use ($clientIds, $salespersonIds, $leaderIds) {
+      $deal->client_id = $clientIds->random();
       $deal->salesperson_id = $salespersonIds->random();
       $deal->leader_id = $leaderIds->random();
       $deal->save();
     });
   }
 }
+

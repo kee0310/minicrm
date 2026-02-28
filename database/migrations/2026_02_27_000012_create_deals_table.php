@@ -15,7 +15,7 @@ return new class extends Migration {
             // human readable code, filled later
             $table->string('deal_id')->unique()->nullable();
 
-            $table->foreignId('lead_id')->constrained('leads')->cascadeOnDelete();
+            $table->foreignId('client_id')->constrained('clients')->cascadeOnDelete();
             $table->string('project_name');
             $table->string('developer')->nullable();
             $table->string('unit_number')->nullable();
@@ -32,7 +32,7 @@ return new class extends Migration {
             $table->timestamps();
 
             // indexes for large scale
-            $table->index(['lead_id']);
+            $table->index(['client_id']);
             $table->index(['salesperson_id']);
             $table->index(['leader_id']);
             $table->index(['pipeline']);
