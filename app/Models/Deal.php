@@ -80,24 +80,4 @@ class Deal extends Model
     {
         return $this->hasMany(LoanBankSubmission::class, 'deal_id');
     }
-
-    public function approvalAnalysis()
-    {
-        return $this->hasOne(LoanApprovalAnalysis::class, 'deal_id')->latestOfMany();
-    }
-
-    public function approvalAnalyses()
-    {
-        return $this->hasMany(LoanApprovalAnalysis::class, 'deal_id');
-    }
-
-    public function disbursement()
-    {
-        return $this->hasOne(LoanDisbursement::class, 'deal_id')->latestOfMany();
-    }
-
-    public function disbursements()
-    {
-        return $this->hasMany(LoanDisbursement::class, 'deal_id');
-    }
 }

@@ -20,9 +20,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('leads', \App\Http\Controllers\LeadController::class);
     Route::resource('deals', \App\Http\Controllers\DealController::class);
     Route::resource('clients', ClientController::class);
-    Route::middleware('role:' . RoleEnum::ADMIN->value . '|' . RoleEnum::LOAN_OFFICER->value)->prefix('loans')->name('loans.')->group(function () {
-        Route::get('/borrower-profile', [LoanController::class, 'borrowerProfile'])->name('borrower-profile');
-        Route::put('/borrower-profile/{client}', [LoanController::class, 'updateBorrowerProfile'])->name('borrower-profile.update');
+        Route::middleware('role:' . RoleEnum::ADMIN->value . '|' . RoleEnum::LOAN_OFFICER->value)->prefix('loans')->name('loans.')->group(function () {
+            Route::get('/borrower-profile', [LoanController::class, 'borrowerProfile'])->name('borrower-profile');
+            Route::put('/borrower-profile/{deal}', [LoanController::class, 'updateBorrowerProfile'])->name('borrower-profile.update');
 
         Route::get('/pre-qualification', [LoanController::class, 'preQualification'])->name('pre-qualification');
         Route::put('/pre-qualification/{deal}', [LoanController::class, 'updatePreQualification'])->name('pre-qualification.update');

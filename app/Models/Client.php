@@ -63,11 +63,6 @@ class Client extends Model
         return $this->belongsTo(User::class, 'leader_id');
     }
 
-    public function financialCondition()
-    {
-        return $this->hasOne(ClientFinancialCondition::class, 'client_id');
-    }
-
     public function recalculateCompletenessAndStatus(): void
     {
         $fields = [
@@ -101,13 +96,4 @@ class Client extends Model
         ])->save();
     }
 
-    public function riskScore(): int
-    {
-        return $this->financialCondition?->riskScore() ?? 0;
-    }
-
-    public function riskGrade(): string
-    {
-        return $this->financialCondition?->riskGrade() ?? 'A';
-    }
 }

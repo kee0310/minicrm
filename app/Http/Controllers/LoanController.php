@@ -4,29 +4,26 @@ namespace App\Http\Controllers;
 
 use App\Enums\BankEnum;
 use App\Enums\PipelineEnum;
-use App\Models\Client;
 use App\Models\Deal;
-use App\Models\LoanApprovalAnalysis;
 use App\Models\LoanBankSubmission;
-use App\Models\LoanDisbursement;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class LoanController extends Controller
 {
+    // Borrower profile grid + financial/risk updates.
     public function borrowerProfile()
     {
-        $clients = Client::with([
-            'financialCondition',
-            'deals' => fn($query) => $query->latest(),
-        ])
+        $deals = Deal::with(['client', 'preQualification'])
             ->latest()
             ->get();
+        $newCaseCounts = $this->getLoanNewCaseCounts();
 
-        return view('loans.borrower-profile', compact('clients'));
+        return view('loans.borrower-profile', compact('deals', 'newCaseCounts'));
     }
 
-    public function updateBorrowerProfile(Request $request, Client $client)
+    // Validate and persist borrower financial metrics, then refresh risk grade.
+    public function updateBorrowerProfile(Request $request, Deal $deal)
     {
         $data = $request->validate([
             'existing_loans' => ['nullable', 'numeric', 'min:0'],
@@ -37,25 +34,28 @@ class LoanController extends Controller
             'ctos' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $financial = $client->financialCondition()->firstOrCreate([]);
-        $financial->fill($data);
-        $financial->risk_grade = $financial->riskGrade();
-        $financial->save();
+        $preQualification = $deal->preQualification()->firstOrCreate([]);
+        $preQualification->fill($data);
+        $preQualification->risk_grade = $preQualification->riskGrade();
+        $preQualification->save();
 
         return redirect()->route('loans.borrower-profile')->with('success', 'Borrower profile updated.');
     }
 
+    // Render pre-qualification table with deal, client risk, and bank options.
     public function preQualification()
     {
-        $deals = Deal::with(['preQualification', 'client.financialCondition'])
+        $deals = Deal::with(['preQualification', 'client'])
             ->whereIn('pipeline', PipelineEnum::creatableValues())
             ->latest()
             ->get();
         $bankOptions = BankEnum::values();
+        $newCaseCounts = $this->getLoanNewCaseCounts();
 
-        return view('loans.pre-qualification', compact('deals', 'bankOptions'));
+        return view('loans.pre-qualification', compact('deals', 'bankOptions', 'newCaseCounts'));
     }
 
+    // Save three-slot bank recommendations and pre-qualification date for a deal.
     public function updatePreQualification(Request $request, Deal $deal)
     {
         $data = $request->validate([
@@ -71,6 +71,7 @@ class LoanController extends Controller
             'loan_margin_3' => ['nullable', 'integer', 'in:70,80,90'],
         ]);
 
+        // Keep three recommendation slots with aligned bank/probability/margin payload.
         $recommendations = collect([1, 2, 3])->map(fn(int $index) => [
             'bank' => $data["recommended_bank_{$index}"] ?? null,
             'approval_probability' => $data["approval_probability_{$index}"] ?? null,
@@ -88,23 +89,27 @@ class LoanController extends Controller
         return redirect()->route('loans.pre-qualification')->with('success', 'Pre-qualification updated.');
     }
 
+    // Render bank submission tracking with submission status options.
     public function bankSubmissionTracking()
     {
-        $deals = Deal::with(['bankSubmissions', 'client.financialCondition', 'preQualification'])
+        $deals = Deal::with(['bankSubmissions', 'client', 'preQualification'])
             ->whereIn('pipeline', [
                 PipelineEnum::BOOKING->value,
                 PipelineEnum::SPA_SIGNED->value,
                 PipelineEnum::LOAN_SUBMITTED->value,
+                PipelineEnum::LOAN_APPROVED->value,
             ])
             ->latest()
             ->get();
 
         $bankOptions = BankEnum::values();
         $statusOptions = ['Prepared', 'Submitted', 'In Review', 'Approved', 'Rejected'];
+        $newCaseCounts = $this->getLoanNewCaseCounts();
 
-        return view('loans.bank-submission-tracking', compact('deals', 'bankOptions', 'statusOptions'));
+        return view('loans.bank-submission-tracking', compact('deals', 'bankOptions', 'statusOptions', 'newCaseCounts'));
     }
 
+    // Create a bank submission row and propagate workflow side effects.
     public function storeBankSubmission(Request $request, Deal $deal)
     {
         $data = $request->validate([
@@ -119,11 +124,11 @@ class LoanController extends Controller
 
         $submission = $deal->bankSubmissions()->create($data);
         $this->syncDealPipelineByApprovalStatus($deal, $submission->approval_status);
-        $this->ensureDependentLoanRows($submission);
 
         return redirect()->route('loans.bank-submission-tracking')->with('success', 'Bank submission added.');
     }
 
+    // Update an existing bank submission and re-apply workflow side effects.
     public function updateBankSubmission(Request $request, LoanBankSubmission $submission)
     {
         $data = $request->validate([
@@ -138,26 +143,29 @@ class LoanController extends Controller
 
         $submission->update($data);
         $this->syncDealPipelineByApprovalStatus($submission->deal, $submission->approval_status);
-        $this->ensureDependentLoanRows($submission);
 
         return redirect()->route('loans.bank-submission-tracking')->with('success', 'Bank submission updated.');
     }
 
+    // Render approval analysis rows for approved submissions (per loan_id).
     public function approvalAnalysis()
     {
-        $approvedSubmissions = LoanBankSubmission::with(['deal', 'approvalAnalysis'])
+        // Approval Analysis rows are driven directly from approved loans.
+        $approvedSubmissions = LoanBankSubmission::with(['deal'])
             ->where('approval_status', 'Approved')
             ->latest('loan_id')
             ->get();
         $bankOptions = BankEnum::values();
+        $newCaseCounts = $this->getLoanNewCaseCounts();
 
-        return view('loans.approval-analysis', compact('approvedSubmissions', 'bankOptions'));
+        return view('loans.approval-analysis', compact('approvedSubmissions', 'bankOptions', 'newCaseCounts'));
     }
 
+    // Create/update approval analysis details for the selected loan.
     public function storeApprovalAnalysis(Request $request, Deal $deal)
     {
         $data = $request->validate([
-            'loan_id' => ['required', 'integer', 'exists:loan_bank_submissions,loan_id'],
+            'loan_id' => ['required', 'integer', 'exists:loans,loan_id'],
             'approved_bank' => ['nullable', Rule::in(BankEnum::values())],
             'applied_amount' => ['nullable', 'numeric', 'min:0'],
             'approved_amount' => ['nullable', 'numeric', 'min:0'],
@@ -179,29 +187,25 @@ class LoanController extends Controller
             $deviation = round((($approvedAmount - $appliedAmount) / $appliedAmount) * 100, 2);
         }
 
-        LoanApprovalAnalysis::updateOrCreate(
-            ['loan_id' => $submission->loan_id],
-            [
-                'deal_id' => $deal->id,
-                'loan_id' => $submission->loan_id,
-                'approved_bank' => $data['approved_bank'] ?? null,
-                'applied_amount' => $data['applied_amount'] ?? null,
-                'approved_amount' => $data['approved_amount'] ?? null,
-                'interest_rate' => $data['interest_rate'] ?? null,
-                'lock_in_period' => $data['lock_in_period'] ?? null,
-                'mrta_mlta' => $data['mrta_mlta'] ?? null,
-                'special_conditions' => $data['special_conditions'] ?? null,
-                'approval_deviation_percentage' => $deviation,
-            ]
-        );
+        $submission->update([
+            'approved_bank' => $data['approved_bank'] ?? null,
+            'applied_amount' => $data['applied_amount'] ?? null,
+            'approved_amount' => $data['approved_amount'] ?? null,
+            'interest_rate' => $data['interest_rate'] ?? null,
+            'lock_in_period' => $data['lock_in_period'] ?? null,
+            'mrta_mlta' => $data['mrta_mlta'] ?? null,
+            'special_conditions' => $data['special_conditions'] ?? null,
+            'approval_deviation_percentage' => $deviation,
+        ]);
 
         return redirect()->route('loans.approval-analysis')->with('success', 'Approval analysis added.');
     }
 
+    // Update approval analysis details for the selected loan.
     public function updateApprovalAnalysis(Request $request, Deal $deal)
     {
         $data = $request->validate([
-            'loan_id' => ['required', 'integer', 'exists:loan_bank_submissions,loan_id'],
+            'loan_id' => ['required', 'integer', 'exists:loans,loan_id'],
             'approved_bank' => ['nullable', Rule::in(BankEnum::values())],
             'applied_amount' => ['nullable', 'numeric', 'min:0'],
             'approved_amount' => ['nullable', 'numeric', 'min:0'],
@@ -223,39 +227,38 @@ class LoanController extends Controller
             $deviation = round((($approvedAmount - $appliedAmount) / $appliedAmount) * 100, 2);
         }
 
-        LoanApprovalAnalysis::updateOrCreate(
-            ['loan_id' => $submission->loan_id],
-            [
-                'deal_id' => $deal->id,
-                'loan_id' => $submission->loan_id,
-                'approved_bank' => $data['approved_bank'] ?? null,
-                'applied_amount' => $data['applied_amount'] ?? null,
-                'approved_amount' => $data['approved_amount'] ?? null,
-                'interest_rate' => $data['interest_rate'] ?? null,
-                'lock_in_period' => $data['lock_in_period'] ?? null,
-                'mrta_mlta' => $data['mrta_mlta'] ?? null,
-                'special_conditions' => $data['special_conditions'] ?? null,
-                'approval_deviation_percentage' => $deviation,
-            ]
-        );
+        $submission->update([
+            'approved_bank' => $data['approved_bank'] ?? null,
+            'applied_amount' => $data['applied_amount'] ?? null,
+            'approved_amount' => $data['approved_amount'] ?? null,
+            'interest_rate' => $data['interest_rate'] ?? null,
+            'lock_in_period' => $data['lock_in_period'] ?? null,
+            'mrta_mlta' => $data['mrta_mlta'] ?? null,
+            'special_conditions' => $data['special_conditions'] ?? null,
+            'approval_deviation_percentage' => $deviation,
+        ]);
 
         return redirect()->route('loans.approval-analysis')->with('success', 'Approval analysis updated.');
     }
 
+    // Render disbursement rows for approved submissions (per loan_id).
     public function disbursement()
     {
-        $approvedSubmissions = LoanBankSubmission::with(['deal', 'disbursement'])
+        // Disbursement rows are also tracked directly in loans.
+        $approvedSubmissions = LoanBankSubmission::with(['deal'])
             ->where('approval_status', 'Approved')
             ->latest('loan_id')
             ->get();
+        $newCaseCounts = $this->getLoanNewCaseCounts();
 
-        return view('loans.disbursement', compact('approvedSubmissions'));
+        return view('loans.disbursement', compact('approvedSubmissions', 'newCaseCounts'));
     }
 
+    // Create/update disbursement details for the selected loan.
     public function updateDisbursement(Request $request, Deal $deal)
     {
         $data = $request->validate([
-            'loan_id' => ['required', 'integer', 'exists:loan_bank_submissions,loan_id'],
+            'loan_id' => ['required', 'integer', 'exists:loans,loan_id'],
             'first_disbursement_date' => ['nullable', 'date'],
             'full_disbursement_date' => ['nullable', 'date'],
             'spa_completion_date' => ['nullable', 'date'],
@@ -266,21 +269,17 @@ class LoanController extends Controller
             ->where('loan_id', $data['loan_id'])
             ->firstOrFail();
 
-        LoanDisbursement::updateOrCreate(
-            ['loan_id' => $submission->loan_id],
-            [
-                'deal_id' => $deal->id,
-                'loan_id' => $submission->loan_id,
-                'first_disbursement_date' => $data['first_disbursement_date'] ?? null,
-                'full_disbursement_date' => $data['full_disbursement_date'] ?? null,
-                'spa_completion_date' => $data['spa_completion_date'] ?? null,
-                'client_notification_date' => $data['client_notification_date'] ?? null,
-            ]
-        );
+        $submission->update([
+            'first_disbursement_date' => $data['first_disbursement_date'] ?? null,
+            'full_disbursement_date' => $data['full_disbursement_date'] ?? null,
+            'spa_completion_date' => $data['spa_completion_date'] ?? null,
+            'client_notification_date' => $data['client_notification_date'] ?? null,
+        ]);
 
         return redirect()->route('loans.disbursement')->with('success', 'Disbursement details updated.');
     }
 
+    // Synchronize deal pipeline when submission status transitions.
     protected function syncDealPipelineByApprovalStatus(Deal $deal, string $status): void
     {
         if ($status === 'Submitted') {
@@ -293,27 +292,48 @@ class LoanController extends Controller
         }
     }
 
-    protected function ensureDependentLoanRows(LoanBankSubmission $submission): void
+    // Compute red-badge counts for "new/empty" rows across the five loan tabs.
+    protected function getLoanNewCaseCounts(): array
     {
-        if ($submission->approval_status !== 'Approved') {
-            return;
-        }
-
-        LoanApprovalAnalysis::firstOrCreate(
-            ['loan_id' => $submission->loan_id],
-            [
-                'deal_id' => $submission->deal_id,
-                'loan_id' => $submission->loan_id,
-                'approved_bank' => $submission->bank_name,
-            ]
-        );
-
-        LoanDisbursement::firstOrCreate(
-            ['loan_id' => $submission->loan_id],
-            [
-                'deal_id' => $submission->deal_id,
-                'loan_id' => $submission->loan_id,
-            ]
-        );
+        return [
+            'borrower_profile' => Deal::whereIn('pipeline', PipelineEnum::creatableValues())
+                ->where(function ($query) {
+                    $query->doesntHave('preQualification')
+                        ->orWhereHas('preQualification', function ($sub) {
+                            $sub->whereNull('existing_loans')
+                                ->whereNull('monthly_commitments')
+                                ->whereNull('credit_card_limits')
+                                ->whereNull('credit_card_utilization')
+                                ->whereNull('ccris')
+                                ->whereNull('ctos');
+                        });
+                })
+                ->count(),
+            'pre_qualification' => Deal::whereIn('pipeline', PipelineEnum::creatableValues())
+                ->doesntHave('preQualification')
+                ->count(),
+            'bank_submission_tracking' => Deal::whereIn('pipeline', [
+                PipelineEnum::BOOKING->value,
+                PipelineEnum::SPA_SIGNED->value,
+                PipelineEnum::LOAN_SUBMITTED->value,
+                PipelineEnum::LOAN_APPROVED->value,
+            ])
+                ->doesntHave('bankSubmissions')
+                ->count(),
+            'approval_analysis' => LoanBankSubmission::where('approval_status', 'Approved')
+                ->whereNull('applied_amount')
+                ->whereNull('approved_amount')
+                ->whereNull('interest_rate')
+                ->whereNull('lock_in_period')
+                ->whereNull('mrta_mlta')
+                ->whereNull('special_conditions')
+                ->count(),
+            'disbursement' => LoanBankSubmission::where('approval_status', 'Approved')
+                ->whereNull('first_disbursement_date')
+                ->whereNull('full_disbursement_date')
+                ->whereNull('spa_completion_date')
+                ->whereNull('client_notification_date')
+                ->count(),
+        ];
     }
 }

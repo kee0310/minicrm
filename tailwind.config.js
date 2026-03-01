@@ -37,6 +37,7 @@ export default {
         'bg-emerald-100',
         'text-emerald-800',
         'bg-teal-100',
+        'bg-olive-500',
         'text-teal-800',
         'px-2',
         'py-1',

@@ -14,7 +14,7 @@ class DealController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Deal::with(['client.financialCondition', 'salesperson', 'leader']);
+        $query = Deal::with(['client', 'preQualification', 'salesperson', 'leader']);
         $user = auth()->user();
 
         if ($user && !$user->hasRole(RoleEnum::ADMIN->value)) {

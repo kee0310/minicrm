@@ -81,7 +81,7 @@
                         <td class="px-6 py-4 text-gray-900">{{ $deal->deal_id }}</td>
                         @php
                           $client = $deal->client;
-                          $financial = $client?->financialCondition;
+                          $financial = $deal->preQualification;
                           $clientPayload = [
                             'client_id' => $client?->client_id,
                             'name' => $client?->name,
@@ -99,7 +99,7 @@
                             'credit_card_utilization' => $financial?->credit_card_utilization,
                             'ccris' => $financial?->ccris,
                             'ctos' => $financial?->ctos,
-                            'risk_grade' => $financial?->risk_grade,
+                            'risk_grade' => $financial?->riskGrade() ?? $financial?->risk_grade,
                           ];
                         @endphp
                         <td class="px-6 py-4">
