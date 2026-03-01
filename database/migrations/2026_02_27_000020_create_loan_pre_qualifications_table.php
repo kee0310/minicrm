@@ -16,7 +16,7 @@ return new class extends Migration {
             $table->decimal('existing_loans', 15, 2)->nullable();
             $table->decimal('monthly_commitments', 15, 2)->nullable();
             $table->decimal('credit_card_limits', 15, 2)->nullable();
-            $table->decimal('credit_card_utilization', 5, 2)->nullable();
+            $table->unsignedTinyInteger('credit_card_utilization')->nullable();
             $table->text('ccris')->nullable();
             $table->text('ctos')->nullable();
             $table->string('risk_grade', 1)->nullable();

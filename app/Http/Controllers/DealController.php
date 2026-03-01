@@ -50,8 +50,10 @@ class DealController extends Controller
 
         $deals = $query->latest()->paginate(20)->withQueryString();
         $stages = PipelineEnum::values();
+        $clients = Client::orderBy('name')->get();
+        $pipelines = PipelineEnum::creatableCases();
 
-        return view('deals.index', compact('deals', 'stages'));
+        return view('deals.index', compact('deals', 'stages', 'clients', 'pipelines'));
     }
 
     /*************  ✨ Windsurf Command ⭐  *************/
@@ -61,13 +63,6 @@ class DealController extends Controller
      * @return \Illuminate\Contracts\View\View
      */
     /*******  78d48508-1fc4-45f3-8f0b-6e90c580d1fa  *******/
-    public function create()
-    {
-        $clients = Client::orderBy('name')->get();
-        $pipelines = PipelineEnum::creatableCases();
-        return view('deals.create', compact('clients', 'pipelines'));
-    }
-
     public function store(StoreDealRequest $request)
     {
         $data = $request->validated();
@@ -84,15 +79,6 @@ class DealController extends Controller
 
         Deal::create($data);
         return redirect()->route('deals.index')->with('success', 'Deal created successfully.');
-    }
-
-    public function edit(Deal $deal)
-    {
-        $clients = Client::orderBy('name')->get();
-        $selectedClientId = $deal->client_id;
-        $pipelines = PipelineEnum::creatableCases();
-        $isPipelineLocked = $deal->pipeline?->isLockedForManualEdit() ?? false;
-        return view('deals.edit', compact('deal', 'clients', 'selectedClientId', 'pipelines', 'isPipelineLocked'));
     }
 
     public function update(UpdateDealRequest $request, Deal $deal)

@@ -22,15 +22,15 @@
   <div class="py-12">
     <div class="mx-auto sm:px-6 lg:px-8">
       <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-        <div class="p-6 text-gray-900">
+        <div class="p-6 text-gray-900" x-data="{ createOpen: false, editOpen: false, editUser: null }">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-medium">{{ __('List of users') }}</h3>
 
             <div class="flex items-center justify-end">
-              <a href="{{ route('users.create') }}"
+              <button type="button" @click="createOpen = true"
                 class="inline-flex items-center px-4 py-2 my-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-wider hover:bg-green-800 focus:bg-green-800 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                 {{ __('Create User') }}
-              </a>
+              </button>
             </div>
           </div>
 
@@ -74,7 +74,16 @@
                         <td class="px-6 py-4">{{ $user->getRoleNames()->join(', ') }}</td>
                         <td class="px-6 py-4">{{ optional($user->created_at)->format('Y-m-d') }}</td>
                         <td class="px-6 py-4">
-                          <a href="{{ route('users.edit', $user) }}" class="text-indigo-600 hover:underline">Edit</a> |
+                          @php
+                            $userPayload = [
+                              'id' => $user->id,
+                              'name' => $user->name,
+                              'email' => $user->email,
+                              'role' => $user->getRoleNames()->first(),
+                            ];
+                          @endphp
+                          <button type="button" class="text-indigo-600 hover:underline" data-user='@json($userPayload)'
+                            @click="editUser = JSON.parse($el.dataset.user); editOpen = true">Edit</button> |
                           <form method="POST" action="{{ route('users.destroy', $user) }}" class="inline"
                             onsubmit="return confirm('Confirm to delete user {{ $user->name }}?');">
                             @method('DELETE')
@@ -94,6 +103,79 @@
             @else
               <div class="text-gray-600">{{ __('No users found.') }}</div>
             @endif
+          </div>
+
+          <div x-show="createOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+            @click.self="createOpen = false">
+            <div class="w-full max-w-xl rounded-lg bg-white p-6 shadow-xl">
+              <div class="mb-4 flex items-center justify-between">
+                <h4 class="text-lg font-semibold">Create User</h4>
+                <button type="button" class="text-gray-500 hover:text-gray-700" @click="createOpen = false">X</button>
+              </div>
+              <form method="POST" action="{{ route('users.store') }}">
+                @csrf
+                <div class="grid grid-cols-1 gap-3">
+                  <div><x-input-label for="create_user_name" :value="__('Name')" /><x-text-input id="create_user_name"
+                      class="block mt-1 w-full" type="text" name="name" :value="old('name')" required /></div>
+                  <div><x-input-label for="create_user_email" :value="__('Email')" /><x-text-input id="create_user_email"
+                      class="block mt-1 w-full" type="email" name="email" :value="old('email')" required /></div>
+                  <div><x-input-label for="create_user_password" :value="__('Password')" /><x-text-input
+                      id="create_user_password" class="block mt-1 w-full" type="password" name="password" required />
+                  </div>
+                  <div><x-input-label for="create_user_password_confirmation" :value="__('Confirm Password')" /><x-text-input
+                      id="create_user_password_confirmation" class="block mt-1 w-full" type="password"
+                      name="password_confirmation" required /></div>
+                  <div>
+                    <x-input-label for="create_user_role" :value="__('Role')" />
+                    <select id="create_user_role" name="role" required
+                      class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                      <option value="">Select a role</option>
+                      @foreach($roles as $role)
+                        <option value="{{ $role }}">{{ $role }}</option>
+                      @endforeach
+                    </select>
+                  </div>
+                </div>
+                <div class="mt-5 flex justify-end gap-2">
+                  <button type="button" @click="createOpen = false" class="px-4 py-2 bg-gray-200 rounded-md">Cancel</button>
+                  <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md">Create</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div x-show="editOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+            @click.self="editOpen = false">
+            <div class="w-full max-w-xl rounded-lg bg-white p-6 shadow-xl">
+              <div class="mb-4 flex items-center justify-between">
+                <h4 class="text-lg font-semibold">Edit User</h4>
+                <button type="button" class="text-gray-500 hover:text-gray-700" @click="editOpen = false">X</button>
+              </div>
+              <form method="POST" :action="'{{ url('users') }}/' + (editUser?.id ?? '')">
+                @method('PUT')
+                @csrf
+                <div class="grid grid-cols-1 gap-3">
+                  <div><x-input-label for="edit_user_name" :value="__('Name')" /><x-text-input id="edit_user_name"
+                      class="block mt-1 w-full" type="text" name="name" x-model="editUser.name" required /></div>
+                  <div><x-input-label for="edit_user_email" :value="__('Email')" /><x-text-input id="edit_user_email"
+                      class="block mt-1 w-full" type="email" name="email" x-model="editUser.email" required /></div>
+                  <div>
+                    <x-input-label for="edit_user_role" :value="__('Role')" />
+                    <select id="edit_user_role" name="role" x-model="editUser.role" required
+                      class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                      <option value="">Select a role</option>
+                      @foreach($roles as $role)
+                        <option value="{{ $role }}">{{ $role }}</option>
+                      @endforeach
+                    </select>
+                  </div>
+                </div>
+                <div class="mt-5 flex justify-end gap-2">
+                  <button type="button" @click="editOpen = false" class="px-4 py-2 bg-gray-200 rounded-md">Cancel</button>
+                  <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md">Save</button>
+                </div>
+              </form>
+            </div>
           </div>
 
         </div>

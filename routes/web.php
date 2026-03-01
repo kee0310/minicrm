@@ -16,13 +16,15 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::resource('users', UserController::class)->middleware('role:' . RoleEnum::ADMIN->value); // Only admin can manage users
-    Route::resource('leads', \App\Http\Controllers\LeadController::class);
-    Route::resource('deals', \App\Http\Controllers\DealController::class);
-    Route::resource('clients', ClientController::class);
+    Route::resource('users', UserController::class)->except(['create', 'edit'])->middleware('role:' . RoleEnum::ADMIN->value); // Only admin can manage users
+    Route::resource('leads', \App\Http\Controllers\LeadController::class)->except(['create', 'edit']);
+    Route::resource('deals', \App\Http\Controllers\DealController::class)->except(['create', 'edit']);
+    Route::resource('clients', ClientController::class)->except(['create', 'edit']);
         Route::middleware('role:' . RoleEnum::ADMIN->value . '|' . RoleEnum::LOAN_OFFICER->value)->prefix('loans')->name('loans.')->group(function () {
-            Route::get('/borrower-profile', [LoanController::class, 'borrowerProfile'])->name('borrower-profile');
-            Route::put('/borrower-profile/{deal}', [LoanController::class, 'updateBorrowerProfile'])->name('borrower-profile.update');
+        Route::get('/borrower-profile', [LoanController::class, 'borrowerProfile'])->name('borrower-profile');
+        Route::put('/borrower-profile/{deal}', [LoanController::class, 'updateBorrowerProfile'])->name('borrower-profile.update');
+        Route::get('/detail/{deal}', [LoanController::class, 'loanDetail'])->name('detail');
+        Route::get('/detail/by-loan/{loanId}', [LoanController::class, 'loanDetailByLoanId'])->name('detail.by-loan');
 
         Route::get('/pre-qualification', [LoanController::class, 'preQualification'])->name('pre-qualification');
         Route::put('/pre-qualification/{deal}', [LoanController::class, 'updatePreQualification'])->name('pre-qualification.update');

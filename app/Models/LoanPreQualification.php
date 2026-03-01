@@ -23,18 +23,9 @@ class LoanPreQualification extends Model
     ];
 
     protected $casts = [
-        'existing_loans' => 'decimal:2',
-        'monthly_commitments' => 'decimal:2',
-        'credit_card_limits' => 'decimal:2',
-        'credit_card_utilization' => 'decimal:2',
         'pre_qualification_date' => 'date',
         'recommended_banks' => 'array',
     ];
-
-    public function deal()
-    {
-        return $this->belongsTo(Deal::class, 'deal_id');
-    }
 
     public function riskScore(): ?int
     {
@@ -228,4 +219,3 @@ class LoanPreQualification extends Model
         return 90;
     }
 }
-

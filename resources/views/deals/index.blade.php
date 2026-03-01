@@ -22,15 +22,49 @@
   <div class="py-12">
     <div class="mx-auto sm:px-6 lg:px-8">
       <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-        <div class="p-6 text-gray-900" x-data="{ showClientModal: false, selectedClient: null }">
+        <div class="p-6 text-gray-900" x-data="{
+          showClientModal: false,
+          selectedClient: null,
+          createOpen: false,
+          editOpen: false,
+          editDeal: null,
+          toggleBookingAndSpa(formPrefix) {
+            const pipeline = formPrefix === 'create' ? document.getElementById('create_pipeline')?.value : this.editDeal?.pipeline;
+            const bookingGroup = document.getElementById(formPrefix + '_booking_fee_group');
+            const bookingInput = document.getElementById(formPrefix + '_booking_fee');
+            const spaGroup = document.getElementById(formPrefix + '_spa_date_group');
+            const spaInput = document.getElementById(formPrefix + '_spa_date');
+            const needsBooking = pipeline === 'Booking' || pipeline === 'SPA Signed';
+            const needsSpa = pipeline === 'SPA Signed';
+            if (bookingGroup && bookingInput) {
+              bookingGroup.style.display = needsBooking ? '' : 'none';
+              bookingInput.required = needsBooking;
+            }
+            if (spaGroup && spaInput) {
+              spaGroup.style.display = needsSpa ? '' : 'none';
+              spaInput.required = needsSpa;
+            }
+          },
+          recalc(formPrefix) {
+            const priceInput = document.getElementById(formPrefix + '_selling_price');
+            const pctInput = document.getElementById(formPrefix + '_commission_percentage');
+            const amountInput = document.getElementById(formPrefix + '_commission_amount');
+            const price = parseFloat(priceInput?.value || 0) || 0;
+            const pct = parseFloat(pctInput?.value || 0) || 0;
+            if (amountInput) amountInput.value = (price * pct / 100).toFixed(2);
+            if (formPrefix === 'edit' && this.editDeal) {
+              this.editDeal.commission_amount = amountInput?.value;
+            }
+          }
+        }">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-medium">{{ __('List of deals') }}</h3>
 
             <div class="flex items-center justify-end">
-              <a href="{{ route('deals.create') }}"
+              <button type="button" @click="createOpen = true; $nextTick(() => { recalc('create'); toggleBookingAndSpa('create'); })"
                 class="inline-flex items-center px-4 py-2 my-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-wider hover:bg-green-800 focus:bg-green-800 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                 {{ __('Create Deal') }}
-              </a>
+              </button>
             </div>
           </div>
 
@@ -120,7 +154,24 @@
                         <td class="px-6 py-4">{{ $deal->leader?->name }}</td>
                         <td class="px-6 py-4">{{ optional($deal->created_at)->format('Y-m-d') }}</td>
                         <td class="px-6 py-4">
-                          <a href="{{ route('deals.edit', $deal) }}" class="text-indigo-600 hover:underline">Edit</a> |
+                          @php
+                            $dealPayload = [
+                              'id' => $deal->id,
+                              'client_id' => $deal->client_id,
+                              'project_name' => $deal->project_name,
+                              'developer' => $deal->developer,
+                              'unit_number' => $deal->unit_number,
+                              'selling_price' => $deal->selling_price,
+                              'commission_percentage' => $deal->commission_percentage,
+                              'commission_amount' => $deal->commission_amount,
+                              'booking_fee' => $deal->booking_fee,
+                              'spa_date' => optional($deal->spa_date)->format('Y-m-d'),
+                              'pipeline' => $deal->pipeline?->value,
+                              'pipeline_locked' => $deal->pipeline?->isLockedForManualEdit() ?? false,
+                            ];
+                          @endphp
+                          <button type="button" class="text-indigo-600 hover:underline" data-deal='@json($dealPayload)'
+                            @click="editDeal = JSON.parse($el.dataset.deal); editOpen = true; $nextTick(() => { recalc('edit'); toggleBookingAndSpa('edit'); })">Edit</button> |
                           <form method="POST" action="{{ route('deals.destroy', $deal) }}" class="inline"
                             onsubmit="return confirm('Confirm to delete deal {{ $deal->deal_id }}?');">
                             @method('DELETE')
@@ -188,6 +239,110 @@
                 <p><span class="font-semibold">Risk Grade:</span> <span
                     x-text="selectedClient?.risk_grade ?? '-'"></span></p>
               </div>
+            </div>
+          </div>
+
+          <div x-show="createOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+            @click.self="createOpen = false">
+            <div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+              <div class="mb-4 flex items-center justify-between">
+                <h4 class="text-lg font-semibold">Create Deal</h4>
+                <button type="button" class="text-gray-500 hover:text-gray-700" @click="createOpen = false">X</button>
+              </div>
+              <form method="POST" action="{{ route('deals.store') }}">
+                @csrf
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div><x-input-label for="create_pipeline" :value="__('Pipeline Stage')" />
+                    <select id="create_pipeline" name="pipeline" required @change="toggleBookingAndSpa('create')"
+                      class="block mt-1 w-full rounded-md border-gray-300">
+                      @foreach($pipelines as $pipeline)
+                        <option value="{{ $pipeline->value }}">{{ $pipeline->value }}</option>
+                      @endforeach
+                    </select>
+                  </div>
+                  <div><x-input-label for="create_client_id" :value="__('Linked Client')" />
+                    <select id="create_client_id" name="client_id" required class="block mt-1 w-full rounded-md border-gray-300">
+                      <option value="">Select a client</option>
+                      @foreach($clients as $client)
+                        <option value="{{ $client->id }}">{{ $client->client_id ? $client->client_id . ' - ' : '' }}{{ $client->name }}</option>
+                      @endforeach
+                    </select>
+                  </div>
+                  <div><x-input-label for="create_project_name" :value="__('Project Name')" /><x-text-input id="create_project_name"
+                      class="block mt-1 w-full" type="text" name="project_name" required /></div>
+                  <div><x-input-label for="create_developer" :value="__('Developer')" /><x-text-input id="create_developer"
+                      class="block mt-1 w-full" type="text" name="developer" /></div>
+                  <div><x-input-label for="create_unit_number" :value="__('Unit Number')" /><x-text-input id="create_unit_number"
+                      class="block mt-1 w-full" type="text" name="unit_number" /></div>
+                  <div><x-input-label for="create_selling_price" :value="__('Selling Price')" /><x-text-input id="create_selling_price"
+                      class="block mt-1 w-full" type="number" step="0.01" name="selling_price" required @input="recalc('create')" /></div>
+                  <div><x-input-label for="create_commission_percentage" :value="__('Commission %')" /><x-text-input id="create_commission_percentage"
+                      class="block mt-1 w-full" type="number" step="0.01" name="commission_percentage" required @input="recalc('create')" /></div>
+                  <div><x-input-label for="create_commission_amount" :value="__('Commission Amount')" /><x-text-input id="create_commission_amount"
+                      class="block mt-1 w-full bg-gray-100" type="number" step="0.01" name="commission_amount" readonly /></div>
+                  <div id="create_booking_fee_group"><x-input-label for="create_booking_fee" :value="__('Booking Fee')" /><x-text-input
+                      id="create_booking_fee" class="block mt-1 w-full" type="number" step="0.01" name="booking_fee" /></div>
+                  <div id="create_spa_date_group"><x-input-label for="create_spa_date" :value="__('SPA Date')" /><x-text-input
+                      id="create_spa_date" class="block mt-1 w-full" type="date" name="spa_date" /></div>
+                </div>
+                <div class="mt-5 flex justify-end gap-2">
+                  <button type="button" @click="createOpen = false" class="px-4 py-2 bg-gray-200 rounded-md">Cancel</button>
+                  <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md">Create</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div x-show="editOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+            @click.self="editOpen = false">
+            <div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+              <div class="mb-4 flex items-center justify-between">
+                <h4 class="text-lg font-semibold">Edit Deal</h4>
+                <button type="button" class="text-gray-500 hover:text-gray-700" @click="editOpen = false">X</button>
+              </div>
+              <form method="POST" :action="'{{ url('deals') }}/' + (editDeal?.id ?? '')">
+                @method('PUT')
+                @csrf
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div><x-input-label for="edit_pipeline" :value="__('Pipeline Stage')" />
+                    <select id="edit_pipeline" :disabled="editDeal?.pipeline_locked" :required="!editDeal?.pipeline_locked"
+                      :name="editDeal?.pipeline_locked ? null : 'pipeline'" x-model="editDeal.pipeline" @change="toggleBookingAndSpa('edit')"
+                      class="block mt-1 w-full rounded-md border-gray-300">
+                      @foreach($pipelines as $pipeline)
+                        <option value="{{ $pipeline->value }}">{{ $pipeline->value }}</option>
+                      @endforeach
+                    </select>
+                  </div>
+                  <div><x-input-label for="edit_client_id" :value="__('Linked Client')" />
+                    <select id="edit_client_id" name="client_id" x-model="editDeal.client_id" required class="block mt-1 w-full rounded-md border-gray-300">
+                      <option value="">Select a client</option>
+                      @foreach($clients as $client)
+                        <option value="{{ $client->id }}">{{ $client->client_id ? $client->client_id . ' - ' : '' }}{{ $client->name }}</option>
+                      @endforeach
+                    </select>
+                  </div>
+                  <div><x-input-label for="edit_project_name" :value="__('Project Name')" /><x-text-input id="edit_project_name"
+                      class="block mt-1 w-full" type="text" name="project_name" x-model="editDeal.project_name" required /></div>
+                  <div><x-input-label for="edit_developer" :value="__('Developer')" /><x-text-input id="edit_developer"
+                      class="block mt-1 w-full" type="text" name="developer" x-model="editDeal.developer" /></div>
+                  <div><x-input-label for="edit_unit_number" :value="__('Unit Number')" /><x-text-input id="edit_unit_number"
+                      class="block mt-1 w-full" type="text" name="unit_number" x-model="editDeal.unit_number" /></div>
+                  <div><x-input-label for="edit_selling_price" :value="__('Selling Price')" /><x-text-input id="edit_selling_price"
+                      class="block mt-1 w-full" type="number" step="0.01" name="selling_price" x-model="editDeal.selling_price" required @input="recalc('edit')" /></div>
+                  <div><x-input-label for="edit_commission_percentage" :value="__('Commission %')" /><x-text-input id="edit_commission_percentage"
+                      class="block mt-1 w-full" type="number" step="0.01" name="commission_percentage" x-model="editDeal.commission_percentage" required @input="recalc('edit')" /></div>
+                  <div><x-input-label for="edit_commission_amount" :value="__('Commission Amount')" /><x-text-input id="edit_commission_amount"
+                      class="block mt-1 w-full bg-gray-100" type="number" step="0.01" name="commission_amount" x-model="editDeal.commission_amount" readonly /></div>
+                  <div id="edit_booking_fee_group"><x-input-label for="edit_booking_fee" :value="__('Booking Fee')" /><x-text-input
+                      id="edit_booking_fee" class="block mt-1 w-full" type="number" step="0.01" name="booking_fee" x-model="editDeal.booking_fee" /></div>
+                  <div id="edit_spa_date_group"><x-input-label for="edit_spa_date" :value="__('SPA Date')" /><x-text-input
+                      id="edit_spa_date" class="block mt-1 w-full" type="date" name="spa_date" x-model="editDeal.spa_date" /></div>
+                </div>
+                <div class="mt-5 flex justify-end gap-2">
+                  <button type="button" @click="editOpen = false" class="px-4 py-2 bg-gray-200 rounded-md">Cancel</button>
+                  <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md">Save</button>
+                </div>
+              </form>
             </div>
           </div>
 

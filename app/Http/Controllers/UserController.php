@@ -25,19 +25,14 @@ class UserController extends Controller
         }
 
         $users = $query->latest()->paginate(10)->withQueryString();
+        $roles = Role::orderBy('name')->pluck('name');
 
-        return view('users.index', compact('users'));
+        return view('users.index', compact('users', 'roles'));
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
-        $roles = Role::orderBy('name')->pluck('name');
-        return view('users.create', compact('roles'));
-    }
-
     /**
      * Store a newly created resource in storage.
      */
@@ -61,12 +56,6 @@ class UserController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(User $user)
-    {
-        $roles = Role::orderBy('name')->pluck('name');
-        return view('users.edit', compact('user', 'roles'));
-    }
-
     /**
      * Update the specified resource in storage.
      */

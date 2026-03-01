@@ -45,6 +45,11 @@ class StoreLeadRequest extends FormRequest
                 return ['nullable', 'integer', Rule::in($leaderIds)];
             },
             'status' => ['required', 'string', Rule::in(LeadStatusEnum::values())],
+            'age' => ['nullable', 'integer', 'min:1', 'required_if:status,' . LeadStatusEnum::DEAL->value],
+            'ic_passport' => ['nullable', 'string', 'max:255', 'required_if:status,' . LeadStatusEnum::DEAL->value],
+            'occupation' => ['nullable', 'string', 'max:255', 'required_if:status,' . LeadStatusEnum::DEAL->value],
+            'company' => ['nullable', 'string', 'max:255', 'required_if:status,' . LeadStatusEnum::DEAL->value],
+            'monthly_income' => ['nullable', 'numeric', 'min:0', 'required_if:status,' . LeadStatusEnum::DEAL->value],
         ];
     }
 

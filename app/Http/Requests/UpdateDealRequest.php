@@ -31,7 +31,12 @@ class UpdateDealRequest extends FormRequest
             'unit_number' => ['nullable', 'string', 'max:100'],
             'selling_price' => ['required', 'numeric', 'min:0'],
             'commission_percentage' => ['required', 'numeric', 'min:0', 'max:100'],
-            'booking_fee' => ['nullable', 'numeric', 'min:0'],
+            'booking_fee' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                Rule::requiredIf(fn () => !$isPipelineLocked && in_array($this->input('pipeline'), [PipelineEnum::BOOKING->value, PipelineEnum::SPA_SIGNED->value], true)),
+            ],
             'spa_date' => [
                 'nullable',
                 'date',

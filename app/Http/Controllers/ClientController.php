@@ -32,13 +32,6 @@ class ClientController extends Controller
             ->latest()
             ->paginate(20)
             ->withQueryString();
-
-        return view('clients.index', compact('clients'));
-    }
-
-    public function create()
-    {
-        $nextClientId = sprintf('CL-%06d', (Client::max('id') ?? 0) + 1);
         $salespersons = User::role([
             RoleEnum::USER->value,
             RoleEnum::LEADER->value,
@@ -49,7 +42,7 @@ class ClientController extends Controller
             RoleEnum::ADMIN->value,
         ])->orderBy('name')->get();
 
-        return view('clients.create', compact('nextClientId', 'salespersons', 'leaders'));
+        return view('clients.index', compact('clients', 'salespersons', 'leaders'));
     }
 
     public function show(Client $client)
@@ -85,22 +78,6 @@ class ClientController extends Controller
         $client->recalculateCompletenessAndStatus();
 
         return redirect()->route('clients.index')->with('success', 'Client created successfully.');
-    }
-
-    public function edit(Client $client)
-    {
-        $this->authorizeClientAccess($client);
-        $salespersons = User::role([
-            RoleEnum::USER->value,
-            RoleEnum::LEADER->value,
-            RoleEnum::ADMIN->value,
-        ])->orderBy('name')->get();
-        $leaders = User::role([
-            RoleEnum::LEADER->value,
-            RoleEnum::ADMIN->value,
-        ])->orderBy('name')->get();
-
-        return view('clients.edit', compact('client', 'salespersons', 'leaders'));
     }
 
     public function update(UpdateClientRequest $request, Client $client)

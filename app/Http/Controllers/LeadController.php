@@ -8,6 +8,7 @@ use App\Http\Requests\StoreLeadRequest;
 use App\Http\Requests\UpdateLeadRequest;
 use Illuminate\Http\Request;
 use App\Enums\RoleEnum;
+use Illuminate\Support\Arr;
 
 class LeadController extends Controller
 {
@@ -59,29 +60,28 @@ class LeadController extends Controller
             ->distinct()
             ->orderBy('source')
             ->pluck('source');
+        $users = \App\Models\User::orderBy('name')->get();
+        $leaders = \App\Models\User::role([\App\Enums\RoleEnum::LEADER->value, \App\Enums\RoleEnum::ADMIN->value])
+            ->orderBy('name')
+            ->get();
 
         $leads = $query->latest()->paginate(20)->withQueryString();
 
-        return view('leads.index', compact('leads', 'statuses', 'sources'));
+        return view('leads.index', compact('leads', 'statuses', 'sources', 'users', 'leaders'));
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
-        $users = \App\Models\User::orderBy('name')->get();
-        $leaders = \App\Models\User::role([\App\Enums\RoleEnum::LEADER->value, \App\Enums\RoleEnum::ADMIN->value])->orderBy('name')->get();
-        $statuses = LeadStatusEnum::values();
-        return view('leads.create', compact('users', 'leaders', 'statuses'));
-    }
-
     /**
      * Store a newly created resource in storage.
      */
     public function store(StoreLeadRequest $request)
     {
-        Lead::create($request->validated());
+        $validated = $request->validated();
+        $lead = Lead::create($this->extractLeadPayload($validated));
+        $this->syncClientProfileWhenDealStatus($lead, $validated);
+
         return redirect()->route('leads.index')->with('success', 'Lead created successfully.');
     }
 
@@ -96,18 +96,6 @@ class LeadController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Lead $lead)
-    {
-        if ($this->isLockedDealLead($lead)) {
-            return redirect()->route('leads.index')->with('warning', 'Lead with Deal status cannot be edited.');
-        }
-
-        $users = \App\Models\User::orderBy('name')->get();
-        $leaders = \App\Models\User::role([\App\Enums\RoleEnum::LEADER->value, \App\Enums\RoleEnum::ADMIN->value])->orderBy('name')->get();
-        $statuses = LeadStatusEnum::values();
-        return view('leads.edit', compact('lead', 'users', 'leaders', 'statuses'));
-    }
-
     /**
      * Update the specified resource in storage.
      */
@@ -117,7 +105,10 @@ class LeadController extends Controller
             return redirect()->route('leads.index')->with('warning', 'Lead with Deal status cannot be edited.');
         }
 
-        $lead->update($request->validated());
+        $validated = $request->validated();
+        $lead->update($this->extractLeadPayload($validated));
+        $this->syncClientProfileWhenDealStatus($lead, $validated);
+
         return redirect()->route('leads.index')->with('success', 'Lead updated successfully.');
     }
 
@@ -137,5 +128,44 @@ class LeadController extends Controller
     protected function isLockedDealLead(Lead $lead): bool
     {
         return ($lead->status?->value ?? $lead->status) === LeadStatusEnum::DEAL->value;
+    }
+
+    protected function extractLeadPayload(array $validated): array
+    {
+        return Arr::only($validated, [
+            'name',
+            'email',
+            'phone',
+            'source',
+            'salesperson_id',
+            'leader_id',
+            'status',
+        ]);
+    }
+
+    protected function syncClientProfileWhenDealStatus(Lead $lead, array $validated): void
+    {
+        $status = $lead->status instanceof LeadStatusEnum
+            ? $lead->status
+            : LeadStatusEnum::tryFrom((string) $lead->status);
+
+        if ($status !== LeadStatusEnum::DEAL) {
+            return;
+        }
+
+        $client = $lead->client()->firstOrNew(['email' => $lead->email]);
+        $client->fill([
+            'name' => $lead->name,
+            'phone' => $lead->phone,
+            'salesperson_id' => $lead->salesperson_id,
+            'leader_id' => $lead->leader_id,
+            'age' => $validated['age'] ?? null,
+            'ic_passport' => $validated['ic_passport'] ?? null,
+            'occupation' => $validated['occupation'] ?? null,
+            'company' => $validated['company'] ?? null,
+            'monthly_income' => $validated['monthly_income'] ?? null,
+        ]);
+        $client->save();
+        $client->recalculateCompletenessAndStatus();
     }
 }
