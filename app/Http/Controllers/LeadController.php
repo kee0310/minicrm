@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Enums\LeadStatusEnum;
 use App\Models\Lead;
+use App\Models\User;
 use App\Http\Requests\StoreLeadRequest;
 use App\Http\Requests\UpdateLeadRequest;
 use Illuminate\Http\Request;
 use App\Enums\RoleEnum;
 use Illuminate\Support\Arr;
+use Illuminate\Validation\ValidationException;
 
 class LeadController extends Controller
 {
@@ -60,14 +62,13 @@ class LeadController extends Controller
             ->distinct()
             ->orderBy('source')
             ->pluck('source');
-        $users = \App\Models\User::orderBy('name')->get();
-        $leaders = \App\Models\User::role([\App\Enums\RoleEnum::LEADER->value, \App\Enums\RoleEnum::ADMIN->value])
+        $salespersons = \App\Models\User::role([\App\Enums\RoleEnum::SALESPERSON->value, \App\Enums\RoleEnum::LEADER->value, \App\Enums\RoleEnum::ADMIN->value])
             ->orderBy('name')
             ->get();
 
         $leads = $query->latest()->paginate(20)->withQueryString();
 
-        return view('leads.index', compact('leads', 'statuses', 'sources', 'users', 'leaders'));
+        return view('leads.index', compact('leads', 'statuses', 'sources', 'salespersons'));
     }
 
     /**
@@ -79,7 +80,9 @@ class LeadController extends Controller
     public function store(StoreLeadRequest $request)
     {
         $validated = $request->validated();
-        $lead = Lead::create($this->extractLeadPayload($validated));
+        $payload = $this->extractLeadPayload($validated);
+        $payload['leader_id'] = $this->resolveLeaderIdFromSalesperson((int) $payload['salesperson_id']);
+        $lead = Lead::create($payload);
         $this->syncClientProfileWhenDealStatus($lead, $validated);
 
         return redirect()->route('leads.index')->with('success', 'Lead created successfully.');
@@ -106,7 +109,9 @@ class LeadController extends Controller
         }
 
         $validated = $request->validated();
-        $lead->update($this->extractLeadPayload($validated));
+        $payload = $this->extractLeadPayload($validated);
+        $payload['leader_id'] = $this->resolveLeaderIdFromSalesperson((int) $payload['salesperson_id']);
+        $lead->update($payload);
         $this->syncClientProfileWhenDealStatus($lead, $validated);
 
         return redirect()->route('leads.index')->with('success', 'Lead updated successfully.');
@@ -138,8 +143,24 @@ class LeadController extends Controller
             'phone',
             'source',
             'salesperson_id',
-            'leader_id',
             'status',
+        ]);
+    }
+
+    protected function resolveLeaderIdFromSalesperson(int $salespersonId): int
+    {
+        $salesperson = User::findOrFail($salespersonId);
+
+        if ($salesperson->hasRole(RoleEnum::LEADER->value) || $salesperson->hasRole(RoleEnum::ADMIN->value)) {
+            return (int) $salesperson->id;
+        }
+
+        if (!empty($salesperson->leader_id)) {
+            return (int) $salesperson->leader_id;
+        }
+
+        throw ValidationException::withMessages([
+            'salesperson_id' => 'Selected salesperson must have an assigned leader.',
         ]);
     }
 

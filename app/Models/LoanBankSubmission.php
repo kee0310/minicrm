@@ -12,6 +12,8 @@ class LoanBankSubmission extends Model
     protected $table = 'loans';
 
     protected $primaryKey = 'loan_id';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     protected $fillable = [
         'deal_id',
@@ -54,5 +56,25 @@ class LoanBankSubmission extends Model
     public function deal()
     {
         return $this->belongsTo(Deal::class, 'deal_id');
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $loan): void {
+            if (!empty($loan->loan_id)) {
+                return;
+            }
+
+            $lastLoanId = static::query()
+                ->orderByDesc('loan_id')
+                ->value('loan_id');
+
+            $nextNumber = 0;
+            if (is_string($lastLoanId) && preg_match('/^LO-(\d+)$/', $lastLoanId, $matches)) {
+                $nextNumber = (int) $matches[1];
+            }
+
+            $loan->loan_id = sprintf('LO-%06d', $nextNumber + 1);
+        });
     }
 }

@@ -1,7 +1,10 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\CommissionController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\UserController;
 use App\Enums\RoleEnum;
@@ -11,16 +14,31 @@ Route::get('/', function () {
     return redirect()->route('login'); // redirect to login
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::resource('users', UserController::class)->except(['create', 'edit'])->middleware('role:' . RoleEnum::ADMIN->value); // Only admin can manage users
-    Route::resource('leads', \App\Http\Controllers\LeadController::class)->except(['create', 'edit']);
-    Route::resource('deals', \App\Http\Controllers\DealController::class)->except(['create', 'edit']);
-    Route::resource('clients', ClientController::class)->except(['create', 'edit']);
-        Route::middleware('role:' . RoleEnum::ADMIN->value . '|' . RoleEnum::LOAN_OFFICER->value)->prefix('loans')->name('loans.')->group(function () {
+    Route::resource('leads', \App\Http\Controllers\LeadController::class)
+        ->except(['create', 'edit'])
+        ->middleware('role:' . RoleEnum::ADMIN->value . '|' . RoleEnum::SALESPERSON->value . '|' . RoleEnum::LEADER->value);
+    Route::resource('deals', \App\Http\Controllers\DealController::class)
+        ->except(['create', 'edit'])
+        ->middleware('role:' . RoleEnum::ADMIN->value . '|' . RoleEnum::SALESPERSON->value . '|' . RoleEnum::LEADER->value);
+    Route::resource('clients', ClientController::class)
+        ->except(['create', 'edit'])
+        ->middleware('role:' . RoleEnum::ADMIN->value . '|' . RoleEnum::SALESPERSON->value . '|' . RoleEnum::LEADER->value);
+
+    Route::middleware('role:' . RoleEnum::ADMIN->value . '|' . RoleEnum::SALESPERSON->value . '|' . RoleEnum::LEADER->value)->prefix('commissions')->name('commissions.')->group(function () {
+        Route::get('/', [CommissionController::class, 'index'])->name('index');
+        Route::put('/{commission}', [CommissionController::class, 'update'])->name('update');
+    });
+
+    Route::middleware('role:' . RoleEnum::ADMIN->value . '|' . RoleEnum::LOAN_OFFICER->value . '|' . RoleEnum::SALESPERSON->value . '|' . RoleEnum::LEADER->value)->prefix('legals')->name('legals.')->group(function () {
+        Route::get('/', [LegalController::class, 'index'])->name('index');
+        Route::put('/{deal}', [LegalController::class, 'update'])->name('update');
+    });
+
+    Route::middleware('role:' . RoleEnum::ADMIN->value . '|' . RoleEnum::LOAN_OFFICER->value . '|' . RoleEnum::SALESPERSON->value . '|' . RoleEnum::LEADER->value)->prefix('loans')->name('loans.')->group(function () {
         Route::get('/borrower-profile', [LoanController::class, 'borrowerProfile'])->name('borrower-profile');
         Route::put('/borrower-profile/{deal}', [LoanController::class, 'updateBorrowerProfile'])->name('borrower-profile.update');
         Route::get('/detail/{deal}', [LoanController::class, 'loanDetail'])->name('detail');
@@ -30,7 +48,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/pre-qualification/{deal}', [LoanController::class, 'updatePreQualification'])->name('pre-qualification.update');
 
         Route::get('/bank-submission-tracking', [LoanController::class, 'bankSubmissionTracking'])->name('bank-submission-tracking');
-        Route::post('/bank-submission-tracking/{deal}', [LoanController::class, 'storeBankSubmission'])->name('bank-submission-tracking.store');
+        Route::post('/bank-submission-tracking', [LoanController::class, 'storeBankSubmission'])->name('bank-submission-tracking.store');
         Route::put('/bank-submission-tracking/submissions/{submission}', [LoanController::class, 'updateBankSubmission'])->name('bank-submission-tracking.update');
 
         Route::get('/approval-analysis', [LoanController::class, 'approvalAnalysis'])->name('approval-analysis');

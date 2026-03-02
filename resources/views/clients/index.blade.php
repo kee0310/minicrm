@@ -22,7 +22,7 @@
   <div class="py-12">
     <div class="mx-auto sm:px-6 lg:px-8">
       <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-        <div class="p-6 text-gray-900" x-data="{ createOpen: false, editOpen: false, editClient: null }">
+        <div class="p-6 text-gray-900" x-data="{ createOpen: false, editOpen: false, editClient: null, searchTerm: '', completenessFilter: '' }">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-medium">{{ __('List of clients') }}</h3>
             <button type="button" @click="createOpen = true"
@@ -31,20 +31,14 @@
             </button>
           </div>
 
-          <div class="mb-4">
-            <form method="GET" action="{{ route('clients.index') }}" class="flex items-center space-x-2 text-xs">
-              <div>
-                <input type="search" name="search" placeholder="Search..." value="{{ request('search') }}"
-                  class="w-full rounded-md border-gray-300 shadow-sm px-3 py-2 text-xs" />
-              </div>
-
-              <div class="flex items-center space-x-2 text-[0.6rem]">
-                <button type="submit"
-                  class="inline-flex items-center px-3 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-white uppercase tracking-wider hover:bg-indigo-700 focus:outline-none">Filter</button>
-                <a href="{{ route('clients.index') }}"
-                  class="inline-flex items-center px-3 py-2 bg-gray-200 border border-transparent rounded-md font-semibold text-gray-700 hover:bg-gray-300">Clear</a>
-              </div>
-            </form>
+          <div class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+            <input type="text" x-model.debounce.300ms="searchTerm" placeholder="Search client id, name, email or phone..."
+              class="w-full sm:max-w-sm rounded-md border-gray-300" />
+            <select x-model="completenessFilter" class="w-full sm:w-56 rounded-md border-gray-300">
+              <option value="">All Completeness</option>
+              <option value="complete">With Completeness</option>
+              <option value="incomplete">Without Completeness</option>
+            </select>
           </div>
 
           @if($clients->count())
@@ -64,7 +58,8 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200 text-sm text-gray-500 whitespace-nowrap">
                   @foreach($clients as $client)
-                    <tr>
+                    <tr
+                      x-show="((('{{ strtolower((string) ($client->client_id ?? '')) }}' + ' {{ strtolower((string) ($client->name ?? '')) }}' + ' {{ strtolower((string) ($client->email ?? '')) }}' + ' {{ strtolower((string) ($client->phone ?? '')) }}').includes((searchTerm || '').toLowerCase()))) && ((!completenessFilter) || (completenessFilter === 'complete' && {{ !is_null($client->completeness_rate) ? 'true' : 'false' }}) || (completenessFilter === 'incomplete' && {{ !is_null($client->completeness_rate) ? 'false' : 'true' }}))">
                       <td class="px-6 py-4 text-gray-900">{{ $client->client_id ?? '-' }}</td>
                       <td class="px-6 py-4 text-gray-900">
                         <a href="{{ route('clients.show', $client) }}" class="text-indigo-600 hover:underline">
@@ -86,7 +81,6 @@
                             'email' => $client->email,
                             'phone' => $client->phone,
                             'salesperson_id' => $client->salesperson_id,
-                            'leader_id' => $client->leader_id,
                             'age' => $client->age,
                             'ic_passport' => $client->ic_passport,
                             'occupation' => $client->occupation,
@@ -137,14 +131,6 @@
                       @endforeach
                     </select>
                   </div>
-                  <div><x-input-label for="create_client_leader_id" :value="__('Leader')" />
-                    <select id="create_client_leader_id" name="leader_id" required class="block mt-1 w-full rounded-md border-gray-300">
-                      <option value="">Select leader</option>
-                      @foreach($leaders as $leader)
-                        <option value="{{ $leader->id }}">{{ $leader->name }}</option>
-                      @endforeach
-                    </select>
-                  </div>
                   <div><x-input-label for="create_client_age" :value="__('Age')" /><x-text-input id="create_client_age" class="block mt-1 w-full" type="number" name="age" /></div>
                   <div><x-input-label for="create_client_ic_passport" :value="__('IC/Passport')" /><x-text-input id="create_client_ic_passport" class="block mt-1 w-full" type="text" name="ic_passport" /></div>
                   <div><x-input-label for="create_client_occupation" :value="__('Occupation')" /><x-text-input id="create_client_occupation" class="block mt-1 w-full" type="text" name="occupation" /></div>
@@ -178,14 +164,6 @@
                       <option value="">Select salesperson</option>
                       @foreach($salespersons as $salesperson)
                         <option value="{{ $salesperson->id }}">{{ $salesperson->name }}</option>
-                      @endforeach
-                    </select>
-                  </div>
-                  <div><x-input-label for="edit_client_leader_id" :value="__('Leader')" />
-                    <select id="edit_client_leader_id" name="leader_id" x-model="editClient.leader_id" required class="block mt-1 w-full rounded-md border-gray-300">
-                      <option value="">Select leader</option>
-                      @foreach($leaders as $leader)
-                        <option value="{{ $leader->id }}">{{ $leader->name }}</option>
                       @endforeach
                     </select>
                   </div>

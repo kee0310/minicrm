@@ -46,6 +46,9 @@
           </p>
           <p><span class="font-semibold">Project:</span> <span x-text="selectedDeal?.project_name ?? '-'"></span></p>
           <p><span class="font-semibold">Developer:</span> <span x-text="selectedDeal?.developer ?? '-'"></span></p>
+          <p><span class="font-semibold">Salesperson:</span> <span
+              x-text="selectedDeal?.salesperson_name ?? '-'"></span></p>
+          <p><span class="font-semibold">Leader:</span> <span x-text="selectedDeal?.leader_name ?? '-'"></span></p>
           <p><span class="font-semibold">Unit Number:</span> <span x-text="selectedDeal?.unit_number ?? '-'"></span></p>
           <p><span class="font-semibold">Selling Price:</span> <span x-text="selectedDeal?.selling_price ?? '-'"></span>
           </p>
@@ -134,30 +137,32 @@
           <table class="min-w-full border border-gray-200 text-left">
             <thead class="bg-gray-50">
               <tr>
+                <th class="border border-gray-200 px-2 py-1">Loan ID</th>
                 <th class="border border-gray-200 px-2 py-1">Bank</th>
+                <th class="border border-gray-200 px-2 py-1">Banker Contact</th>
+                <th class="border border-gray-200 px-2 py-1">Doc Score</th>
                 <th class="border border-gray-200 px-2 py-1">Status</th>
                 <th class="border border-gray-200 px-2 py-1">Submission Date</th>
+                <th class="border border-gray-200 px-2 py-1">Expected Approval</th>
                 <th class="border border-gray-200 px-2 py-1">File %</th>
               </tr>
             </thead>
             <tbody>
               <template x-if="!selectedDeal?.bank_submissions?.length">
                 <tr>
-                  <td colspan="5" class="border border-gray-200 px-2 py-1 text-gray-500 text-center italic">No data</td>
+                  <td colspan="8" class="border border-gray-200 px-2 py-1 text-gray-500 text-center italic">No data</td>
                 </tr>
               </template>
               <template x-for="(item, index) in (selectedDeal?.bank_submissions ?? [])" :key="index">
                 <tr>
+                  <td class="border border-gray-200 px-2 py-1" x-text="item?.loan_id ?? '-'"></td>
                   <td class="border border-gray-200 px-2 py-1" x-text="item?.bank_name ?? '-'"></td>
-                  <td class="border border-gray-200 px-2 py-1" x-text="item?.approval_status ?? '-'" :class="{
-                    'text-gray-600': item?.approval_status === 'Prepared',
-                    'text-blue-600': item?.approval_status === 'Submitted',
-                    'text-amber-600': item?.approval_status === 'In Review',
-                    'text-green-600': item?.approval_status === 'Approved',
-                    'text-red-600': item?.approval_status === 'Rejected',
-                  }">
+                  <td class="border border-gray-200 px-2 py-1" x-text="item?.banker_contact ?? '-'"></td>
+                  <td class="border border-gray-200 px-2 py-1" x-text="item?.document_completeness_score ?? '-'"></td>
+                  <td class="border border-gray-200 px-2 py-1" x-text="item?.approval_status ?? '-'">
                   </td>
                   <td class="border border-gray-200 px-2 py-1" x-text="item?.submission_date ?? '-'"></td>
+                  <td class="border border-gray-200 px-2 py-1" x-text="item?.expected_approval_date ?? '-'"></td>
                   <td class="border border-gray-200 px-2 py-1" x-text="item?.file_completeness_percentage ?? '-'"></td>
                 </tr>
               </template>
@@ -172,24 +177,28 @@
           <table class="min-w-full border border-gray-200 text-left">
             <thead class="bg-gray-50">
               <tr>
+                <th class="border border-gray-200 px-2 py-1">Loan ID</th>
                 <th class="border border-gray-200 px-2 py-1">Approved Bank</th>
                 <th class="border border-gray-200 px-2 py-1">Applied Amount</th>
                 <th class="border border-gray-200 px-2 py-1">Approved Amount</th>
                 <th class="border border-gray-200 px-2 py-1">Interest Rate</th>
+                <th class="border border-gray-200 px-2 py-1">Lock-in Period</th>
               </tr>
             </thead>
             <tbody>
               <template x-if="!selectedDeal?.approval_analysis?.length">
                 <tr>
-                  <td colspan="5" class="border border-gray-200 px-2 py-1 text-gray-500 text-center italic">No data</td>
+                  <td colspan="6" class="border border-gray-200 px-2 py-1 text-gray-500 text-center italic">No data</td>
                 </tr>
               </template>
               <template x-for="(item, index) in (selectedDeal?.approval_analysis ?? [])" :key="index">
                 <tr>
+                  <td class="border border-gray-200 px-2 py-1" x-text="item?.loan_id ?? '-'"></td>
                   <td class="border border-gray-200 px-2 py-1" x-text="item?.approved_bank ?? '-'"></td>
                   <td class="border border-gray-200 px-2 py-1" x-text="item?.applied_amount ?? '-'"></td>
                   <td class="border border-gray-200 px-2 py-1" x-text="item?.approved_amount ?? '-'"></td>
                   <td class="border border-gray-200 px-2 py-1" x-text="item?.interest_rate ?? '-'"></td>
+                  <td class="border border-gray-200 px-2 py-1" x-text="item?.lock_in_period ?? '-'"></td>
                 </tr>
               </template>
             </tbody>
@@ -203,6 +212,7 @@
           <table class="min-w-full border border-gray-200 text-left">
             <thead class="bg-gray-50">
               <tr>
+                <th class="border border-gray-200 px-2 py-1">Loan ID</th>
                 <th class="border border-gray-200 px-2 py-1">First Disbursement</th>
                 <th class="border border-gray-200 px-2 py-1">Full Disbursement</th>
                 <th class="border border-gray-200 px-2 py-1">SPA Completion</th>
@@ -217,6 +227,7 @@
               </template>
               <template x-for="(item, index) in (selectedDeal?.disbursements ?? [])" :key="index">
                 <tr>
+                  <td class="border border-gray-200 px-2 py-1" x-text="item?.loan_id ?? '-'"></td>
                   <td class="border border-gray-200 px-2 py-1" x-text="item?.first_disbursement_date ?? '-'"></td>
                   <td class="border border-gray-200 px-2 py-1" x-text="item?.full_disbursement_date ?? '-'"></td>
                   <td class="border border-gray-200 px-2 py-1" x-text="item?.spa_completion_date ?? '-'"></td>
@@ -225,6 +236,24 @@
               </template>
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <section class="rounded border border-gray-200 p-3">
+        <h5 class="mb-2 text-sm font-semibold text-gray-900">Legal</h5>
+        <div class="grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-2">
+          <p><span class="font-semibold">Status:</span> <span x-text="selectedDeal?.legal?.status ?? '-'"></span></p>
+          <p><span class="font-semibold">Lawyer Firm:</span> <span
+              x-text="selectedDeal?.legal?.lawyer_firm ?? '-'"></span></p>
+          <p><span class="font-semibold">SPA Date:</span> <span x-text="selectedDeal?.legal?.spa_date ?? '-'"></span>
+          </p>
+          <p><span class="font-semibold">Loan Agreement Date:</span> <span
+              x-text="selectedDeal?.legal?.loan_agreement_date ?? '-'"></span></p>
+          <p><span class="font-semibold">Completion Date:</span> <span
+              x-text="selectedDeal?.legal?.completion_date ?? '-'"></span></p>
+          <p><span class="font-semibold">Stamp Duty:</span> <span
+              x-text="selectedDeal?.legal?.stamp_duty == null ? '-' : (selectedDeal.legal.stamp_duty ? 'Yes' : 'No')"></span>
+          </p>
         </div>
       </section>
     </div>

@@ -37,13 +37,13 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        Role::firstOrCreate(['name' => RoleEnum::USER->value, 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => RoleEnum::SALESPERSON->value, 'guard_name' => 'web']);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-        ])->assignRole(RoleEnum::USER->value);
+        ])->assignRole(RoleEnum::SALESPERSON->value);
 
         event(new Registered($user));
 

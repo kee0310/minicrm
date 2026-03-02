@@ -3,9 +3,9 @@
 namespace App\Http\Requests;
 
 use App\Enums\LeadStatusEnum;
+use App\Enums\RoleEnum;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Enums\RoleEnum;
 use App\Models\User;
 
 class StoreLeadRequest extends FormRequest
@@ -25,6 +25,8 @@ class StoreLeadRequest extends FormRequest
      */
     public function rules(): array
     {
+        $salespersonIds = User::role([RoleEnum::SALESPERSON->value, RoleEnum::LEADER->value, RoleEnum::ADMIN->value])->pluck('id')->toArray();
+
         return [
             'name' => 'required|string|max:255',
             'email' => [
@@ -38,12 +40,8 @@ class StoreLeadRequest extends FormRequest
             'salesperson_id' => [
                 'required',
                 'integer',
-                Rule::exists('users', 'id'),
+                Rule::in($salespersonIds),
             ],
-            'leader_id' => function () {
-                $leaderIds = User::role([RoleEnum::LEADER->value, RoleEnum::ADMIN->value])->pluck('id')->toArray();
-                return ['nullable', 'integer', Rule::in($leaderIds)];
-            },
             'status' => ['required', 'string', Rule::in(LeadStatusEnum::values())],
             'age' => ['nullable', 'integer', 'min:1', 'required_if:status,' . LeadStatusEnum::DEAL->value],
             'ic_passport' => ['nullable', 'string', 'max:255', 'required_if:status,' . LeadStatusEnum::DEAL->value],
@@ -57,8 +55,7 @@ class StoreLeadRequest extends FormRequest
     {
         return [
             'salesperson_id.exists' => 'Selected user does not exist.',
-            'leader_id.exists' => 'Selected user does not exist.',
-            'leader_id.in' => 'Selected user does not exist.',
+            'salesperson_id.in' => 'Selected salesperson does not have an allowed role.',
             'email.unique' => 'This email already exists.',
         ];
     }

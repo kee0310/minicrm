@@ -17,6 +17,6 @@ class RoleSeeder extends Seeder
         Role::firstOrCreate(['name' => RoleEnum::ADMIN->value]);
         Role::firstOrCreate(['name' => RoleEnum::LEADER->value]);
         Role::firstOrCreate(['name' => RoleEnum::LOAN_OFFICER->value]);
-        Role::firstOrCreate(['name' => RoleEnum::USER->value]);
+        Role::firstOrCreate(['name' => RoleEnum::SALESPERSON->value]);
     }
 }

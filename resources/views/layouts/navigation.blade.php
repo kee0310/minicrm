@@ -1,4 +1,19 @@
 <nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
+    @php
+        $user = auth()->user();
+        $isLoanOfficer = $user?->hasRole(\App\Enums\RoleEnum::LOAN_OFFICER->value);
+        $canAccessLoans = $user?->hasAnyRole([
+            \App\Enums\RoleEnum::ADMIN->value,
+            \App\Enums\RoleEnum::LOAN_OFFICER->value,
+            \App\Enums\RoleEnum::SALESPERSON->value,
+            \App\Enums\RoleEnum::LEADER->value,
+        ]);
+        $canAccessCommissions = $user?->hasAnyRole([
+            \App\Enums\RoleEnum::ADMIN->value,
+            \App\Enums\RoleEnum::SALESPERSON->value,
+            \App\Enums\RoleEnum::LEADER->value,
+        ]);
+    @endphp
     <!-- Primary Navigation Menu -->
     <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -12,29 +27,41 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('leads.index')" :active="request()->routeIs('leads.*')">
-                        {{ __('Leads') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.*')">
-                        {{ __('Clients') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('deals.index')" :active="request()->routeIs('deals.*')">
-                        {{ __('Deals') }}
-                    </x-nav-link>
-                    @if(auth()->user()->hasRole(\App\Enums\RoleEnum::ADMIN->value) || auth()->user()->hasRole(\App\Enums\RoleEnum::LOAN_OFFICER->value))
+                    @if(!$isLoanOfficer)
+                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                            {{ __('Dashboard') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('leads.index')" :active="request()->routeIs('leads.*')">
+                            {{ __('Leads') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.*')">
+                            {{ __('Clients') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('deals.index')" :active="request()->routeIs('deals.*')">
+                            {{ __('Deals') }}
+                        </x-nav-link>
+                    @endif
+                    @if($canAccessLoans)
                         <x-nav-link :href="route('loans.borrower-profile')" :active="request()->routeIs('loans.*')">
                             {{ __('Loans') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('legals.index')" :active="request()->routeIs('legals.*')">
+                            {{ __('Legal') }}
+                        </x-nav-link>
+                    @endif
+                    @if($canAccessCommissions)
+                        <x-nav-link :href="route('commissions.index')" :active="request()->routeIs('commissions.*')">
+                            {{ __('Commission') }}
+                        </x-nav-link>
                     @endif
 
-                    @role(\App\Enums\RoleEnum::ADMIN->value)
-                    <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
-                        {{ __('Users') }}
-                    </x-nav-link>
-                    @endrole
+                    @if(!$isLoanOfficer)
+                        @role(\App\Enums\RoleEnum::ADMIN->value)
+                        <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+                            {{ __('Users') }}
+                        </x-nav-link>
+                        @endrole
+                    @endif
                 </div>
             </div>
 
@@ -95,29 +122,41 @@
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
 
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Dashboard') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('leads.index')" :active="request()->routeIs('leads.*')">
-                {{ __('Leads') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.*')">
-                {{ __('Clients') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('deals.index')" :active="request()->routeIs('deals.*')">
-                {{ __('Deals') }}
-            </x-responsive-nav-link>
-            @if(auth()->user()->hasRole(\App\Enums\RoleEnum::ADMIN->value) || auth()->user()->hasRole(\App\Enums\RoleEnum::LOAN_OFFICER->value))
+            @if(!$isLoanOfficer)
+                <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                    {{ __('Dashboard') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('leads.index')" :active="request()->routeIs('leads.*')">
+                    {{ __('Leads') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.*')">
+                    {{ __('Clients') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('deals.index')" :active="request()->routeIs('deals.*')">
+                    {{ __('Deals') }}
+                </x-responsive-nav-link>
+            @endif
+            @if($canAccessLoans)
                 <x-responsive-nav-link :href="route('loans.borrower-profile')" :active="request()->routeIs('loans.*')">
                     {{ __('Loans') }}
                 </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('legals.index')" :active="request()->routeIs('legals.*')">
+                    {{ __('Legal') }}
+                </x-responsive-nav-link>
+            @endif
+            @if($canAccessCommissions)
+                <x-responsive-nav-link :href="route('commissions.index')" :active="request()->routeIs('commissions.*')">
+                    {{ __('Commission') }}
+                </x-responsive-nav-link>
             @endif
 
-            @role(\App\Enums\RoleEnum::ADMIN->value)
-            <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
-                {{ __('Users') }}
-            </x-responsive-nav-link>
-            @endrole
+            @if(!$isLoanOfficer)
+                @role(\App\Enums\RoleEnum::ADMIN->value)
+                <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+                    {{ __('Users') }}
+                </x-responsive-nav-link>
+                @endrole
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->

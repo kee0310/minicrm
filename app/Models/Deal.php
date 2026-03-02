@@ -54,6 +54,21 @@ class Deal extends Model
                 $deal->saveQuietly();
             }
         });
+
+        static::saved(function (Deal $deal) {
+            // When a deal reaches Completed, ensure a commission row exists.
+            if ($deal->pipeline?->value !== PipelineEnum::COMPLETED->value) {
+                return;
+            }
+
+            $deal->commission()->firstOrCreate(
+                ['deal_id' => $deal->id],
+                [
+                    'paid' => 0,
+                    'payment_status' => 'Unpaid',
+                ]
+            );
+        });
     }
 
     public function client()
@@ -79,5 +94,15 @@ class Deal extends Model
     public function bankSubmissions()
     {
         return $this->hasMany(LoanBankSubmission::class, 'deal_id');
+    }
+
+    public function legalCase()
+    {
+        return $this->hasOne(LegalCase::class, 'deal_id');
+    }
+
+    public function commission()
+    {
+        return $this->hasOne(Commission::class, 'deal_id');
     }
 }

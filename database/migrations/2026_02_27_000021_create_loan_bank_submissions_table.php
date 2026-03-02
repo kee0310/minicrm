@@ -11,7 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('loans', function (Blueprint $table) {
-            $table->id('loan_id');
+            $table->string('loan_id', 20)->primary();
             $table->foreignId('deal_id')->constrained('deals')->cascadeOnDelete();
 
             // Bank Submission Tracking fields
@@ -42,7 +42,6 @@ return new class extends Migration {
             $table->timestamps();
 
             $table->index(['deal_id']);
-            $table->index(['loan_id']);
             $table->index(['approval_status']);
         });
     }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -12,7 +13,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable, HasRoles;
+    use HasFactory, Notifiable, TwoFactorAuthenticatable, HasRoles, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -20,6 +21,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'leader_id',
         'name',
         'email',
         'password',
@@ -45,6 +47,7 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
+            'leader_id' => 'integer',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
@@ -73,5 +76,15 @@ class User extends Authenticatable
     public function leaderDeals()
     {
         return $this->hasMany(\App\Models\Deal::class, 'leader_id');
+    }
+
+    public function leader()
+    {
+        return $this->belongsTo(User::class, 'leader_id');
+    }
+
+    public function salespersons()
+    {
+        return $this->hasMany(User::class, 'leader_id');
     }
 }

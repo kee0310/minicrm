@@ -11,12 +11,21 @@ use App\Models\Lead;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class ClientController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Client::query();
+        $query = Client::with(['salesperson', 'leader']);
+        $user = $request->user();
+
+        if ($user && ($user->hasRole(RoleEnum::SALESPERSON->value) || $user->hasRole(RoleEnum::LEADER->value))) {
+            $query->where(function ($q) use ($user) {
+                $q->where('salesperson_id', $user->id)
+                    ->orWhere('leader_id', $user->id);
+            });
+        }
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -33,16 +42,12 @@ class ClientController extends Controller
             ->paginate(20)
             ->withQueryString();
         $salespersons = User::role([
-            RoleEnum::USER->value,
-            RoleEnum::LEADER->value,
-            RoleEnum::ADMIN->value,
-        ])->orderBy('name')->get();
-        $leaders = User::role([
+            RoleEnum::SALESPERSON->value,
             RoleEnum::LEADER->value,
             RoleEnum::ADMIN->value,
         ])->orderBy('name')->get();
 
-        return view('clients.index', compact('clients', 'salespersons', 'leaders'));
+        return view('clients.index', compact('clients', 'salespersons'));
     }
 
     public function show(Client $client)
@@ -59,10 +64,11 @@ class ClientController extends Controller
     public function store(StoreClientRequest $request)
     {
         $data = $request->validated();
+        $leaderId = $this->resolveLeaderIdFromSalesperson((int) $data['salesperson_id']);
 
         $client = Client::create([
             'salesperson_id' => $data['salesperson_id'],
-            'leader_id' => $data['leader_id'],
+            'leader_id' => $leaderId,
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'],
@@ -84,10 +90,11 @@ class ClientController extends Controller
     {
         $this->authorizeClientAccess($client);
         $data = $request->validated();
+        $leaderId = $this->resolveLeaderIdFromSalesperson((int) $data['salesperson_id']);
 
         $clientData = [
             'salesperson_id' => $data['salesperson_id'],
-            'leader_id' => $data['leader_id'],
+            'leader_id' => $leaderId,
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'],
@@ -128,5 +135,30 @@ class ClientController extends Controller
         if (!$user) {
             abort(403);
         }
+
+        if ($user->hasRole(RoleEnum::SALESPERSON->value) || $user->hasRole(RoleEnum::LEADER->value)) {
+            $canAccess = ((int) $client->salesperson_id === (int) $user->id) || ((int) $client->leader_id === (int) $user->id);
+
+            if (!$canAccess) {
+                abort(403);
+            }
+        }
+    }
+
+    protected function resolveLeaderIdFromSalesperson(int $salespersonId): int
+    {
+        $salesperson = User::findOrFail($salespersonId);
+
+        if ($salesperson->hasRole(RoleEnum::LEADER->value) || $salesperson->hasRole(RoleEnum::ADMIN->value)) {
+            return (int) $salesperson->id;
+        }
+
+        if (!empty($salesperson->leader_id)) {
+            return (int) $salesperson->leader_id;
+        }
+
+        throw ValidationException::withMessages([
+            'salesperson_id' => 'Selected salesperson must have an assigned leader.',
+        ]);
     }
 }

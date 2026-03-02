@@ -26,6 +26,9 @@
           createOpen: false,
           editOpen: false,
           editLead: null,
+          searchTerm: '',
+          statusFilter: '',
+          sourceFilter: '',
           toggleDealFields(prefix) {
             const status = prefix === 'create' ? document.getElementById('create_status')?.value : this.editLead?.status;
             const wrap = document.getElementById(prefix + '_deal_fields');
@@ -43,43 +46,25 @@
             </div>
           </div>
 
-          <!-- Search and filter form -->
-          <div class="mb-4">
-            <form method="GET" action="{{ route('leads.index') }}" class="flex items-center space-x-2 text-xs">
-              <div>
-                <input type="search" name="search" placeholder="Search..." value="{{ request('search') }}"
-                  class="w-full rounded-md border-gray-300 shadow-sm px-3 py-2 text-xs" />
-              </div>
-
-              <div>
-                <select name="status" type="filter" class="rounded-md border-gray-300 shadow-sm px-3 py-2 pr-8 text-xs">
-                  <option value="">All Statuses</option>
-                  @if(!empty($statuses))
-                    @foreach($statuses as $s)
-                      <option value="{{ $s }}" @selected(request('status') == $s)>{{ $s }}</option>
-                    @endforeach
-                  @endif
-                </select>
-              </div>
-
-              <div>
-                <select name="source" type="filter" class="rounded-md border-gray-300 shadow-sm px-3 py-2 pr-8 text-xs">
-                  <option value="">All Sources</option>
-                  @if(!empty($sources))
-                    @foreach($sources as $source)
-                      <option value="{{ $source }}" @selected(request('source') == $source)>{{ $source }}</option>
-                    @endforeach
-                  @endif
-                </select>
-              </div>
-
-              <div class="flex items-center space-x-2 text-[0.6rem]">
-                <button type="submit"
-                  class="inline-flex items-center px-3 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-white uppercase tracking-wider hover:bg-indigo-700 focus:outline-none">Filter</button>
-                <a href="{{ route('leads.index') }}"
-                  class="inline-flex items-center px-3 py-2 bg-gray-200 border border-transparent rounded-md font-semibold text-gray-700 hover:bg-gray-300">Clear</a>
-              </div>
-            </form>
+          <div class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+            <input type="text" x-model.debounce.300ms="searchTerm" placeholder="Search name, email or phone..."
+              class="w-full sm:max-w-sm rounded-md border-gray-300" />
+            <select x-model="statusFilter" class="w-full sm:w-48 rounded-md border-gray-300">
+              <option value="">All Status</option>
+              @if(!empty($statuses))
+                @foreach($statuses as $s)
+                  <option value="{{ $s }}">{{ $s }}</option>
+                @endforeach
+              @endif
+            </select>
+            <select x-model="sourceFilter" class="w-full sm:w-56 rounded-md border-gray-300">
+              <option value="">All Source</option>
+              @if(!empty($sources))
+                @foreach($sources as $source)
+                  <option value="{{ $source }}">{{ $source }}</option>
+                @endforeach
+              @endif
+            </select>
           </div>
 
           <div id="live-table-container">
@@ -101,7 +86,8 @@
                   </thead>
                   <tbody class="bg-white divide-y divide-gray-200 text-sm text-gray-500 whitespace-nowrap">
                     @foreach($leads as $lead)
-                      <tr>
+                      <tr
+                        x-show="((('{{ strtolower((string) ($lead->name ?? '')) }}' + ' {{ strtolower((string) ($lead->email ?? '')) }}' + ' {{ strtolower((string) ($lead->phone ?? '')) }}').includes((searchTerm || '').toLowerCase()))) && ((!statusFilter) || ('{{ $lead->status?->value ?? '' }}' === statusFilter)) && ((!sourceFilter) || ('{{ $lead->source ?? '' }}' === sourceFilter))">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $lead->name }}</td>
                         <td class="px-6 py-4">{{ $lead->email }}</td>
                         <td class="px-6 py-4">{{ $lead->phone }}</td>
@@ -123,10 +109,9 @@
                                 'name' => $lead->name,
                                 'email' => $lead->email,
                                 'phone' => $lead->phone,
-                                'source' => $lead->source,
-                                'salesperson_id' => $lead->salesperson_id,
-                                'leader_id' => $lead->leader_id,
-                                'status' => $lead->status?->value,
+                              'source' => $lead->source,
+                              'salesperson_id' => $lead->salesperson_id,
+                              'status' => $lead->status?->value,
                                 'age' => $lead->client?->age,
                                 'ic_passport' => $lead->client?->ic_passport,
                                 'occupation' => $lead->client?->occupation,
@@ -189,17 +174,8 @@
                     <x-input-label for="create_salesperson_id" :value="__('Salesperson')" />
                     <select id="create_salesperson_id" name="salesperson_id" required class="block mt-1 w-full rounded-md border-gray-300">
                       <option value="">Select a user</option>
-                      @foreach($users as $user)
-                        <option value="{{ $user->id }}">{{ $user->name }}</option>
-                      @endforeach
-                    </select>
-                  </div>
-                  <div>
-                    <x-input-label for="create_leader_id" :value="__('Leader')" />
-                    <select id="create_leader_id" name="leader_id" class="block mt-1 w-full rounded-md border-gray-300">
-                      <option value="">-- None --</option>
-                      @foreach($leaders as $leader)
-                        <option value="{{ $leader->id }}">{{ $leader->name }}</option>
+                      @foreach($salespersons as $salesperson)
+                        <option value="{{ $salesperson->id }}">{{ $salesperson->name }}</option>
                       @endforeach
                     </select>
                   </div>
@@ -257,17 +233,8 @@
                     <x-input-label for="edit_salesperson_id" :value="__('Salesperson')" />
                     <select id="edit_salesperson_id" name="salesperson_id" x-model="editLead.salesperson_id" required class="block mt-1 w-full rounded-md border-gray-300">
                       <option value="">Select a user</option>
-                      @foreach($users as $user)
-                        <option value="{{ $user->id }}">{{ $user->name }}</option>
-                      @endforeach
-                    </select>
-                  </div>
-                  <div>
-                    <x-input-label for="edit_leader_id" :value="__('Leader')" />
-                    <select id="edit_leader_id" name="leader_id" x-model="editLead.leader_id" class="block mt-1 w-full rounded-md border-gray-300">
-                      <option value="">-- None --</option>
-                      @foreach($leaders as $leader)
-                        <option value="{{ $leader->id }}">{{ $leader->name }}</option>
+                      @foreach($salespersons as $salesperson)
+                        <option value="{{ $salesperson->id }}">{{ $salesperson->name }}</option>
                       @endforeach
                     </select>
                   </div>

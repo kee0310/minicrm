@@ -37,7 +37,9 @@
               <th class="px-4 py-3 text-left font-semibold">MRTA / MLTA</th>
               <th class="px-4 py-3 text-left font-semibold">Special Conditions</th>
               <th class="px-4 py-3 text-left font-semibold">Deviation %</th>
-              <th class="px-4 py-3 text-right font-semibold">Action</th>
+              @if($canManageLoanRecords)
+                <th class="px-4 py-3 text-right font-semibold">Action</th>
+              @endif
             </tr>
           </thead>
           @php
@@ -97,7 +99,7 @@
                 x-show="((('{{ strtolower((string) ($deal->deal_id ?? '')) }}' + ' {{ strtolower((string) ($deal->project_name ?? '')) }}' + ' {{ strtolower((string) ($deal->client?->name ?? '')) }}').includes((searchTerm || '').toLowerCase()))) && ((!bankFilter) || ('{{ $submission->approved_bank ?? $submission->bank_name ?? '' }}' === bankFilter))">
                 <td class="px-4 py-3">
                   <button type="button" class="text-left text-indigo-600 hover:underline"
-                    @click="openLoanDetail({{ $deal->id }}, 'loan.approval.detail', {{ $submission->loan_id }})">
+                    @click="openLoanDetail({{ $deal->id }}, 'loan.approval.detail', @js($submission->loan_id))">
                     {{ $deal->deal_id }}/{{ $i }}
                   </button>:<br>
                   {{ $deal->project_name }}
@@ -111,17 +113,19 @@
               <td class="px-4 py-3">{{ $submission->mrta_mlta ?? '-' }}</td>
               <td class="px-4 py-3">{{ $submission->special_conditions ?? '-' }}</td>
               <td class="px-4 py-3">{{ $submission->approval_deviation_percentage ?? '-' }}</td>
-                <td class="px-4 py-3 text-right">
-                  <button type="button" data-analysis='@json($analysisPayload)'
-                    @click="editDeal = JSON.parse($el.dataset.analysis); openModal('loan.approval.edit')"
-                    class="px-3 py-2 text-white rounded-md {{ $hasRecord ? 'bg-indigo-600' : 'bg-green-600' }}">
-                    {{ $hasRecord ? 'Edit' : 'Add' }}
-                  </button>
-                </td>
+                @if($canManageLoanRecords)
+                  <td class="px-4 py-3 text-right">
+                    <button type="button" data-analysis='@json($analysisPayload)'
+                      @click="editDeal = JSON.parse($el.dataset.analysis); openModal('loan.approval.edit')"
+                      class="px-3 py-2 text-white rounded-md {{ $hasRecord ? 'bg-indigo-600' : 'bg-green-600' }}">
+                      {{ $hasRecord ? 'Edit' : 'Add' }}
+                    </button>
+                  </td>
+                @endif
               </tr>
             @empty
               <tr>
-                <td colspan="11" class="px-4 py-6 text-center text-gray-600">
+                <td colspan="{{ $canManageLoanRecords ? '11' : '10' }}" class="px-4 py-6 text-center text-gray-600">
                   No approved loans found.
                 </td>
               </tr>
@@ -132,6 +136,7 @@
         {{-- Loan detail modal --}}
         @include('loans.partials.loan-detail-modal', ['modalKey' => 'loan.approval.detail'])
 
+        @if($canManageLoanRecords)
         {{-- Add/Edit approval analysis modal --}}
         <div x-show="isModalOpen('loan.approval.edit')" x-cloak x-transition:enter="transition ease-in-out duration-200"
           x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
@@ -189,10 +194,10 @@
             </form>
           </div>
         </div>
+        @endif
       </div>
     </div>
   </div>
 </x-app-layout>
-
 
 

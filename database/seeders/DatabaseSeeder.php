@@ -17,6 +17,10 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             LeadSeeder::class,
             DealSeeder::class,
+            LoanPreQualificationSeeder::class,
+            LoanBankSubmissionSeeder::class,
+            LegalCaseSeeder::class,
+            CommissionSeeder::class,
         ]);
     }
 }

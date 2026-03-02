@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
-use App\Models\User;
 use App\Enums\RoleEnum;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class UserSeeder extends Seeder
 {
@@ -14,30 +13,40 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory()->create([
+        $admin = User::factory()->create([
             'name' => 'Admin',
             'email' => 'admin@admin.com',
             'password' => bcrypt('password'),
-        ])->syncRoles([RoleEnum::ADMIN->value]);
+            'leader_id' => null,
+        ]);
+        $admin->syncRoles([RoleEnum::ADMIN->value]);
+        $admin->forceFill(['leader_id' => $admin->id])->saveQuietly();
 
-        User::factory()->create([
+        $leader = User::factory()->create([
             'name' => 'Leader',
             'email' => 'leader@leader.com',
             'password' => bcrypt('password'),
-        ])->syncRoles([RoleEnum::LEADER->value]);
+            'leader_id' => null,
+        ]);
+        $leader->syncRoles([RoleEnum::LEADER->value]);
+        $leader->forceFill(['leader_id' => $leader->id])->saveQuietly();
 
         User::factory()->create([
             'name' => 'Loan Officer',
-            'email' => 'loan@loan.com',
+            'email' => 'lofficer@lofficer.com',
             'password' => bcrypt('password'),
+            'leader_id' => null,
         ])->syncRoles([RoleEnum::LOAN_OFFICER->value]);
 
         User::factory()->create([
-            'name' => 'User',
-            'email' => 'user@user.com',
+            'name' => 'Salesperson',
+            'email' => 'salesperson@salesperson.com',
             'password' => bcrypt('password'),
-        ])->syncRoles([RoleEnum::USER->value]);
+            'leader_id' => $leader->id,
+        ])->syncRoles([RoleEnum::SALESPERSON->value]);
 
-        User::factory(5)->create();
+        User::factory(5)->create([
+            'leader_id' => $leader->id,
+        ]);
     }
 }

@@ -22,34 +22,27 @@
   <div class="py-12">
     <div class="mx-auto sm:px-6 lg:px-8">
       <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-        <div class="p-6 text-gray-900" x-data="{ createOpen: false, editOpen: false, editUser: null }">
+        <div class="p-6 text-gray-900" x-data="{ createOpen: false, editOpen: false, createRole: '', editUser: null, searchTerm: '', roleFilter: '' }">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-medium">{{ __('List of users') }}</h3>
 
             <div class="flex items-center justify-end">
-              <button type="button" @click="createOpen = true"
+              <button type="button" @click="createOpen = true; createRole = ''"
                 class="inline-flex items-center px-4 py-2 my-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-wider hover:bg-green-800 focus:bg-green-800 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                 {{ __('Create User') }}
               </button>
             </div>
           </div>
 
-          <!-- Search form -->
-          <div class="mb-4">
-            <form method="GET" action="{{ route('users.index') }}" class="flex items-center space-x-2 text-xs">
-              <div>
-                <input type="search" name="search" placeholder="Search" value="{{ request('search') }}"
-                  class="w-full rounded-md border-gray-300 shadow-sm px-3 py-2 text-xs" />
-              </div>
-
-
-              <div class="flex items-center space-x-2 text-[0.6rem]">
-                <button type="submit"
-                  class="inline-flex items-center px-3 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-white uppercase tracking-wider hover:bg-indigo-700 focus:outline-none">Search</button>
-                <a href="{{ route('users.index') }}"
-                  class="inline-flex items-center px-3 py-2 bg-gray-200 border border-transparent rounded-md font-semibold text-gray-700 hover:bg-gray-300">Clear</a>
-              </div>
-            </form>
+          <div class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+            <input type="text" x-model.debounce.300ms="searchTerm" placeholder="Search name or email..."
+              class="w-full sm:max-w-sm rounded-md border-gray-300" />
+            <select x-model="roleFilter" class="w-full sm:w-48 rounded-md border-gray-300">
+              <option value="">All Roles</option>
+              @foreach($roles as $role)
+                <option value="{{ $role }}">{{ $role }}</option>
+              @endforeach
+            </select>
           </div>
 
           <div id="live-table-container">
@@ -68,7 +61,8 @@
                   </thead>
                   <tbody class="bg-white divide-y divide-gray-200 text-sm text-gray-500 whitespace-nowrap">
                     @foreach($users as $user)
-                      <tr>
+                      <tr
+                        x-show="((('{{ strtolower((string) ($user->name ?? '')) }}' + ' {{ strtolower((string) ($user->email ?? '')) }}').includes((searchTerm || '').toLowerCase()))) && ((!roleFilter) || ('{{ $user->getRoleNames()->first() ?? '' }}' === roleFilter))">
                         <td class="px-6 py-4 text-gray-900">{{ $user->name }}</td>
                         <td class="px-6 py-4">{{ $user->email }}</td>
                         <td class="px-6 py-4">{{ $user->getRoleNames()->join(', ') }}</td>
@@ -80,6 +74,7 @@
                               'name' => $user->name,
                               'email' => $user->email,
                               'role' => $user->getRoleNames()->first(),
+                              'leader_id' => $user->leader_id,
                             ];
                           @endphp
                           <button type="button" class="text-indigo-600 hover:underline" data-user='@json($userPayload)'
@@ -127,11 +122,21 @@
                       name="password_confirmation" required /></div>
                   <div>
                     <x-input-label for="create_user_role" :value="__('Role')" />
-                    <select id="create_user_role" name="role" required
+                    <select id="create_user_role" name="role" x-model="createRole" required
                       class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                       <option value="">Select a role</option>
                       @foreach($roles as $role)
                         <option value="{{ $role }}">{{ $role }}</option>
+                      @endforeach
+                    </select>
+                  </div>
+                  <div x-show="createRole === '{{ \App\Enums\RoleEnum::SALESPERSON->value }}'" x-cloak>
+                    <x-input-label for="create_user_leader_id" :value="__('Leader')" />
+                    <select id="create_user_leader_id" name="leader_id" :required="createRole === '{{ \App\Enums\RoleEnum::SALESPERSON->value }}'"
+                      class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                      <option value="">Select leader</option>
+                      @foreach($leaders as $leader)
+                        <option value="{{ $leader->id }}">{{ $leader->name }}</option>
                       @endforeach
                     </select>
                   </div>
@@ -166,6 +171,17 @@
                       <option value="">Select a role</option>
                       @foreach($roles as $role)
                         <option value="{{ $role }}">{{ $role }}</option>
+                      @endforeach
+                    </select>
+                  </div>
+                  <div x-show="editUser?.role === '{{ \App\Enums\RoleEnum::SALESPERSON->value }}'" x-cloak>
+                    <x-input-label for="edit_user_leader_id" :value="__('Leader')" />
+                    <select id="edit_user_leader_id" name="leader_id" x-model="editUser.leader_id"
+                      :required="editUser?.role === '{{ \App\Enums\RoleEnum::SALESPERSON->value }}'"
+                      class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                      <option value="">Select leader</option>
+                      @foreach($leaders as $leader)
+                        <option value="{{ $leader->id }}">{{ $leader->name }}</option>
                       @endforeach
                     </select>
                   </div>

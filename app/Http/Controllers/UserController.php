@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Enums\RoleEnum;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 
 class UserController extends Controller
 {
@@ -26,8 +28,9 @@ class UserController extends Controller
 
         $users = $query->latest()->paginate(10)->withQueryString();
         $roles = Role::orderBy('name')->pluck('name');
+        $leaders = User::role([RoleEnum::LEADER->value, RoleEnum::ADMIN->value])->orderBy('name')->get(['id', 'name']);
 
-        return view('users.index', compact('users', 'roles'));
+        return view('users.index', compact('users', 'roles', 'leaders'));
     }
 
     /**
@@ -38,9 +41,15 @@ class UserController extends Controller
      */
     public function store(StoreUserRequest $request)
     {
-        $user = User::create($request->validated());
-        if ($request->filled('role')) {
-            $user->assignRole($request->input('role'));
+        $data = $request->validated();
+        $role = $data['role'] ?? null;
+
+        $userData = Arr::except($data, ['role']);
+        $userData['leader_id'] = $role === RoleEnum::SALESPERSON->value ? ($data['leader_id'] ?? null) : null;
+
+        $user = User::create($userData);
+        if (!empty($role)) {
+            $user->assignRole($role);
         }
         return redirect()->route('users.index')->with('success', 'User created successfully.');
     }
@@ -61,9 +70,15 @@ class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, User $user)
     {
-        $user->update($request->validated());
-        if ($request->filled('role')) {
-            $user->syncRoles([$request->input('role')]);
+        $data = $request->validated();
+        $role = $data['role'] ?? null;
+
+        $userData = Arr::except($data, ['role']);
+        $userData['leader_id'] = $role === RoleEnum::SALESPERSON->value ? ($data['leader_id'] ?? null) : null;
+
+        $user->update($userData);
+        if (!empty($role)) {
+            $user->syncRoles([$role]);
         }
         return redirect()->route('users.index')->with('success', 'User updated successfully.');
     }

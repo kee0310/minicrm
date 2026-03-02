@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\RoleEnum;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 class StoreClientRequest extends FormRequest
 {
     public function authorize(): bool
@@ -12,9 +15,10 @@ class StoreClientRequest extends FormRequest
 
     public function rules(): array
     {
+        $salespersonIds = User::role([RoleEnum::SALESPERSON->value, RoleEnum::LEADER->value, RoleEnum::ADMIN->value])->pluck('id')->toArray();
+
         return [
-            'salesperson_id' => ['required', 'integer', 'exists:users,id'],
-            'leader_id' => ['required', 'integer', 'exists:users,id'],
+            'salesperson_id' => ['required', 'integer', Rule::in($salespersonIds)],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:clients,email'],
             'phone' => ['required', 'string', 'max:20'],

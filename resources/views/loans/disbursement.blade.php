@@ -32,7 +32,9 @@
               <th class="px-4 py-3 text-left font-semibold">Full Disbursement Date</th>
               <th class="px-4 py-3 text-left font-semibold">SPA Completion Date</th>
               <th class="px-4 py-3 text-left font-semibold">Client Notification Date</th>
-              <th class="px-4 py-3 text-right font-semibold">Action</th>
+              @if($canManageLoanRecords)
+                <th class="px-4 py-3 text-right font-semibold">Action</th>
+              @endif
             </tr>
           </thead>
           @php
@@ -81,7 +83,7 @@
                 x-show="((('{{ strtolower((string) ($deal->deal_id ?? '')) }}' + ' {{ strtolower((string) ($deal->project_name ?? '')) }}' + ' {{ strtolower((string) ($deal->client?->name ?? '')) }}').includes((searchTerm || '').toLowerCase()))) && ((!disbursementFilter) || (disbursementFilter === 'with' && {{ $hasDisbursement ? 'true' : 'false' }}) || (disbursementFilter === 'without' && {{ $hasDisbursement ? 'false' : 'true' }}))">
                 <td class="px-4 py-3">
                   <button type="button" class="text-left text-indigo-600 hover:underline"
-                    @click="openLoanDetail({{ $deal->id }}, 'loan.disbursement.detail', {{ $submission->loan_id }})">
+                    @click="openLoanDetail({{ $deal->id }}, 'loan.disbursement.detail', @js($submission->loan_id))">
                     {{ $deal->deal_id }}/{{ $i }}
                   </button>:<br>
                   {{ $deal->project_name }}
@@ -92,15 +94,17 @@
                 <td class="px-4 py-3">{{ optional($submission->spa_completion_date)->format('d M Y') ?? '-' }}</td>
                 <td class="px-4 py-3">{{ optional($submission->client_notification_date)->format('d M Y') ?? '-' }}
                 </td>
-                <td class="px-4 py-3 text-right">
-                  <button type="button" data-disbursement='@json($disbursementPayload)'
-                    @click="editDeal = JSON.parse($el.dataset.disbursement); openModal('loan.disbursement.edit')"
-                    class="px-3 py-2 text-white rounded-md {{ $hasDisbursement ? 'bg-indigo-600' : 'bg-green-600' }}">{{ $hasDisbursement ? 'Edit' : 'Add' }}</button>
-                </td>
+                @if($canManageLoanRecords)
+                  <td class="px-4 py-3 text-right">
+                    <button type="button" data-disbursement='@json($disbursementPayload)'
+                      @click="editDeal = JSON.parse($el.dataset.disbursement); openModal('loan.disbursement.edit')"
+                      class="px-3 py-2 text-white rounded-md {{ $hasDisbursement ? 'bg-indigo-600' : 'bg-green-600' }}">{{ $hasDisbursement ? 'Edit' : 'Add' }}</button>
+                  </td>
+                @endif
               </tr>
             @empty
               <tr>
-                <td colspan="7" class="px-4 py-6 text-center text-gray-600">No approved loans found.</td>
+                <td colspan="{{ $canManageLoanRecords ? '7' : '6' }}" class="px-4 py-6 text-center text-gray-600">No approved loans found.</td>
               </tr>
             @endforelse
           </tbody>
@@ -109,6 +113,7 @@
         {{-- Loan detail modal --}}
         @include('loans.partials.loan-detail-modal', ['modalKey' => 'loan.disbursement.detail'])
 
+        @if($canManageLoanRecords)
         {{-- Add/Edit disbursement modal --}}
         <div x-show="isModalOpen('loan.disbursement.edit')" x-cloak x-transition:enter="transition ease-in-out duration-200"
           x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
@@ -151,10 +156,10 @@
             </form>
           </div>
         </div>
+        @endif
       </div>
     </div>
   </div>
 </x-app-layout>
-
 
 

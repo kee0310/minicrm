@@ -35,7 +35,9 @@
               <th class="px-4 py-3 text-left font-semibold">Recommended Bank 2</th>
               <th class="px-4 py-3 text-left font-semibold">Recommended Bank 3</th>
               <th class="px-4 py-3 text-left font-semibold">Pre-Qualification Date</th>
-              <th class="px-4 py-3 text-right font-semibold">Action</th>
+              @if($canManageLoanRecords)
+                <th class="px-4 py-3 text-right font-semibold">Action</th>
+              @endif
             </tr>
           </thead>
           @php
@@ -134,15 +136,17 @@
                   </td>
                 @endfor
                 <td class="px-4 py-3">{{ optional($pre?->pre_qualification_date)->format('Y-m-d') ?? '-' }}</td>
-                <td class="px-4 py-3 text-right">
-                  <button type="button" data-pre='@json($prePayload)'
-                    @click="editDeal = JSON.parse($el.dataset.pre); openModal('loan.prequalification.edit')"
-                    class="px-3 py-2 text-white rounded-md {{ $pre ? 'bg-indigo-600' : 'bg-green-600' }}">{{ $pre ? 'Edit' : 'Add' }}</button>
-                </td>
+                @if($canManageLoanRecords)
+                  <td class="px-4 py-3 text-right">
+                    <button type="button" data-pre='@json($prePayload)'
+                      @click="editDeal = JSON.parse($el.dataset.pre); openModal('loan.prequalification.edit')"
+                      class="px-3 py-2 text-white rounded-md {{ $pre ? 'bg-indigo-600' : 'bg-green-600' }}">{{ $pre ? 'Edit' : 'Add' }}</button>
+                  </td>
+                @endif
               </tr>
             @empty
               <tr>
-                <td colspan="8" class="px-4 py-6 text-center text-gray-600">No new deals found.</td>
+                <td colspan="{{ $canManageLoanRecords ? '8' : '7' }}" class="px-4 py-6 text-center text-gray-600">No new deals found.</td>
               </tr>
             @endforelse
           </tbody>
@@ -151,6 +155,7 @@
         {{-- Loan detail modal --}}
         @include('loans.partials.loan-detail-modal', ['modalKey' => 'loan.prequalification.detail'])
 
+        @if($canManageLoanRecords)
         {{-- Add/Edit pre-qualification modal --}}
         <div x-show="isModalOpen('loan.prequalification.edit')" x-cloak x-transition:enter="transition ease-in-out duration-200"
           x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
@@ -279,6 +284,7 @@
             </form>
           </div>
         </div>
+        @endif
       </div>
     </div>
   </div>

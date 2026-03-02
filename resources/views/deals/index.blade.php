@@ -28,6 +28,8 @@
           createOpen: false,
           editOpen: false,
           editDeal: null,
+          searchTerm: '',
+          stageFilter: '',
           toggleBookingAndSpa(formPrefix) {
             const pipeline = formPrefix === 'create' ? document.getElementById('create_pipeline')?.value : this.editDeal?.pipeline;
             const bookingGroup = document.getElementById(formPrefix + '_booking_fee_group');
@@ -68,27 +70,15 @@
             </div>
           </div>
 
-          <div class="mb-4">
-            <form method="GET" action="{{ route('deals.index') }}" class="flex items-center space-x-2 text-xs">
-              <div>
-                <input type="search" name="search" placeholder="Search..." value="{{ request('search') }}"
-                  class="w-full rounded-md border-gray-300 shadow-sm px-3 py-2 text-xs" />
-              </div>
-              <div>
-                <select name="stage" type="filter" class="rounded-md border-gray-300 shadow-sm px-3 py-2 pr-8 text-xs">
-                  <option value="">All Stages</option>
-                  @foreach($stages as $stage)
-                    <option value="{{ $stage }}" @selected(request('stage') == $stage)>{{ $stage }}</option>
-                  @endforeach
-                </select>
-              </div>
-              <div class="flex items-center space-x-2 text-[0.6rem]">
-                <button type="submit"
-                  class="inline-flex items-center px-3 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-white uppercase tracking-wider hover:bg-indigo-700 focus:outline-none">Filter</button>
-                <a href="{{ route('deals.index') }}"
-                  class="inline-flex items-center px-3 py-2 bg-gray-200 border border-transparent rounded-md font-semibold text-gray-700 hover:bg-gray-300">Clear</a>
-              </div>
-            </form>
+          <div class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+            <input type="text" x-model.debounce.300ms="searchTerm" placeholder="Search deal id, project or client..."
+              class="w-full sm:max-w-sm rounded-md border-gray-300" />
+            <select x-model="stageFilter" class="w-full sm:w-48 rounded-md border-gray-300">
+              <option value="">All Stage</option>
+              @foreach($stages as $stage)
+                <option value="{{ $stage }}">{{ $stage }}</option>
+              @endforeach
+            </select>
           </div>
 
           <div id="live-table-container">
@@ -111,7 +101,8 @@
                   </thead>
                   <tbody class="bg-white divide-y divide-gray-200 text-sm text-gray-500 whitespace-nowrap">
                     @foreach($deals as $deal)
-                      <tr>
+                      <tr
+                        x-show="((('{{ strtolower((string) ($deal->deal_id ?? '')) }}' + ' {{ strtolower((string) ($deal->project_name ?? '')) }}' + ' {{ strtolower((string) ($deal->client?->name ?? '')) }}').includes((searchTerm || '').toLowerCase()))) && ((!stageFilter) || ('{{ $deal->pipeline?->value ?? '' }}' === stageFilter))">
                         <td class="px-6 py-4 text-gray-900">{{ $deal->deal_id }}</td>
                         @php
                           $client = $deal->client;
@@ -170,14 +161,20 @@
                               'pipeline_locked' => $deal->pipeline?->isLockedForManualEdit() ?? false,
                             ];
                           @endphp
-                          <button type="button" class="text-indigo-600 hover:underline" data-deal='@json($dealPayload)'
-                            @click="editDeal = JSON.parse($el.dataset.deal); editOpen = true; $nextTick(() => { recalc('edit'); toggleBookingAndSpa('edit'); })">Edit</button> |
-                          <form method="POST" action="{{ route('deals.destroy', $deal) }}" class="inline"
-                            onsubmit="return confirm('Confirm to delete deal {{ $deal->deal_id }}?');">
-                            @method('DELETE')
-                            @csrf
-                            <button type="submit" class="text-red-600 hover:underline">Delete</button>
-                          </form>
+                          @if(($deal->pipeline?->value ?? '') === \App\Enums\PipelineEnum::LOAN_SUBMITTED->value)
+                            <span class="text-sm italic text-gray-600">waiting</span>
+                          @elseif(($deal->pipeline?->value ?? '') === \App\Enums\PipelineEnum::COMPLETED->value)
+                            <span class="text-sm italic text-gray-600">closed</span>
+                          @else
+                            <button type="button" class="text-indigo-600 hover:underline" data-deal='@json($dealPayload)'
+                              @click="editDeal = JSON.parse($el.dataset.deal); editOpen = true; $nextTick(() => { recalc('edit'); toggleBookingAndSpa('edit'); })">Edit</button> |
+                            <form method="POST" action="{{ route('deals.destroy', $deal) }}" class="inline"
+                              onsubmit="return confirm('Confirm to delete deal {{ $deal->deal_id }}?');">
+                              @method('DELETE')
+                              @csrf
+                              <button type="submit" class="text-red-600 hover:underline">Delete</button>
+                            </form>
+                          @endif
                         </td>
                       </tr>
                     @endforeach

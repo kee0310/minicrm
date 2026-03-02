@@ -6,6 +6,7 @@
       'bank_submission_tracking' => 0,
       'approval_analysis' => 0,
       'disbursement' => 0,
+      'legal' => 0,
     ];
   @endphp
 
@@ -93,7 +94,4 @@
       </span>
     @endif
   </div>
-
 </div>
-
-

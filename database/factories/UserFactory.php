@@ -51,8 +51,8 @@ class UserFactory extends Factory
     public function configure()
     {
         return $this->afterCreating(function (User $user) {
-            Role::firstOrCreate(['name' => RoleEnum::USER->value, 'guard_name' => 'web']);
-            $user->assignRole(RoleEnum::USER->value);
+            Role::firstOrCreate(['name' => RoleEnum::SALESPERSON->value, 'guard_name' => 'web']);
+            $user->assignRole(RoleEnum::SALESPERSON->value);
         });
     }
 
