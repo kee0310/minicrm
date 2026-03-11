@@ -1,0 +1,58 @@
+[x-cloak] {
+    display: none !important;
+}
+
+:root {
+    --crm-bg: aliceblue;
+    --crm-surface: #ffffff;
+    --crm-surface-muted: #f9fafb;
+    --crm-border: #e5e7eb;
+    --crm-border-strong: #d1d5db;
+    --crm-text: #111827;
+    --crm-text-muted: #6b7280;
+    --crm-primary: #2563eb;
+    --crm-primary-hover: #1d4ed8;
+    --crm-success: #16a34a;
+    --crm-danger: #dc2626;
+    --crm-warning: #d97706;
+}
+
+html,
+body {
+    @apply h-full antialiased;
+    font-size: 13px;
+    color: var(--crm-text);
+    background: var(--crm-bg);
+}
+
+body {
+    @apply font-sans text-sm;
+}
+
+h1 {
+    @apply text-2xl font-semibold tracking-tight text-slate-900;
+}
+
+h2 {
+    @apply text-xl font-semibold tracking-tight text-slate-900;
+}
+
+h3 {
+    @apply text-base font-semibold text-slate-900;
+}
+
+label {
+    @apply text-xs font-semibold tracking-wide text-slate-600;
+}
+
+input,
+select,
+textarea {
+    @apply rounded-lg border-slate-300 text-sm shadow-sm transition;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    @apply border-blue-500 ring-2 ring-blue-100;
+}

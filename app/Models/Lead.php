@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use App\Enums\LeadStatusEnum;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\User;
 
 class Lead extends Model
 {
@@ -20,24 +20,22 @@ class Lead extends Model
         'salesperson_id',
         'leader_id',
         'status',
+        'age',
+        'ic_passport',
+        'occupation',
+        'company',
+        'working_years',
+        'monthly_income',
+        'fixed_income',
     ];
 
     protected $casts = [
         'status' => LeadStatusEnum::class,
+        'age' => 'integer',
+        'working_years' => 'integer',
+        'monthly_income' => 'decimal:2',
+        'fixed_income' => 'decimal:2',
     ];
-
-    protected static function booted()
-    {
-        static::saved(function (Lead $lead) {
-            $leadStatus = $lead->status instanceof LeadStatusEnum
-                ? $lead->status
-                : LeadStatusEnum::tryFrom((string) $lead->status);
-
-            if ($leadStatus === LeadStatusEnum::DEAL) {
-                $lead->ensureClientProfile();
-            }
-        });
-    }
 
     public function salesperson()
     {
@@ -49,21 +47,21 @@ class Lead extends Model
         return $this->belongsTo(User::class, 'leader_id');
     }
 
-    public function client()
+    public function scopeVisibleTo(Builder $query, ?User $user): Builder
     {
-        return $this->hasOne(Client::class, 'email', 'email');
+        if (! $user || $user->hasRole(\App\Enums\RoleEnum::ADMIN->value)) {
+            return $query;
+        }
+
+        if ($user->hasRole(\App\Enums\RoleEnum::LEADER->value)) {
+            return $query->where(function (Builder $roleQuery) use ($user) {
+                $roleQuery->where('salesperson_id', $user->id)
+                    ->orWhere('leader_id', $user->id);
+            });
+        }
+
+        return $query->where('salesperson_id', $user->id);
     }
 
-    protected function ensureClientProfile(): void
-    {
-        $this->client()->updateOrCreate(
-            ['email' => $this->email],
-            [
-                'name' => $this->name,
-                'phone' => $this->phone,
-                'salesperson_id' => $this->salesperson_id,
-                'leader_id' => $this->leader_id,
-            ]
-        );
-    }
+    // Client profiles are stored directly on leads now.
 }

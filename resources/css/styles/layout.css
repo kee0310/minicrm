@@ -1,0 +1,202 @@
+.crm-shell {
+    @apply min-h-screen bg-slate-50;
+}
+
+.crm-content {
+    @apply mx-auto w-full max-w-[1680px] px-4 py-4 lg:px-6;
+}
+
+@media (min-width: 1024px) {
+    .crm-main-with-sidebar {
+        padding-left: var(--crm-sidebar-width, 14rem);
+        transition: padding-left 300ms ease;
+        will-change: padding-left;
+    }
+
+    .crm-sidebar-desktop {
+        width: var(--crm-sidebar-width, 14rem);
+        transition: width 300ms ease;
+        will-change: width;
+        contain: layout;
+    }
+
+    html[data-sidebar-direction='collapse'] .crm-main-with-sidebar {
+        transition-duration: 220ms;
+    }
+
+    html[data-sidebar-direction='collapse'] .crm-sidebar-desktop {
+        transition-duration: 220ms;
+    }
+
+    html[data-sidebar-expanded='0'][data-sidebar-transition='0']
+        .crm-sidebar-desktop
+        [data-sidebar-label],
+    html[data-sidebar-expanded='0'][data-sidebar-transition='0']
+        .crm-sidebar-desktop
+        [data-sidebar-chevron] {
+        display: none !important;
+    }
+
+    html[data-sidebar-expanded='0']
+        .crm-sidebar-desktop
+        [data-sidebar-sub-label] {
+        opacity: 0 !important;
+    }
+
+    html[data-sidebar-expanded='0'] .crm-sidebar-desktop [data-loan-submenu] {
+        display: none !important;
+    }
+
+    html[data-sidebar-expanded='1']
+        .crm-sidebar-desktop
+        [data-sidebar-toggle-expanded] {
+        display: inline-block !important;
+    }
+
+    html[data-sidebar-expanded='1']
+        .crm-sidebar-desktop
+        [data-sidebar-toggle-collapsed] {
+        display: none !important;
+    }
+
+    html[data-sidebar-expanded='0']
+        .crm-sidebar-desktop
+        [data-sidebar-toggle-expanded] {
+        display: none !important;
+    }
+
+    html[data-sidebar-expanded='0']
+        .crm-sidebar-desktop
+        [data-sidebar-toggle-collapsed] {
+        display: inline-block !important;
+    }
+
+    html[data-sidebar-transition='1'] .crm-sidebar-desktop [data-sidebar-label],
+    html[data-sidebar-transition='1']
+        .crm-sidebar-desktop
+        [data-sidebar-chevron] {
+        visibility: hidden !important;
+        opacity: 0;
+        transform: translateX(-6px);
+    }
+
+    html[data-sidebar-transition='1'][data-sidebar-direction='expand']
+        .crm-sidebar-desktop
+        [data-loan-submenu] {
+        display: none !important;
+    }
+
+    html[data-sidebar-transition='1'][data-sidebar-direction='collapse']
+        .crm-sidebar-desktop
+        [data-loan-submenu] {
+        display: none !important;
+    }
+
+    .crm-sidebar-desktop [data-sidebar-label],
+    .crm-sidebar-desktop [data-sidebar-sub-label],
+    .crm-sidebar-desktop [data-sidebar-chevron] {
+        transition:
+            opacity 220ms ease-out,
+            transform 220ms ease-out;
+    }
+
+    .crm-nav-icon {
+        width: 1.25rem;
+        min-width: 1.25rem;
+        height: 20px;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .crm-nav-icon.crm-nav-icon-sm {
+        width: 1rem;
+        min-width: 1rem;
+        height: 1rem;
+    }
+
+    html[data-sidebar-expanded='1'][data-sidebar-transition='0']
+        .crm-sidebar-desktop
+        [data-sidebar-label],
+    html[data-sidebar-expanded='1'][data-sidebar-transition='0']
+        .crm-sidebar-desktop
+        [data-sidebar-chevron] {
+        visibility: visible !important;
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.crm-shell:not(.crm-ready) .crm-sidebar-desktop,
+.crm-shell:not(.crm-ready) .crm-main-with-sidebar {
+    transition: none !important;
+}
+
+.crm-shell:not(.crm-ready) [data-sidebar-chevron],
+.crm-shell:not(.crm-ready) .fa-chevron-down {
+    transition: none !important;
+}
+
+.crm-sidebar-brand {
+    @apply flex min-w-0 items-center gap-3;
+}
+
+.crm-sidebar-brand-icon {
+    @apply inline-flex items-center justify-center rounded-lg text-white;
+    height: 2.3rem;
+    width: 2.3rem;
+    background: goldenrod;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        0 3px 8px rgba(0, 0, 0, 0.24);
+}
+
+.crm-sidebar-toggle-btn {
+    @apply rounded-md p-3 py-2 text-base text-white/90 hover:bg-white/10 hover:text-white;
+}
+
+.crm-nav-item {
+    @apply flex w-full gap-3 rounded-md px-3 text-left text-[1.02rem] font-medium;
+}
+
+.crm-nav-item-active {
+    @apply bg-white/10 text-white;
+}
+
+.crm-nav-item-inactive {
+    @apply text-slate-200 hover:bg-white/10 hover:text-white;
+}
+
+.crm-nav-submenu {
+    @apply ml-3 space-y-1 border-l border-[#395085] pl-3;
+}
+
+.crm-nav-subitem {
+    @apply block truncate rounded-md px-3 py-2 text-sm;
+}
+
+.crm-nav-flyout {
+    @apply z-[90] w-[15rem] rounded-xl border border-[#395085] bg-white/10 p-3 shadow-2xl;
+    background: linear-gradient(
+        115deg,
+        rgb(35, 59, 109, 1) 0%,
+        rgb(50 91 175) 70%,
+        rgb(12 141 200) 100%
+    );
+}
+
+/* Hide scrollbar for Chrome, Safari, and Opera */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar for IE, Edge, and Firefox */
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.crm-dashboard-scroll .crm-dash-month-nav {
+    border-color: #dbe4f0;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+}

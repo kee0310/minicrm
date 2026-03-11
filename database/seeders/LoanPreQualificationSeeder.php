@@ -5,7 +5,9 @@ namespace Database\Seeders;
 use App\Enums\PipelineEnum;
 use App\Models\Deal;
 use App\Models\LoanPreQualification;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class LoanPreQualificationSeeder extends Seeder
 {
@@ -30,44 +32,74 @@ class LoanPreQualificationSeeder extends Seeder
             ->get();
 
         foreach ($eligibleDeals as $deal) {
-            if (random_int(1, 100) > 85) {
-                continue;
-            }
+            $income = (float) ($deal->client?->monthly_income ?? $faker->randomFloat(2, 2800, 24000));
+            $existingLoans = $faker->randomFloat(2, 0, max(15000, $income * 18));
+            $monthlyCommitments = round($income * $faker->randomFloat(2, 0.18, 0.75), 2);
+            $creditCardLimits = $faker->randomFloat(2, 3000, 60000);
 
-            $income = (float) ($deal->client?->monthly_income ?? $faker->randomFloat(2, 3000, 22000));
-            $isHighDsr = random_int(1, 100) <= 25;
-            $ratio = $isHighDsr
-                ? $faker->randomFloat(2, 0.70, 0.92)
-                : $faker->randomFloat(2, 0.25, 0.65);
-            $monthlyCommitments = round($income * $ratio, 2);
+            $pipelineDates = DB::table('deal_pipelines')
+                ->where('deal_id', $deal->id)
+                ->first(['booking_date', 'spa_signed_date', 'lead_date']);
 
-            LoanPreQualification::query()->updateOrCreate(
+            $baseDate = Carbon::parse(
+                $pipelineDates?->booking_date
+                    ?? $pipelineDates?->spa_signed_date
+                    ?? $pipelineDates?->lead_date
+                    ?? $deal->created_at
+            );
+            $preQualificationDate = $this->clampToSeedWindow($baseDate->copy()->addDays(random_int(0, 12)));
+
+            $preQualification = LoanPreQualification::query()->updateOrCreate(
                 ['deal_id' => $deal->id],
                 [
-                    'existing_loans' => $faker->randomFloat(2, 0, 500000),
+                    'existing_loans' => $existingLoans,
                     'monthly_commitments' => $monthlyCommitments,
-                    'credit_card_limits' => $faker->randomFloat(2, 5000, 50000),
-                    'credit_card_utilization' => random_int(10, 95),
+                    'credit_card_limits' => $creditCardLimits,
+                    'credit_card_utilization' => random_int(5, 92),
                     'ccris' => $faker->randomElement([
                         'clean record',
                         'good repayment',
-                        'minor late payment in past',
-                        'overdue account detected',
+                        'no overdue',
+                        'minor late payment history',
+                        'rescheduled account',
                     ]),
                     'ctos' => $faker->randomElement([
                         'no issues',
-                        'clean',
-                        'rescheduled account',
+                        'clear',
                         'current account',
+                        'special attention account',
                     ]),
-                    'risk_grade' => $faker->randomElement(['A', 'B', 'C']),
-                    'pre_qualification_date' => $deal->created_at?->copy()->addDays(random_int(1, 10))?->toDateString(),
+                    'pre_qualification_date' => $preQualificationDate,
                     'recommended_banks' => [
                         $faker->randomElement(['Maybank', 'CIMB', 'Public Bank', 'Hong Leong']),
                         $faker->randomElement(['RHB', 'AmBank', 'UOB', 'OCBC']),
                     ],
+                    'created_at' => $this->clampToSeedWindow($deal->created_at?->copy() ?? now()),
+                    'updated_at' => $this->clampToSeedWindow(($deal->updated_at?->copy() ?? now())->addDays(random_int(0, 5))),
                 ]
             );
+
+            $riskGrade = $preQualification->riskGrade();
+            if (! is_null($riskGrade)) {
+                $preQualification->forceFill(['risk_grade' => $riskGrade])->saveQuietly();
+            }
         }
+    }
+
+    private function clampToSeedWindow(\Carbon\CarbonInterface $date): \Carbon\CarbonInterface
+    {
+        $year = (int) now()->year;
+        $start = Carbon::create($year, 1, 1, 0, 0, 0);
+        $end = Carbon::create($year, 2, 1, 23, 59, 59)->endOfMonth();
+
+        if ($date->lt($start)) {
+            return $start;
+        }
+
+        if ($date->gt($end)) {
+            return $end;
+        }
+
+        return $date;
     }
 }

@@ -12,7 +12,9 @@ class LoanBankSubmission extends Model
     protected $table = 'loans';
 
     protected $primaryKey = 'loan_id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [
@@ -25,13 +27,13 @@ class LoanBankSubmission extends Model
         'expected_approval_date',
         'file_completeness_percentage',
         'approved_bank',
+        'application_amount',
         'applied_amount',
         'approved_amount',
         'interest_rate',
         'lock_in_period',
         'mrta_mlta',
         'special_conditions',
-        'approval_deviation_percentage',
         'first_disbursement_date',
         'full_disbursement_date',
         'spa_completion_date',
@@ -43,10 +45,10 @@ class LoanBankSubmission extends Model
         'expected_approval_date' => 'date',
         'document_completeness_score' => 'integer',
         'file_completeness_percentage' => 'integer',
+        'application_amount' => 'decimal:2',
         'applied_amount' => 'decimal:2',
         'approved_amount' => 'decimal:2',
         'interest_rate' => 'decimal:2',
-        'approval_deviation_percentage' => 'decimal:2',
         'first_disbursement_date' => 'date',
         'full_disbursement_date' => 'date',
         'spa_completion_date' => 'date',
@@ -61,7 +63,7 @@ class LoanBankSubmission extends Model
     protected static function booted(): void
     {
         static::creating(function (self $loan): void {
-            if (!empty($loan->loan_id)) {
+            if (! empty($loan->loan_id)) {
                 return;
             }
 

@@ -5,7 +5,9 @@ namespace Database\Seeders;
 use App\Enums\PipelineEnum;
 use App\Models\Commission;
 use App\Models\Deal;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class CommissionSeeder extends Seeder
 {
@@ -21,30 +23,43 @@ class CommissionSeeder extends Seeder
             ])
             ->whereNotNull('commission_amount')
             ->each(function (Deal $deal): void {
-                $status = 'Unpaid';
-                $paid = 0;
-                $createdAt = $deal->deal_closing_date
-                    ? $deal->deal_closing_date->copy()
-                    : ($deal->updated_at ?? now())->copy();
+                $isPaid = ($deal->pipeline?->value ?? (string) $deal->pipeline) === PipelineEnum::COMMISSION_PAID->value;
+                $pipelineDates = DB::table('deal_pipelines')
+                    ->where('deal_id', $deal->id)
+                    ->first(['completed_date', 'commission_paid_date']);
 
-                if ($deal->pipeline?->value === PipelineEnum::COMMISSION_PAID->value) {
-                    $status = 'Paid';
-                    $paid = (float) ($deal->commission_amount ?? 0);
-                    $createdAt = $createdAt->copy()->addDays(random_int(3, 30));
-                }
-
-                $commission = Commission::query()->updateOrCreate(
-                    ['deal_id' => $deal->id],
-                    [
-                        'paid' => $paid,
-                        'payment_status' => $status,
-                    ]
+                $baseDate = $this->clampToSeedWindow(
+                    Carbon::parse($pipelineDates?->completed_date ?? $deal->updated_at ?? $deal->created_at)
                 );
 
-                $commission->forceFill([
-                    'created_at' => $createdAt,
-                    'updated_at' => $createdAt->copy()->addDays(random_int(0, 15)),
-                ])->saveQuietly();
+                Commission::query()->updateOrCreate(
+                    ['deal_id' => $deal->id],
+                    [
+                        'paid' => $isPaid ? (float) ($deal->commission_amount ?? 0) : 0,
+                        'payment_status' => $isPaid ? 'Paid' : 'Unpaid',
+                        'created_at' => $baseDate,
+                        'updated_at' => $isPaid
+                            ? $this->clampToSeedWindow(Carbon::parse($pipelineDates?->commission_paid_date ?? $baseDate->copy()->addDays(random_int(2, 20))))
+                            : $this->clampToSeedWindow($baseDate->copy()->addDays(random_int(0, 12))),
+                    ]
+                );
             });
+    }
+
+    private function clampToSeedWindow(\Carbon\CarbonInterface $date): \Carbon\CarbonInterface
+    {
+        $year = (int) now()->year;
+        $start = Carbon::create($year, 1, 1, 0, 0, 0);
+        $end = Carbon::create($year, 2, 1, 23, 59, 59)->endOfMonth();
+
+        if ($date->lt($start)) {
+            return $start;
+        }
+
+        if ($date->gt($end)) {
+            return $end;
+        }
+
+        return $date;
     }
 }

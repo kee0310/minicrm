@@ -3,72 +3,45 @@
 namespace App\Http\Controllers;
 
 use App\Enums\LeadStatusEnum;
-use App\Models\Lead;
-use App\Models\User;
 use App\Http\Requests\StoreLeadRequest;
 use App\Http\Requests\UpdateLeadRequest;
+use App\Models\Lead;
+use App\Models\User;
+use App\Query\Lead\LeadIndexQuery;
+use App\Services\DealService;
+use App\Services\LeadService;
 use Illuminate\Http\Request;
-use App\Enums\RoleEnum;
-use Illuminate\Support\Arr;
-use Illuminate\Validation\ValidationException;
 
 class LeadController extends Controller
 {
+    public function __construct(
+        private LeadService $leadService,
+        private DealService $dealService
+    )
+    {
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $query = Lead::with(['salesperson', 'leader']);
-
+        /** @var User|null $user */
         $user = auth()->user();
-        if ($user && !$user->hasRole(RoleEnum::ADMIN->value)) {
-            if ($user->hasRole(RoleEnum::LEADER->value)) {
-                $query->where(function ($q) use ($user) {
-                    $q->where('salesperson_id', $user->id)
-                        ->orWhere('leader_id', $user->id);
-                });
-            } else {
-                $query->where('salesperson_id', $user->id);
-            }
-        }
+        $query = Lead::query()
+            ->visibleTo($user);
+        $summaryBase = Lead::query()->visibleTo($user);
 
-        if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhereHas('salesperson', function ($salespersonQuery) use ($search) {
-                        $salespersonQuery->where('name', 'like', "%{$search}%");
-                    })
-                    ->orWhereHas('leader', function ($leaderQuery) use ($search) {
-                        $leaderQuery->where('name', 'like', "%{$search}%");
-                    });
-            });
-        }
-
-        if ($status = $request->input('status')) {
-            $query->where('status', $status);
-        }
-
-        if ($source = $request->input('source')) {
-            $query->where('source', $source);
-        }
+        $summary = LeadIndexQuery::summary($summaryBase);
 
         $statuses = LeadStatusEnum::values();
-        $sources = (clone $query)->select('source')
-            ->whereNotNull('source')
-            ->where('source', '!=', '')
-            ->distinct()
-            ->orderBy('source')
-            ->pluck('source');
-        $salespersons = \App\Models\User::role([\App\Enums\RoleEnum::SALESPERSON->value, \App\Enums\RoleEnum::LEADER->value, \App\Enums\RoleEnum::ADMIN->value])
-            ->orderBy('name')
-            ->get();
+        $salespersons = $this->dealService->assignableSalespersons($user);
 
-        $leads = $query->latest()->paginate(20)->withQueryString();
+        LeadIndexQuery::build($query, $request);
 
-        return view('leads.index', compact('leads', 'statuses', 'sources', 'salespersons'));
+        $leads = $query->paginate(10)->withQueryString();
+
+        return view('leads.index', compact('leads', 'statuses', 'salespersons', 'summary'));
     }
 
     /**
@@ -80,12 +53,10 @@ class LeadController extends Controller
     public function store(StoreLeadRequest $request)
     {
         $validated = $request->validated();
-        $payload = $this->extractLeadPayload($validated);
-        $payload['leader_id'] = $this->resolveLeaderIdFromSalesperson((int) $payload['salesperson_id']);
+        $payload = $this->leadService->buildLeadPayload($validated);
         $lead = Lead::create($payload);
-        $this->syncClientProfileWhenDealStatus($lead, $validated);
 
-        return redirect()->route('leads.index')->with('success', 'Lead created successfully.');
+        return redirect()->route('leads.index')->with('success', "Lead {$lead->name} created successfully.");
     }
 
     /**
@@ -104,17 +75,11 @@ class LeadController extends Controller
      */
     public function update(UpdateLeadRequest $request, Lead $lead)
     {
-        if ($this->isLockedDealLead($lead)) {
-            return redirect()->route('leads.index')->with('warning', 'Lead with Deal status cannot be edited.');
-        }
-
         $validated = $request->validated();
-        $payload = $this->extractLeadPayload($validated);
-        $payload['leader_id'] = $this->resolveLeaderIdFromSalesperson((int) $payload['salesperson_id']);
+        $payload = $this->leadService->buildLeadPayload($validated);
         $lead->update($payload);
-        $this->syncClientProfileWhenDealStatus($lead, $validated);
 
-        return redirect()->route('leads.index')->with('success', 'Lead updated successfully.');
+        return redirect()->back()->with('success', "Lead {$lead->name} updated successfully.");
     }
 
     /**
@@ -122,71 +87,14 @@ class LeadController extends Controller
      */
     public function destroy(Lead $lead)
     {
-        if ($this->isLockedDealLead($lead)) {
-            return redirect()->route('leads.index')->with('warning', 'Lead with Deal status cannot be deleted.');
+        if ($this->leadService->isLockedDealLead($lead)) {
+            return redirect()->back()->with('warning', "Lead {$lead->name} cannot be deleted because it is already in Deal status.");
         }
 
         $lead->delete();
-        return redirect()->route('leads.index')->with('success', 'Lead deleted successfully.');
+
+        return redirect()->back()->with('success', "Lead {$lead->name} deleted successfully.");
     }
 
-    protected function isLockedDealLead(Lead $lead): bool
-    {
-        return ($lead->status?->value ?? $lead->status) === LeadStatusEnum::DEAL->value;
-    }
-
-    protected function extractLeadPayload(array $validated): array
-    {
-        return Arr::only($validated, [
-            'name',
-            'email',
-            'phone',
-            'source',
-            'salesperson_id',
-            'status',
-        ]);
-    }
-
-    protected function resolveLeaderIdFromSalesperson(int $salespersonId): int
-    {
-        $salesperson = User::findOrFail($salespersonId);
-
-        if ($salesperson->hasRole(RoleEnum::LEADER->value) || $salesperson->hasRole(RoleEnum::ADMIN->value)) {
-            return (int) $salesperson->id;
-        }
-
-        if (!empty($salesperson->leader_id)) {
-            return (int) $salesperson->leader_id;
-        }
-
-        throw ValidationException::withMessages([
-            'salesperson_id' => 'Selected salesperson must have an assigned leader.',
-        ]);
-    }
-
-    protected function syncClientProfileWhenDealStatus(Lead $lead, array $validated): void
-    {
-        $status = $lead->status instanceof LeadStatusEnum
-            ? $lead->status
-            : LeadStatusEnum::tryFrom((string) $lead->status);
-
-        if ($status !== LeadStatusEnum::DEAL) {
-            return;
-        }
-
-        $client = $lead->client()->firstOrNew(['email' => $lead->email]);
-        $client->fill([
-            'name' => $lead->name,
-            'phone' => $lead->phone,
-            'salesperson_id' => $lead->salesperson_id,
-            'leader_id' => $lead->leader_id,
-            'age' => $validated['age'] ?? null,
-            'ic_passport' => $validated['ic_passport'] ?? null,
-            'occupation' => $validated['occupation'] ?? null,
-            'company' => $validated['company'] ?? null,
-            'monthly_income' => $validated['monthly_income'] ?? null,
-        ]);
-        $client->save();
-        $client->recalculateCompletenessAndStatus();
-    }
+    // Lead profile fields are stored directly on leads now.
 }

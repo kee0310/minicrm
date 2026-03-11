@@ -1,0 +1,120 @@
+.crm-card {
+    @apply relative my-4 overflow-hidden rounded-2xl border bg-white shadow-sm;
+    border-color: #bfd7f6;
+    background:
+        radial-gradient(
+            120% 80% at 100% 0%,
+            rgba(96, 165, 250, 0.12) 0%,
+            rgba(96, 165, 250, 0) 50%
+        ),
+        linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+    box-shadow:
+        rgba(0, 0, 0, 0.1) 0px 4px 6px -1px,
+        rgba(0, 0, 0, 0.06) 0px 2px 4px -1px;
+}
+
+.crm-card::before {
+    content: '';
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 40px;
+    height: 4px;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, #93c5fd 0%, #60a5fa 100%);
+    opacity: 0.85;
+}
+
+.crm-card-body {
+    @apply p-5;
+}
+
+.crm-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-transparent px-4 py-2 text-sm font-semibold transition duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1;
+}
+
+.crm-btn-primary {
+    @apply crm-btn bg-[--crm-background] bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-400;
+}
+
+.crm-btn-secondary {
+    @apply crm-btn border-slate-300 bg-white text-slate-700 focus:ring-slate-300;
+}
+
+.crm-btn-danger {
+    @apply crm-btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-400;
+}
+
+.crm-badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold;
+}
+
+.crm-kpi {
+    @apply relative overflow-hidden rounded-xl border bg-white p-4 shadow-sm;
+    border-color: #dbe4f0;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow:
+        rgba(0, 0, 0, 0.1) 0px 4px 6px -1px,
+        rgba(0, 0, 0, 0.06) 0px 2px 4px -1px !important;
+}
+
+.crm-kpi::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, #1d4ed8 0%, #2563eb 55%, #60a5fa 100%);
+}
+
+.crm-kpi-label {
+    @apply text-[9px] font-semibold uppercase tracking-[0.08em] text-gray-500;
+}
+
+.crm-kpi-trend-up {
+    @apply text-xs font-semibold text-emerald-600;
+}
+
+.crm-kpi-trend-down {
+    @apply text-xs font-semibold text-rose-600;
+}
+
+.crm-kpi-trend-flat {
+    @apply text-xs font-semibold text-slate-500;
+}
+
+.crm-dashboard-scroll .crm-card > header h3 {
+    @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-500;
+}
+
+.crm-dashboard-scroll .crm-dash-chart-panel {
+    border-color: #d7e2ee;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+}
+
+.crm-dashboard-scroll .crm-kpi {
+    border-color: #dbe4f0;
+    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.05);
+}
+
+.crm-kpi-label-2 {
+    @apply text-[10px] font-semibold uppercase tracking-[0.08em] text-blue-400;
+}
+
+.crm-kpi-2 {
+    @apply rounded-none border px-4 py-3;
+    border-color: #d6e2f2;
+    background:
+        radial-gradient(
+            100% 90% at 0% 0%,
+            rgba(59, 130, 246, 0.1) 0%,
+            rgba(59, 130, 246, 0) 45%
+        ),
+        linear-gradient(180deg, #ffffff 0%, #f4f8ff 100%);
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px !important;
+}
+
+.crm-kpi-2::before,
+.crm-kpi-2::after {
+    content: none;
+}

@@ -13,13 +13,21 @@ return new class extends Migration {
         Schema::create('leads', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->unique();
+            $table->string('email');
             $table->string('phone')->nullable();
             $table->string('source')->nullable();
             $table->foreignId('salesperson_id')->constrained('users')->restrictOnDelete();
             $table->foreignId('leader_id')->nullable()->constrained('users')->nullOnDelete();
             $table->text('status')->default(\App\Enums\LeadStatusEnum::NEW->value);
+            $table->unsignedTinyInteger('age')->nullable();
+            $table->string('ic_passport')->nullable();
+            $table->string('occupation')->nullable();
+            $table->string('company')->nullable();
+            $table->unsignedSmallInteger('working_years')->nullable();
+            $table->decimal('monthly_income', 15, 2)->nullable();
+            $table->decimal('fixed_income', 15, 2)->nullable();
             $table->timestamps();
+            $table->index('email');
         });
     }
 

@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -25,13 +26,13 @@ return new class extends Migration {
 
             // Approval Analysis fields
             $table->string('approved_bank')->nullable();
+            $table->decimal('application_amount', 15, 2)->nullable();
             $table->decimal('applied_amount', 15, 2)->nullable();
             $table->decimal('approved_amount', 15, 2)->nullable();
             $table->decimal('interest_rate', 5, 2)->nullable();
             $table->string('lock_in_period')->nullable();
             $table->string('mrta_mlta')->nullable();
             $table->text('special_conditions')->nullable();
-            $table->decimal('approval_deviation_percentage', 8, 2)->nullable();
 
             // Disbursement fields
             $table->date('first_disbursement_date')->nullable();

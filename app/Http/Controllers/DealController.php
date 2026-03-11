@@ -3,105 +3,59 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PipelineEnum;
-use App\Enums\RoleEnum;
-use App\Models\Client;
-use App\Models\Deal;
 use App\Http\Requests\StoreDealRequest;
 use App\Http\Requests\UpdateDealRequest;
+use App\Models\Deal;
+use App\Query\Deal\DealIndexQuery;
+use App\Services\DealService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DealController extends Controller
 {
-    public function index(Request $request)
+    public function __construct(private DealService $dealService)
     {
-        $query = Deal::with(['client', 'preQualification', 'salesperson', 'leader']);
-        $user = auth()->user();
-
-        if ($user && !$user->hasRole(RoleEnum::ADMIN->value)) {
-            if ($user->hasRole(RoleEnum::LEADER->value)) {
-                $query->where(function ($q) use ($user) {
-                    $q->where('salesperson_id', $user->id)
-                        ->orWhere('leader_id', $user->id);
-                });
-            } else {
-                $query->where('salesperson_id', $user->id);
-            }
-        }
-
-        if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('deal_id', 'like', "%{$search}%")
-                    ->orWhere('project_name', 'like', "%{$search}%")
-                    ->orWhereHas('client', function ($clientQuery) use ($search) {
-                        $clientQuery->where('name', 'like', "%{$search}%");
-                    })
-                    ->orWhereHas('salesperson', function ($salespersonQuery) use ($search) {
-                        $salespersonQuery->where('name', 'like', "%{$search}%");
-                    })
-                    ->orWhereHas('leader', function ($leaderQuery) use ($search) {
-                        $leaderQuery->where('name', 'like', "%{$search}%");
-                    });
-            });
-        }
-
-        if ($stage = $request->input('stage')) {
-            $query->where('pipeline', $stage);
-        }
-
-        $deals = $query->latest()->paginate(20)->withQueryString();
-        $stages = PipelineEnum::values();
-        $clients = Client::orderBy('name')->get();
-        $pipelines = PipelineEnum::creatableCases();
-
-        return view('deals.index', compact('deals', 'stages', 'clients', 'pipelines'));
     }
 
-    /*************  ✨ Windsurf Command ⭐  *************/
-    /**
-     * Show the form for creating a new deal.
-     *
-     * @return \Illuminate\Contracts\View\View
-     */
-    /*******  78d48508-1fc4-45f3-8f0b-6e90c580d1fa  *******/
+    public function index(Request $request)
+    {
+        $user = Auth::user();
+        $query = Deal::visibleTo($user);
+        $summaryBase = Deal::visibleTo($user);
+
+        $summary = DealIndexQuery::summary($summaryBase);
+        DealIndexQuery::build($query, $request);
+
+        $deals = $query->paginate(10)->withQueryString();
+        $stages = PipelineEnum::values();
+        $leads = $this->dealService->assignableLeads($user);
+        $salespersons = $this->dealService->assignableSalespersons($user);
+        $pipelines = PipelineEnum::creatableCases();
+
+        return view('deals.index', compact('deals', 'stages', 'leads', 'salespersons', 'pipelines', 'summary'));
+    }
+
     public function store(StoreDealRequest $request)
     {
         $data = $request->validated();
-        $client = Client::findOrFail($data['client_id']);
+        $deal = $this->dealService->createDeal($data);
 
-        if (!$client->salesperson_id || !$client->leader_id) {
-            return back()
-                ->withInput()
-                ->withErrors(['client_id' => 'Selected client must have salesperson and leader assigned.']);
-        }
-
-        $data['salesperson_id'] = $client->salesperson_id;
-        $data['leader_id'] = $client->leader_id;
-
-        Deal::create($data);
-        return redirect()->route('deals.index')->with('success', 'Deal created successfully.');
+        return redirect()->route('deals.index')->with('success', "Deal {$deal->deal_id} created successfully.");
     }
 
     public function update(UpdateDealRequest $request, Deal $deal)
     {
         $data = $request->validated();
-        $client = Client::findOrFail($data['client_id']);
+        $this->dealService->updateDeal($deal, $data);
 
-        if (!$client->salesperson_id || !$client->leader_id) {
-            return back()
-                ->withInput()
-                ->withErrors(['client_id' => 'Selected client must have salesperson and leader assigned.']);
-        }
-
-        $data['salesperson_id'] = $client->salesperson_id;
-        $data['leader_id'] = $client->leader_id;
-
-        $deal->update($data);
-        return redirect()->route('deals.index')->with('success', 'Deal updated successfully.');
+        return redirect()->back()->with('success', "Deal {$deal->deal_id} updated successfully.");
     }
 
     public function destroy(Deal $deal)
     {
-        $deal->delete();
-        return redirect()->route('deals.index')->with('success', 'Deal deleted successfully.');
+        $this->dealService->deleteDeal($deal);
+
+        return redirect()->route('deals.index')->with('success', "Deal {$deal->deal_id} deleted successfully.");
     }
+
 }

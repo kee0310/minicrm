@@ -1,0 +1,138 @@
+/*----------------------------*/
+/*       Table Container      */
+/*----------------------------*/
+.crm-table-wrap {
+    @apply overflow-hidden overflow-x-auto rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-100;
+}
+
+.crm-table {
+    @apply min-w-full border-separate border-spacing-0 overflow-y-hidden text-sm;
+}
+
+/*----------------------------*/
+/*        Table Thead         */
+/*----------------------------*/
+.crm-table thead th {
+    @apply bg-blue-100/50 px-1 py-2 text-center align-middle text-[9px] font-semibold uppercase leading-snug tracking-[0.08em];
+}
+
+/*----------------------------*/
+/*         Sorting UI         */
+/*----------------------------*/
+.crm-sort-btn {
+    @apply inline-flex cursor-pointer select-none items-center gap-1 font-semibold text-slate-500 transition-all hover:text-[#7dabeb];
+}
+
+.crm-sort-btn::before {
+    content: '';
+    display: inline-block;
+    min-width: 0.85em;
+}
+
+[data-sort-indicator] {
+    display: inline-block;
+    min-width: 0.85em;
+    text-align: center;
+}
+
+/*----------------------------*/
+/*        Table Tbody         */
+/*----------------------------*/
+.crm-table tbody td {
+    @apply h-12 border-b border-slate-200 p-2 text-center align-middle text-sm leading-relaxed text-slate-700;
+}
+
+.crm-table tbody td:nth-child(2) {
+    text-align: left;
+}
+
+.crm-table tbody tr:last-child td {
+    @apply border-b-0;
+}
+
+.crm-table tbody tr:nth-child(even) {
+    @apply bg-indigo-50/30;
+}
+
+.crm-table tbody tr:hover {
+    @apply bg-red-50/60 transition-colors;
+}
+
+.crm-table tbody td[colspan] {
+    @apply text-center align-middle;
+}
+
+/*----------------------------*/
+/*       Empty / Meta Row     */
+/*----------------------------*/
+.crm-table-empty,
+.crm-table-empty-inline {
+    @apply py-10 text-center text-lg font-semibold text-slate-500;
+}
+
+.crm-table-date {
+    @apply italic text-slate-500;
+}
+
+/*----------------------------*/
+/*        Action Button       */
+/*----------------------------*/
+.crm-action-btn {
+    @apply inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-slate-100 text-slate-500 transition duration-150 hover:bg-slate-200 hover:text-slate-700;
+}
+
+.crm-action-btn-danger {
+    @apply inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-slate-100 text-red-500 transition duration-150 hover:bg-red-100 hover:text-red-600;
+}
+
+.crm-action-btn span,
+.crm-action-btn-danger span {
+    @apply sr-only;
+}
+
+.crm-action-btn .fa-pen-to-square {
+    color: #2563eb;
+}
+
+.crm-action-btn .fa-plus {
+    color: #16a34a;
+}
+
+.crm-action-btn-danger .fa-trash,
+.crm-action-btn-danger .fa-trash-can,
+.crm-action-btn-danger .fa-plus {
+    color: #dc2626;
+}
+
+/*----------------------------*/
+/*   Dashboard Table Theme    */
+/*----------------------------*/
+.crm-dashboard-scroll .crm-table-wrap {
+    border-color: #dbe4f0;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.crm-dashboard-scroll .crm-table thead th {
+    border-bottom-color: #dbe4f0;
+    background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+    color: #70a2e9;
+    letter-spacing: 0.09em;
+}
+
+.crm-dashboard-scroll .crm-table tbody td {
+    border-bottom-color: #e7edf7;
+    color: #334155;
+}
+
+.crm-dashboard-scroll .crm-table tbody tr:nth-child(even) {
+    background: rgba(248, 251, 255, 0.75);
+}
+
+.crm-dashboard-scroll .crm-table tbody tr:hover {
+    background: rgba(219, 234, 254, 0.6);
+}
+
+.crm-dashboard-scroll .crm-table-empty {
+    color: #64748b;
+}

@@ -2,38 +2,69 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\LegalStatusEnum;
 use App\Enums\PipelineEnum;
+use App\Enums\RoleEnum;
 use App\Models\Deal;
+use App\Models\User;
+use App\Query\Legal\LegalIndexQuery;
+use App\Services\LegalService;
+use App\Services\LoanAccessService;
+use App\Services\OfficerDirectoryService;
+use App\Services\OfficerAssignmentService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
-class LegalController extends LoanController
+class LegalController extends Controller
 {
+    public function __construct(
+        private LoanAccessService $loanAccessService,
+        private LegalService $legalService,
+        private OfficerDirectoryService $officerDirectory,
+        private OfficerAssignmentService $officerAssignment
+    ) {}
+
     // Render legal table for loan approved deals.
-    public function index()
+    public function index(Request $request)
     {
-        $deals = $this->scopeDealsForLoanAccess(
-            Deal::with(['client', 'legalCase'])
-        )
-            ->whereIn('pipeline', [
-                PipelineEnum::LOAN_APPROVED->value,
-                PipelineEnum::LEGAL_PROCESSING->value,
-                PipelineEnum::COMPLETED->value,
-            ])
-            ->latest()
-            ->get();
+        $authUser = $request->user();
+        $canManageLoanRecords = $this->loanAccessService->canManageLegalRecords($authUser);
+        $query = $this->loanAccessService->scopeDealsForLoanAccess(
+            Deal::with(['client', 'legalCase', 'legalOfficer']),
+            $authUser
+        )->whereIn('pipeline', [
+            PipelineEnum::LOAN_APPROVED->value,
+            PipelineEnum::LEGAL_PROCESSING->value,
+            PipelineEnum::COMPLETED->value,
+        ]);
 
-        $statusOptions = ['Drafting', 'Pending Bank', 'Pending Customer Signature', 'Completed'];
-        $newCaseCounts = $this->getLoanNewCaseCounts();
-        $canManageLoanRecords = $this->canManageLoanRecords();
+        LegalIndexQuery::build($query, $request, $authUser, $canManageLoanRecords);
+        $summary = LegalIndexQuery::summary(clone $query);
+        $deals = $query->paginate(10)->withQueryString();
 
-        return view('legals.index', compact('deals', 'statusOptions', 'newCaseCounts', 'canManageLoanRecords'));
+        $statusOptions = LegalStatusEnum::values();
+        [$legalOfficers, $currentLegalOfficerId] = $this->officerDirectory
+            ->listAndCurrent($authUser, RoleEnum::LEGAL_OFFICER->value);
+
+        return view('legals.index', compact('deals', 'statusOptions', 'canManageLoanRecords', 'legalOfficers', 'currentLegalOfficerId', 'summary'));
     }
 
     // Create/update legal details for a deal in legal workflow.
     public function update(Request $request, Deal $deal)
     {
-        $this->ensureCanManageLoanRecords();
-        $this->ensureCanViewDeal($deal);
+        $authUser = $request->user();
+        $this->loanAccessService->ensureCanManageLegalRecords($authUser);
+        $this->loanAccessService->ensureCanViewDeal($deal, $authUser);
+        $legalOfficerIds = $this->officerDirectory->idsForRole(RoleEnum::LEGAL_OFFICER->value);
+
+        if ($this->officerAssignment->isCaseTaken(
+            $deal,
+            $authUser,
+            RoleEnum::LEGAL_OFFICER->value,
+            'legal_officer_id'
+        )) {
+            return $this->jsonOrRedirect($request, 'Case has been taken.', 409, 'warning');
+        }
 
         abort_unless(
             in_array($deal->pipeline?->value, [
@@ -46,32 +77,19 @@ class LegalController extends LoanController
         );
 
         $data = $request->validate([
-            'status' => ['required', 'string', 'in:Drafting,Pending Bank,Pending Customer Signature,Completed'],
-            'lawyer_firm' => ['required', 'string', 'max:255'],
-            'spa_date' => ['required', 'date'],
-            'loan_agreement_date' => ['required', 'date'],
-            'completion_date' => ['required', 'date'],
+            'status' => ['nullable', 'string', Rule::in(LegalStatusEnum::values())],
+            'lawyer_firm' => ['nullable', 'string', 'max:255'],
+            'spa_date' => ['nullable', 'date'],
+            'loan_agreement_date' => ['nullable', 'date'],
+            'completion_date' => ['nullable', 'date'],
             'stamp_duty' => ['nullable', 'boolean'],
+            'assign_to' => ['nullable', 'integer', Rule::in($legalOfficerIds)],
         ]);
 
-        $legalCase = $deal->legalCase()->updateOrCreate(
-            ['deal_id' => $deal->id],
-            [
-                'status' => $data['status'],
-                'lawyer_firm' => $data['lawyer_firm'],
-                'spa_date' => $data['spa_date'],
-                'loan_agreement_date' => $data['loan_agreement_date'],
-                'completion_date' => $data['completion_date'],
-                'stamp_duty' => (bool) ($data['stamp_duty'] ?? false),
-            ]
-        );
+        $this->legalService->updateLegalCase($deal, $data, $authUser);
+        $dealCode = $deal->deal_id ?? ('#' . $deal->id);
+        $successMessage = "Legal case for deal {$dealCode} updated successfully.";
 
-        if ($legalCase->status === 'Completed') {
-            $deal->update(['pipeline' => PipelineEnum::COMPLETED->value]);
-        } else {
-            $deal->update(['pipeline' => PipelineEnum::LEGAL_PROCESSING->value]);
-        }
-
-        return redirect()->route('legals.index')->with('success', 'Legal case updated.');
+        return $this->jsonOrRedirect($request, $successMessage);
     }
 }

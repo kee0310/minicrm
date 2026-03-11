@@ -9,6 +9,8 @@ class LegalCase extends Model
 {
     use HasFactory;
 
+    protected $table = 'legals';
+
     protected $fillable = [
         'deal_id',
         'status',

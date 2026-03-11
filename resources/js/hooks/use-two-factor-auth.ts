@@ -19,15 +19,7 @@ export type UseTwoFactorAuthReturn = {
 export const OTP_MAX_LENGTH = 6;
 
 const fetchJson = async <T>(url: string): Promise<T> => {
-    const response = await fetch(url, {
-        headers: { Accept: 'application/json' },
-    });
-
-    if (!response.ok) {
-        throw new Error(`Failed to fetch: ${response.status}`);
-    }
-
-    return response.json();
+    throw new Error(`Remote request disabled for endpoint: ${url}`);
 };
 
 export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {

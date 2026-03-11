@@ -1,44 +1,77 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Services\LoanNotificationService;
 use App\Http\Controllers\CommissionController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\DashboardChartController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\UserController;
 use App\Enums\RoleEnum;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect()->route('login'); // redirect to login
 });
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+    Route::get('/dashboard/charts', DashboardChartController::class)->name('dashboard.charts');
+    Route::get('/dashboard/pipeline-details', [DashboardChartController::class, 'pipelineDetails'])->name('dashboard.pipeline-details');
+    Route::get('/dashboard/sales', [DashboardController::class, 'sales'])
+        ->middleware('role:' . RoleEnum::SALESPERSON->value . '|' . RoleEnum::LEADER->value)
+        ->name('dashboard.sales');
+    Route::get('/dashboard/deals', [DashboardController::class, 'deals'])
+        ->middleware('role:' . RoleEnum::ADMIN->value)
+        ->name('dashboard.deals');
+    Route::get('/dashboard/salespeople', [DashboardController::class, 'salespeople'])
+        ->middleware('role:' . RoleEnum::ADMIN->value . '|' . RoleEnum::LEADER->value)
+        ->name('dashboard.salespeople');
+});
 
 Route::middleware('auth')->group(function () {
+    Route::get('/notifications/count', function (Request $request) {
+        $user = $request->user();
+        abort_if(! $user, 403);
+
+        $roleFingerprint = md5($user->getRoleNames()->sort()->implode('|'));
+        $cacheKey = sprintf('notifications_%d_%s', $user->id, $roleFingerprint);
+
+        $badges = Cache::remember($cacheKey, now()->addSeconds(30), function () use ($user) {
+            return app(LoanNotificationService::class)->forUser($user);
+        });
+
+        $badges['loan_submission'] = (int) ($badges['bank_submission'] ?? 0);
+        $badges['legal'] = (int) ($badges['legal_new'] ?? 0);
+
+        return response()->json($badges);
+    })->name('notifications.count');
+
     Route::resource('users', UserController::class)->except(['create', 'edit'])->middleware('role:' . RoleEnum::ADMIN->value); // Only admin can manage users
     Route::resource('leads', \App\Http\Controllers\LeadController::class)
-        ->except(['create', 'edit'])
-        ->middleware('role:' . RoleEnum::ADMIN->value . '|' . RoleEnum::SALESPERSON->value . '|' . RoleEnum::LEADER->value);
+        ->except(['create', 'edit']);
     Route::resource('deals', \App\Http\Controllers\DealController::class)
-        ->except(['create', 'edit'])
-        ->middleware('role:' . RoleEnum::ADMIN->value . '|' . RoleEnum::SALESPERSON->value . '|' . RoleEnum::LEADER->value);
+        ->except(['create', 'edit']);
     Route::resource('clients', ClientController::class)
-        ->except(['create', 'edit'])
-        ->middleware('role:' . RoleEnum::ADMIN->value . '|' . RoleEnum::SALESPERSON->value . '|' . RoleEnum::LEADER->value);
+        ->only(['index', 'show'])
+        ->parameters(['clients' => 'lead']);
 
-    Route::middleware('role:' . RoleEnum::ADMIN->value . '|' . RoleEnum::SALESPERSON->value . '|' . RoleEnum::LEADER->value)->prefix('commissions')->name('commissions.')->group(function () {
+    Route::prefix('commissions')->name('commissions.')->group(function () {
         Route::get('/', [CommissionController::class, 'index'])->name('index');
         Route::put('/{commission}', [CommissionController::class, 'update'])->name('update');
     });
 
-    Route::middleware('role:' . RoleEnum::ADMIN->value . '|' . RoleEnum::LOAN_OFFICER->value . '|' . RoleEnum::SALESPERSON->value . '|' . RoleEnum::LEADER->value)->prefix('legals')->name('legals.')->group(function () {
+    Route::prefix('legals')->name('legals.')->group(function () {
         Route::get('/', [LegalController::class, 'index'])->name('index');
         Route::put('/{deal}', [LegalController::class, 'update'])->name('update');
     });
 
-    Route::middleware('role:' . RoleEnum::ADMIN->value . '|' . RoleEnum::LOAN_OFFICER->value . '|' . RoleEnum::SALESPERSON->value . '|' . RoleEnum::LEADER->value)->prefix('loans')->name('loans.')->group(function () {
+    Route::prefix('loans')->name('loans.')->group(function () {
+        Route::get('/notifications', [LoanController::class, 'notifications'])->name('notifications');
         Route::get('/borrower-profile', [LoanController::class, 'borrowerProfile'])->name('borrower-profile');
         Route::put('/borrower-profile/{deal}', [LoanController::class, 'updateBorrowerProfile'])->name('borrower-profile.update');
         Route::get('/detail/{deal}', [LoanController::class, 'loanDetail'])->name('detail');

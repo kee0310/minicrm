@@ -1,270 +1,157 @@
 <x-app-layout>
-  <x-slot name="header">
-    <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-      {{ __('Leads') }}
-    </h2>
-  </x-slot>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            {{ __('Leads') }}
+        </h2>
+    </x-slot>
 
-  @if(session('warning'))
-    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)"
-      class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4 transition duration-500 ease-in-out">
-      <p>{{ session('warning') }}</p>
-    </div>
-  @endif
+    <div class="space-y-6">
 
-  @if(session('success'))
-    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)"
-      class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 transition duration-500 ease-in-out">
-      <p>{{ session('success') }}</p>
-    </div>
-  @endif
+        <section class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <article class="crm-kpi">
+                <p class="crm-kpi-label">Total Leads</p>
+                <p class="mt-2 text-2xl font-semibold text-slate-900">{{ number_format($summary['total'] ?? 0) }}</p>
+            </article>
+            @foreach ($statuses as $status)
+                @php
+                    $key = strtolower(str_replace(' ', '_', $status));
+                @endphp
+                <article class="crm-kpi">
+                    <p class="crm-kpi-label">{{ $status }}</p>
+                    <p
+                        class="mt-2 text-2xl font-semibold {{ strtolower($status) === 'lost' ? 'text-red-600' : (strtolower($status) === 'deal' ? 'text-green-600' : 'text-slate-900') }}">
+                        {{ number_format($summary[$key] ?? 0) }}
+                    </p>
+                </article>
+            @endforeach
+        </section>
 
-  <div class="py-12">
-    <div class="mx-auto sm:px-6 lg:px-8">
-      <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-        <div class="p-6 text-gray-900" x-data="{
-          createOpen: false,
-          editOpen: false,
-          editLead: null,
-          searchTerm: '',
-          statusFilter: '',
-          sourceFilter: '',
-          toggleDealFields(prefix) {
-            const status = prefix === 'create' ? document.getElementById('create_status')?.value : this.editLead?.status;
-            const wrap = document.getElementById(prefix + '_deal_fields');
-            if (wrap) wrap.style.display = status === 'Deal' ? '' : 'none';
-          }
-        }">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-medium">{{ __('List of leads') }}</h3>
+        @php
+            $leadSourceOptions = [
+                'Facebook',
+                'Friend Referral',
+                'Exhibition/Fair',
+                'Company Assigned',
+                'Old Client Referral',
+            ];
+        @endphp
+        <x-card>
+            <div class="text-gray-900" x-data="{
+                leadFormOpen: false,
+                leadFormMode: 'create',
+                currentUserId: @js((int) (auth()->id() ?? 0)),
+                canEditSalesperson: @js(auth()->user()?->hasRole(\App\Enums\RoleEnum::ADMIN->value) || auth()->user()?->hasRole(\App\Enums\RoleEnum::LEADER->value)),
+                defaultLeadStatus: @js($statuses[0] ?? 'New'),
+                leadForm: {},
+                initialLeadFormOpen: @js($errors->any()),
+                initialLeadFormMode: @js(old('_method') === 'PUT' ? 'edit' : 'create'),
+                initialLeadForm: @js([
+                    'id' => old('lead_id'),
+                    'name' => old('name'),
+                    'email' => old('email'),
+                    'phone' => old('phone'),
+                    'source' => old('source'),
+                    'salesperson_id' => old('salesperson_id'),
+                    'status' => old('status'),
+                    'age' => old('age'),
+                    'ic_passport' => old('ic_passport'),
+                    'occupation' => old('occupation'),
+                    'company' => old('company'),
+                    'monthly_income' => old('monthly_income'),
+                    'working_years' => old('working_years'),
+                    'fixed_income' => old('fixed_income'),
+                ]),
+                searchTerm: @js(request('search', '')),
+                statusFilter: @js(request('status', '')),
+                ...tableListState({
+                    endpoint: '{{ route('leads.index') }}',
+                    filters: { statusFilter: 'status' },
+                }),
+                init() {
+                    this.leadForm = this.emptyLeadForm();
+                    if (this.initialLeadFormOpen) {
+                        this.leadFormMode = this.initialLeadFormMode;
+                        this.leadForm = { ...this.leadForm, ...this.initialLeadForm };
+                        this.leadFormOpen = true;
+                    }
+                    this.$nextTick(() => this.toggleDealFields());
+                },
+                emptyLeadForm() {
+                    const defaultSalespersonId = this.salespersonOptions.some(user => Number(user.id) === Number(this.currentUserId))
+                        ? String(this.currentUserId)
+                        : String(this.salespersonOptions[0]?.id ?? '');
+                    return {
+                        id: null,
+                        name: '',
+                        email: '',
+                        phone: '',
+                        source: '{{ $leadSourceOptions[0] ?? '' }}',
+                        salesperson_id: defaultSalespersonId,
+                        status: this.defaultLeadStatus,
+                        age: '',
+                        ic_passport: '',
+                        occupation: '',
+                        company: '',
+                        monthly_income: '',
+                        working_years: '',
+                        fixed_income: '',
+                    };
+                },
+                salespersonOptions: @js($salespersons->map(fn($user) => ['id' => $user->id, 'name' => $user->name])->values()),
+                openCreateLead() {
+                    this.leadFormMode = 'create';
+                    this.leadForm = this.emptyLeadForm();
+                    this.leadFormOpen = true;
+                    this.$nextTick(() => this.toggleDealFields());
+                },
+                openEditLead(lead) {
+                    this.leadFormMode = 'edit';
+                    this.leadForm = { ...this.emptyLeadForm(), ...lead };
+                    this.leadFormOpen = true;
+                    this.$nextTick(() => this.toggleDealFields());
+                },
+                toggleDealFields() {
+                    const wrap = document.getElementById('lead_deal_fields');
+                    const status = this.leadForm?.status;
+                    if (wrap) wrap.style.display = status === 'Deal' ? '' : 'none';
+                }
+            }">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium">{{ __('List of leads') }}</h3>
+                </div>
 
-            <div class="flex items-center justify-end">
-              <button type="button" @click="createOpen = true; $nextTick(() => toggleDealFields('create'))"
-                class="inline-flex items-center px-4 py-2 my-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-wider hover:bg-green-800 focus:bg-green-800 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                {{ __('Create Lead') }}
-              </button>
+                <div class="crm-filter-block">
+                    <div class="crm-filter-toolbar">
+                        <x-filter-search-row model="searchTerm" placeholder="Search name, email or phone..."
+                            :request-value="request('search', '')" />
+                        <button class="crm-create-btn sm:w-full" type="button"
+                            @click="openCreateLead()">
+                            {{ __('Create Lead') }}
+                        </button>
+                    </div>
+                    <div class="crm-filter-tabs-scroll scrollbar-hide">
+                        <div class="crm-filter-tabs">
+                            <x-filter-tab-button state-key="statusFilter" value="" label="All"
+                                :request-value="request('status', '')" all />
+                            @if (!empty($statuses))
+                                @foreach ($statuses as $s)
+                                    <x-filter-tab-button state-key="statusFilter" :value="$s" :label="$s"
+                                        :request-value="request('status', '')" />
+                                @endforeach
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <div id="live-table-container" @click="handleTableClick($event)">@include('leads.partials.leads-table', ['leads' => $leads])</div>
+                @include('leads.partials.lead-form-modals', [
+                    'leadSourceOptions' => $leadSourceOptions,
+                    'salespersons' => $salespersons,
+                    'statuses' => $statuses,
+                ])
+
+
             </div>
-          </div>
-
-          <div class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
-            <input type="text" x-model.debounce.300ms="searchTerm" placeholder="Search name, email or phone..."
-              class="w-full sm:max-w-sm rounded-md border-gray-300" />
-            <select x-model="statusFilter" class="w-full sm:w-48 rounded-md border-gray-300">
-              <option value="">All Status</option>
-              @if(!empty($statuses))
-                @foreach($statuses as $s)
-                  <option value="{{ $s }}">{{ $s }}</option>
-                @endforeach
-              @endif
-            </select>
-            <select x-model="sourceFilter" class="w-full sm:w-56 rounded-md border-gray-300">
-              <option value="">All Source</option>
-              @if(!empty($sources))
-                @foreach($sources as $source)
-                  <option value="{{ $source }}">{{ $source }}</option>
-                @endforeach
-              @endif
-            </select>
-          </div>
-
-          <div id="live-table-container">
-            @if(isset($leads) && $leads->count())
-              <div class="overflow-x-auto">
-
-                <table class="min-w-full divide-y divide-gray-200">
-                  <thead class="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <tr>
-                      <th class="px-6 py-3">Name</th>
-                      <th class="px-6 py-3">Email</th>
-                      <th class="px-6 py-3 ">Phone</th>
-                      <th class="px-6 py-3">Source</th>
-                      <th class="px-6 py-3">Salesperson</th>
-                      <th class="px-6 py-3">Leader</th>
-                      <th class="px-6 py-3">Status</th>
-                      <th class="px-6 py-3">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody class="bg-white divide-y divide-gray-200 text-sm text-gray-500 whitespace-nowrap">
-                    @foreach($leads as $lead)
-                      <tr
-                        x-show="((('{{ strtolower((string) ($lead->name ?? '')) }}' + ' {{ strtolower((string) ($lead->email ?? '')) }}' + ' {{ strtolower((string) ($lead->phone ?? '')) }}').includes((searchTerm || '').toLowerCase()))) && ((!statusFilter) || ('{{ $lead->status?->value ?? '' }}' === statusFilter)) && ((!sourceFilter) || ('{{ $lead->source ?? '' }}' === sourceFilter))">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $lead->name }}</td>
-                        <td class="px-6 py-4">{{ $lead->email }}</td>
-                        <td class="px-6 py-4">{{ $lead->phone }}</td>
-                        <td class="px-6 py-4">{{ $lead->source }}</td>
-                        <td class="px-6 py-4">{{ $lead->salesperson?->name }}</td>
-                        <td class="px-6 py-4">{{ $lead->leader?->name }}</td>
-                        <td class="px-6 py-4">
-                          <span class="{{ $lead->status->badge() }}">
-                            {{ $lead->status->value }}
-                          </span>
-                        </td>
-                        <td class="px-6 py-4">
-                          @if($lead->status->value === \App\Enums\LeadStatusEnum::DEAL->value)
-
-                          @else
-                            @php
-                              $leadPayload = [
-                                'id' => $lead->id,
-                                'name' => $lead->name,
-                                'email' => $lead->email,
-                                'phone' => $lead->phone,
-                              'source' => $lead->source,
-                              'salesperson_id' => $lead->salesperson_id,
-                              'status' => $lead->status?->value,
-                                'age' => $lead->client?->age,
-                                'ic_passport' => $lead->client?->ic_passport,
-                                'occupation' => $lead->client?->occupation,
-                                'company' => $lead->client?->company,
-                                'monthly_income' => $lead->client?->monthly_income,
-                              ];
-                            @endphp
-                            <button type="button" class="text-indigo-600 hover:underline" data-lead='@json($leadPayload)'
-                              @click="editLead = JSON.parse($el.dataset.lead); editOpen = true; $nextTick(() => toggleDealFields('edit'))">Edit</button> |
-                            <form method="POST" action="{{ route('leads.destroy', $lead) }}" class="inline"
-                              onsubmit="return confirm('Confirm to delete lead {{ $lead->name }}?');">
-                              @method('DELETE')
-                              @csrf
-                              <button type="submit" class="text-red-600 hover:underline">Delete</button>
-                            </form>
-                          @endif
-                        </td>
-                      </tr>
-                    @endforeach
-                  </tbody>
-                </table>
-              </div>
-
-              <div class="mt-4">
-                {{ $leads->links() }}
-              </div>
-            @else
-              <div class="text-gray-600">{{ __('No leads found.') }}</div>
-            @endif
-          </div>
-
-          <div x-show="createOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-            @click.self="createOpen = false">
-            <div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-              <div class="mb-4 flex items-center justify-between">
-                <h4 class="text-lg font-semibold">Create Lead</h4>
-                <button type="button" class="text-gray-500 hover:text-gray-700" @click="createOpen = false">X</button>
-              </div>
-              <form method="POST" action="{{ route('leads.store') }}">
-                @csrf
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div><x-input-label for="create_name" :value="__('Name')" /><x-text-input id="create_name" class="block mt-1 w-full"
-                      type="text" name="name" required /></div>
-                  <div><x-input-label for="create_email" :value="__('Email')" /><x-text-input id="create_email" class="block mt-1 w-full"
-                      type="email" name="email" required /></div>
-                  <div><x-input-label for="create_phone" :value="__('Phone')" /><x-text-input id="create_phone" class="block mt-1 w-full"
-                      type="text" name="phone" required /></div>
-                  <div>
-                    <x-input-label for="create_source" :value="__('Source')" />
-                    <select id="create_source" name="source" required class="block mt-1 w-full rounded-md border-gray-300">
-                      @php
-                        $options = ['Facebook', 'Friend Referral', 'Exhibition/Fair', 'Company Assigned', 'Old Client Referral'];
-                      @endphp
-                      @foreach($options as $source)
-                        <option value="{{ $source }}">{{ $source }}</option>
-                      @endforeach
-                    </select>
-                  </div>
-                  <div>
-                    <x-input-label for="create_salesperson_id" :value="__('Salesperson')" />
-                    <select id="create_salesperson_id" name="salesperson_id" required class="block mt-1 w-full rounded-md border-gray-300">
-                      <option value="">Select a user</option>
-                      @foreach($salespersons as $salesperson)
-                        <option value="{{ $salesperson->id }}">{{ $salesperson->name }}</option>
-                      @endforeach
-                    </select>
-                  </div>
-                  <div>
-                    <x-input-label for="create_status" :value="__('Status')" />
-                    <select id="create_status" name="status" required @change="toggleDealFields('create')" class="block mt-1 w-full rounded-md border-gray-300">
-                      @foreach($statuses as $status)
-                        <option value="{{ $status }}">{{ $status }}</option>
-                      @endforeach
-                    </select>
-                  </div>
-                </div>
-
-                <div id="create_deal_fields" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div><x-input-label for="create_age" :value="__('Age')" /><x-text-input id="create_age" class="block mt-1 w-full" type="number" min="1" name="age" /></div>
-                  <div><x-input-label for="create_ic_passport" :value="__('IC/Passport')" /><x-text-input id="create_ic_passport" class="block mt-1 w-full" type="text" name="ic_passport" /></div>
-                  <div><x-input-label for="create_occupation" :value="__('Occupation')" /><x-text-input id="create_occupation" class="block mt-1 w-full" type="text" name="occupation" /></div>
-                  <div><x-input-label for="create_company" :value="__('Company')" /><x-text-input id="create_company" class="block mt-1 w-full" type="text" name="company" /></div>
-                  <div><x-input-label for="create_monthly_income" :value="__('Monthly Income')" /><x-text-input id="create_monthly_income" class="block mt-1 w-full" type="number" step="0.01" min="0" name="monthly_income" /></div>
-                </div>
-                <div class="mt-5 flex justify-end gap-2">
-                  <button type="button" @click="createOpen = false" class="px-4 py-2 bg-gray-200 rounded-md">Cancel</button>
-                  <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md">Create</button>
-                </div>
-              </form>
-            </div>
-          </div>
-
-          <div x-show="editOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-            @click.self="editOpen = false">
-            <div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-              <div class="mb-4 flex items-center justify-between">
-                <h4 class="text-lg font-semibold">Edit Lead</h4>
-                <button type="button" class="text-gray-500 hover:text-gray-700" @click="editOpen = false">X</button>
-              </div>
-              <form method="POST" :action="'{{ url('leads') }}/' + (editLead?.id ?? '')">
-                @method('PUT')
-                @csrf
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div><x-input-label for="edit_name" :value="__('Name')" /><x-text-input id="edit_name" class="block mt-1 w-full"
-                      type="text" name="name" x-model="editLead.name" required /></div>
-                  <div><x-input-label for="edit_email" :value="__('Email')" /><x-text-input id="edit_email" class="block mt-1 w-full"
-                      type="email" name="email" x-model="editLead.email" required /></div>
-                  <div><x-input-label for="edit_phone" :value="__('Phone')" /><x-text-input id="edit_phone" class="block mt-1 w-full"
-                      type="text" name="phone" x-model="editLead.phone" required /></div>
-                  <div>
-                    <x-input-label for="edit_source" :value="__('Source')" />
-                    <select id="edit_source" name="source" x-model="editLead.source" required class="block mt-1 w-full rounded-md border-gray-300">
-                      @foreach(['Facebook', 'Friend Referral', 'Exhibition/Fair', 'Company Assigned', 'Old Client Referral'] as $source)
-                        <option value="{{ $source }}">{{ $source }}</option>
-                      @endforeach
-                    </select>
-                  </div>
-                  <div>
-                    <x-input-label for="edit_salesperson_id" :value="__('Salesperson')" />
-                    <select id="edit_salesperson_id" name="salesperson_id" x-model="editLead.salesperson_id" required class="block mt-1 w-full rounded-md border-gray-300">
-                      <option value="">Select a user</option>
-                      @foreach($salespersons as $salesperson)
-                        <option value="{{ $salesperson->id }}">{{ $salesperson->name }}</option>
-                      @endforeach
-                    </select>
-                  </div>
-                  <div>
-                    <x-input-label for="edit_status" :value="__('Status')" />
-                    <select id="edit_status" name="status" x-model="editLead.status" required @change="toggleDealFields('edit')" class="block mt-1 w-full rounded-md border-gray-300">
-                      @foreach($statuses as $status)
-                        <option value="{{ $status }}">{{ $status }}</option>
-                      @endforeach
-                    </select>
-                  </div>
-                </div>
-                <div id="edit_deal_fields" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div><x-input-label for="edit_age" :value="__('Age')" /><x-text-input id="edit_age" class="block mt-1 w-full" type="number" min="1" name="age" x-model="editLead.age" /></div>
-                  <div><x-input-label for="edit_ic_passport" :value="__('IC/Passport')" /><x-text-input id="edit_ic_passport" class="block mt-1 w-full" type="text" name="ic_passport" x-model="editLead.ic_passport" /></div>
-                  <div><x-input-label for="edit_occupation" :value="__('Occupation')" /><x-text-input id="edit_occupation" class="block mt-1 w-full" type="text" name="occupation" x-model="editLead.occupation" /></div>
-                  <div><x-input-label for="edit_company" :value="__('Company')" /><x-text-input id="edit_company" class="block mt-1 w-full" type="text" name="company" x-model="editLead.company" /></div>
-                  <div><x-input-label for="edit_monthly_income" :value="__('Monthly Income')" /><x-text-input id="edit_monthly_income" class="block mt-1 w-full" type="number" step="0.01" min="0" name="monthly_income" x-model="editLead.monthly_income" /></div>
-                </div>
-                <div class="mt-5 flex justify-end gap-2">
-                  <button type="button" @click="editOpen = false" class="px-4 py-2 bg-gray-200 rounded-md">Cancel</button>
-                  <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md">Save</button>
-                </div>
-              </form>
-            </div>
-          </div>
-
-
-        </div>
-      </div>
     </div>
-  </div>
+    </x-card>
 </x-app-layout>

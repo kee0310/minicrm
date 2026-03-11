@@ -7,7 +7,6 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Spatie\Permission\Models\Role;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
@@ -43,16 +42,27 @@ class UserFactory extends Factory
      */
     public function unverified(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
     }
 
-    public function configure()
+    public function salesperson(): static
     {
-        return $this->afterCreating(function (User $user) {
-            Role::firstOrCreate(['name' => RoleEnum::SALESPERSON->value, 'guard_name' => 'web']);
-            $user->assignRole(RoleEnum::SALESPERSON->value);
+        return $this->state(fn (array $attributes) => [
+            'leader_id' => null,
+        ])->afterCreating(function (User $user): void {
+            $user->syncRoles([RoleEnum::SALESPERSON->value]);
+        });
+    }
+
+    public function leader(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'leader_id' => null,
+        ])->afterCreating(function (User $user): void {
+            $user->syncRoles([RoleEnum::LEADER->value]);
+            $user->forceFill(['leader_id' => $user->id])->saveQuietly();
         });
     }
 
@@ -61,7 +71,7 @@ class UserFactory extends Factory
      */
     public function withTwoFactor(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'two_factor_secret' => encrypt('secret'),
             'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1'])),
             'two_factor_confirmed_at' => now(),

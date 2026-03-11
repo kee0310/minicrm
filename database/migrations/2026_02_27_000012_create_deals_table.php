@@ -15,7 +15,7 @@ return new class extends Migration {
             // human readable code, filled later
             $table->string('deal_id')->unique()->nullable();
 
-            $table->foreignId('client_id')->constrained('clients')->cascadeOnDelete();
+            $table->foreignId('lead_id')->constrained('leads')->cascadeOnDelete();
             $table->string('project_name');
             $table->string('developer')->nullable();
             $table->string('unit_number')->nullable();
@@ -24,17 +24,20 @@ return new class extends Migration {
             $table->decimal('commission_amount', 15, 2)->nullable();
             $table->foreignId('salesperson_id')->constrained('users')->restrictOnDelete();
             $table->foreignId('leader_id')->constrained('users')->restrictOnDelete();
+            $table->foreignId('loan_officer_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('legal_officer_id')->nullable()->constrained('users')->nullOnDelete();
             $table->decimal('booking_fee', 15, 2)->nullable();
-            $table->date('spa_date')->nullable();
             $table->date('deal_closing_date')->nullable();
             $table->string('pipeline')->default('Lead');
 
             $table->timestamps();
 
             // indexes for large scale
-            $table->index(['client_id']);
+            $table->index(['lead_id']);
             $table->index(['salesperson_id']);
             $table->index(['leader_id']);
+            $table->index(['loan_officer_id']);
+            $table->index(['legal_officer_id']);
             $table->index(['pipeline']);
         });
     }

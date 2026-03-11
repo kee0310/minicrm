@@ -2,163 +2,40 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\RoleEnum;
-use App\Http\Requests\StoreClientRequest;
-use App\Http\Requests\UpdateClientRequest;
-use App\Models\Client;
+use App\Enums\LeadStatusEnum;
 use App\Models\Deal;
 use App\Models\Lead;
-use App\Models\User;
+use App\Query\Client\ClientIndexQuery;
+use App\Services\LeadService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class ClientController extends Controller
 {
+    public function __construct(private LeadService $leadService) {}
+
     public function index(Request $request)
     {
-        $query = Client::with(['salesperson', 'leader']);
         $user = $request->user();
+        $base = Lead::query()
+            ->visibleTo($user)
+            ->where('status', LeadStatusEnum::DEAL->value);
+        $query = ClientIndexQuery::build($base, $request);
+        $clients = $query->paginate(10)->withQueryString();
 
-        if ($user && ($user->hasRole(RoleEnum::SALESPERSON->value) || $user->hasRole(RoleEnum::LEADER->value))) {
-            $query->where(function ($q) use ($user) {
-                $q->where('salesperson_id', $user->id)
-                    ->orWhere('leader_id', $user->id);
-            });
-        }
-
-        if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhere('ic_passport', 'like', "%{$search}%");
-            });
-        }
-
-        $clients = $query
-            ->orderBy('completeness_rate', 'asc')
-            ->latest()
-            ->paginate(20)
-            ->withQueryString();
-        $salespersons = User::role([
-            RoleEnum::SALESPERSON->value,
-            RoleEnum::LEADER->value,
-            RoleEnum::ADMIN->value,
-        ])->orderBy('name')->get();
-
-        return view('clients.index', compact('clients', 'salespersons'));
+        return view('clients.index', compact('clients'));
     }
 
-    public function show(Client $client)
+    public function show(Lead $lead)
     {
-        $this->authorizeClientAccess($client);
-        $deals = Deal::with(['client', 'salesperson', 'leader'])
-            ->where('client_id', $client->id)
-            ->latest()
+        $this->leadService->ensureLeadAccess(auth()->user(), $lead);
+        $deals = Deal::with(['client', 'salesperson', 'leader', 'loanOfficer', 'legalOfficer'])
+            ->where('lead_id', $lead->id)
+            ->latest('updated_at')
             ->get();
 
-        return view('clients.show', compact('client', 'deals'));
-    }
-
-    public function store(StoreClientRequest $request)
-    {
-        $data = $request->validated();
-        $leaderId = $this->resolveLeaderIdFromSalesperson((int) $data['salesperson_id']);
-
-        $client = Client::create([
-            'salesperson_id' => $data['salesperson_id'],
-            'leader_id' => $leaderId,
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'phone' => $data['phone'],
-            'age' => $data['age'] ?? null,
-            'ic_passport' => $data['ic_passport'] ?? null,
-            'occupation' => $data['occupation'] ?? null,
-            'company' => $data['company'] ?? null,
-            'monthly_income' => $data['monthly_income'] ?? null,
-            'status' => 'New',
-            'completeness_rate' => 0,
-        ]);
-
-        $client->recalculateCompletenessAndStatus();
-
-        return redirect()->route('clients.index')->with('success', 'Client created successfully.');
-    }
-
-    public function update(UpdateClientRequest $request, Client $client)
-    {
-        $this->authorizeClientAccess($client);
-        $data = $request->validated();
-        $leaderId = $this->resolveLeaderIdFromSalesperson((int) $data['salesperson_id']);
-
-        $clientData = [
-            'salesperson_id' => $data['salesperson_id'],
-            'leader_id' => $leaderId,
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'phone' => $data['phone'],
-            'age' => $data['age'] ?? null,
-            'ic_passport' => $data['ic_passport'] ?? null,
-            'occupation' => $data['occupation'] ?? null,
-            'company' => $data['company'] ?? null,
-            'monthly_income' => $data['monthly_income'] ?? null,
-        ];
-        $client->update($clientData);
-        $client->recalculateCompletenessAndStatus();
-
-        return redirect()->route('clients.index')->with('success', 'Client updated successfully.');
-    }
-
-    public function destroy(Client $client)
-    {
-        $this->authorizeClientAccess($client);
-
-        $hasDeals = Deal::where('client_id', $client->id)->exists();
-
-        if ($hasDeals) {
-            return redirect()->route('clients.index')->with('warning', 'Client cannot be deleted because deals already exist.');
-        }
-
-        DB::transaction(function () use ($client) {
-            Lead::where('email', $client->email)->delete();
-            $client->delete();
-        });
-
-        return redirect()->route('clients.index')->with('success', 'Client deleted successfully.');
-    }
-
-    protected function authorizeClientAccess(Client $client): void
-    {
-        $user = auth()->user();
-
-        if (!$user) {
-            abort(403);
-        }
-
-        if ($user->hasRole(RoleEnum::SALESPERSON->value) || $user->hasRole(RoleEnum::LEADER->value)) {
-            $canAccess = ((int) $client->salesperson_id === (int) $user->id) || ((int) $client->leader_id === (int) $user->id);
-
-            if (!$canAccess) {
-                abort(403);
-            }
-        }
-    }
-
-    protected function resolveLeaderIdFromSalesperson(int $salespersonId): int
-    {
-        $salesperson = User::findOrFail($salespersonId);
-
-        if ($salesperson->hasRole(RoleEnum::LEADER->value) || $salesperson->hasRole(RoleEnum::ADMIN->value)) {
-            return (int) $salesperson->id;
-        }
-
-        if (!empty($salesperson->leader_id)) {
-            return (int) $salesperson->leader_id;
-        }
-
-        throw ValidationException::withMessages([
-            'salesperson_id' => 'Selected salesperson must have an assigned leader.',
+        return view('clients.show', [
+            'client' => $lead,
+            'deals' => $deals,
         ]);
     }
 }

@@ -1,0 +1,119 @@
+.crm-anim-fade-up {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: crmFadeUp 360ms ease-out forwards;
+    animation-delay: var(--crm-anim-delay, 0ms);
+}
+
+.crm-anim-pop {
+    opacity: 0;
+    transform: scale(0.98);
+    animation: crmPopIn 320ms ease-out forwards;
+    animation-delay: var(--crm-anim-delay, 0ms);
+}
+
+.crm-anim-stagger > * {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: crmFadeUp 320ms ease-out forwards;
+    animation-delay: var(--crm-anim-delay, 0ms);
+}
+
+.crm-anim-stagger > *:nth-child(1) {
+    --crm-anim-delay: 40ms;
+}
+
+.crm-anim-stagger > *:nth-child(2) {
+    --crm-anim-delay: 80ms;
+}
+
+.crm-anim-stagger > *:nth-child(3) {
+    --crm-anim-delay: 120ms;
+}
+
+.crm-anim-stagger > *:nth-child(4) {
+    --crm-anim-delay: 160ms;
+}
+
+.crm-anim-stagger > *:nth-child(5) {
+    --crm-anim-delay: 200ms;
+}
+
+.crm-anim-stagger > *:nth-child(6) {
+    --crm-anim-delay: 240ms;
+}
+
+.crm-anim-stagger > *:nth-child(7) {
+    --crm-anim-delay: 280ms;
+}
+
+.crm-anim-stagger > *:nth-child(8) {
+    --crm-anim-delay: 320ms;
+}
+
+@keyframes crmFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes crmPopIn {
+    from {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.crm-dashboard-scroll .crm-anim-fade-up {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: none;
+}
+
+.crm-dashboard-scroll .crm-anim-pop {
+    opacity: 0;
+    transform: scale(0.98);
+    animation: none;
+}
+
+.crm-dashboard-scroll .crm-anim-stagger > * {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: none;
+}
+
+.crm-dashboard-scroll .crm-anim-fade-up.crm-inview {
+    animation: crmFadeUp 360ms ease-out forwards;
+    animation-delay: var(--crm-anim-delay, 0ms);
+}
+
+.crm-dashboard-scroll .crm-anim-pop.crm-inview {
+    animation: crmPopIn 320ms ease-out forwards;
+    animation-delay: var(--crm-anim-delay, 0ms);
+}
+
+.crm-dashboard-scroll .crm-anim-stagger.crm-inview > * {
+    animation: crmFadeUp 320ms ease-out forwards;
+    animation-delay: var(--crm-anim-delay, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .crm-anim-fade-up,
+    .crm-anim-pop,
+    .crm-anim-stagger > * {
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+    }
+}

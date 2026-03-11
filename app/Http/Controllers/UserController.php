@@ -2,31 +2,30 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\RoleEnum;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
-use App\Enums\RoleEnum;
 use App\Models\User;
-use Spatie\Permission\Models\Role;
+use App\Query\User\UserIndexQuery;
+use App\Services\UserService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
+    public function __construct(private UserService $userService)
+    {
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $query = User::query();
+        $query = User::query()->with('roles:id,name');
+        UserIndexQuery::build($query, $request);
 
-        if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-
-        $users = $query->latest()->paginate(10)->withQueryString();
+        $users = $query->paginate(10)->withQueryString();
         $roles = Role::orderBy('name')->pluck('name');
         $leaders = User::role([RoleEnum::LEADER->value, RoleEnum::ADMIN->value])->orderBy('name')->get(['id', 'name']);
 
@@ -41,17 +40,9 @@ class UserController extends Controller
      */
     public function store(StoreUserRequest $request)
     {
-        $data = $request->validated();
-        $role = $data['role'] ?? null;
+        $user = $this->userService->createUser($request->validated());
 
-        $userData = Arr::except($data, ['role']);
-        $userData['leader_id'] = $role === RoleEnum::SALESPERSON->value ? ($data['leader_id'] ?? null) : null;
-
-        $user = User::create($userData);
-        if (!empty($role)) {
-            $user->assignRole($role);
-        }
-        return redirect()->route('users.index')->with('success', 'User created successfully.');
+        return redirect()->route('users.index')->with('success', "User {$user->name} created successfully.");
     }
 
     /**
@@ -70,17 +61,9 @@ class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, User $user)
     {
-        $data = $request->validated();
-        $role = $data['role'] ?? null;
+        $this->userService->updateUser($user, $request->validated());
 
-        $userData = Arr::except($data, ['role']);
-        $userData['leader_id'] = $role === RoleEnum::SALESPERSON->value ? ($data['leader_id'] ?? null) : null;
-
-        $user->update($userData);
-        if (!empty($role)) {
-            $user->syncRoles([$role]);
-        }
-        return redirect()->route('users.index')->with('success', 'User updated successfully.');
+        return redirect()->back()->with('success', "User {$user->name} updated successfully.");
     }
 
     /**
@@ -88,20 +71,11 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        // Check if user has deals
-        if ($user->salesDeals()->exists()) {
-            // Redirect back with a message
-            return redirect()->back()->with('warning', 'Cannot delete user: they have deals assigned.');
+        $error = $this->userService->deleteUser($user);
+        if ($error) {
+            return redirect()->back()->with('warning', $error);
         }
 
-        // Check if user has leads
-        if ($user->salesLeads()->exists()) {
-            // Redirect back with a message
-            return redirect()->back()->with('warning', 'Cannot delete user: they have leads assigned.');
-        }
-
-        $user->delete();
-
-        return redirect()->back()->with('success', 'User deleted successfully.');
+        return redirect()->back()->with('success', "User {$user->name} deleted successfully.");
     }
 }
