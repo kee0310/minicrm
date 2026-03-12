@@ -25,4 +25,3 @@ class VerifyEmailController extends Controller
         return redirect()->intended(route('dashboard.index', absolute: false).'?verified=1');
     }
 }
-

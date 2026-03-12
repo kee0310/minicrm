@@ -4,11 +4,12 @@ namespace Database\Factories;
 
 use App\Enums\LeadStatusEnum;
 use App\Enums\RoleEnum;
+use App\Models\Lead;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Lead>
+ * @extends Factory<Lead>
  */
 class LeadFactory extends Factory
 {

@@ -82,4 +82,3 @@ return new class extends Migration
         Schema::dropIfExists('deal_pipelines');
     }
 };
-

@@ -1,10 +1,12 @@
 <?php
 
+use App\Enums\LeadStatusEnum;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -18,7 +20,7 @@ return new class extends Migration {
             $table->string('source')->nullable();
             $table->foreignId('salesperson_id')->constrained('users')->restrictOnDelete();
             $table->foreignId('leader_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->text('status')->default(\App\Enums\LeadStatusEnum::NEW->value);
+            $table->text('status')->default(LeadStatusEnum::NEW->value);
             $table->unsignedTinyInteger('age')->nullable();
             $table->string('ic_passport')->nullable();
             $table->string('occupation')->nullable();

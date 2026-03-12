@@ -1,15 +1,17 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Services\LoanNotificationService;
-use App\Http\Controllers\CommissionController;
+use App\Enums\RoleEnum;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\CommissionController;
 use App\Http\Controllers\DashboardChartController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DealController;
+use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LoanController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
-use App\Enums\RoleEnum;
+use App\Services\LoanNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
@@ -23,13 +25,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/charts', DashboardChartController::class)->name('dashboard.charts');
     Route::get('/dashboard/pipeline-details', [DashboardChartController::class, 'pipelineDetails'])->name('dashboard.pipeline-details');
     Route::get('/dashboard/sales', [DashboardController::class, 'sales'])
-        ->middleware('role:' . RoleEnum::SALESPERSON->value . '|' . RoleEnum::LEADER->value)
+        ->middleware('role:'.RoleEnum::SALESPERSON->value.'|'.RoleEnum::LEADER->value)
         ->name('dashboard.sales');
     Route::get('/dashboard/deals', [DashboardController::class, 'deals'])
-        ->middleware('role:' . RoleEnum::ADMIN->value)
+        ->middleware('role:'.RoleEnum::ADMIN->value)
         ->name('dashboard.deals');
     Route::get('/dashboard/salespeople', [DashboardController::class, 'salespeople'])
-        ->middleware('role:' . RoleEnum::ADMIN->value . '|' . RoleEnum::LEADER->value)
+        ->middleware('role:'.RoleEnum::ADMIN->value.'|'.RoleEnum::LEADER->value)
         ->name('dashboard.salespeople');
 });
 
@@ -51,10 +53,10 @@ Route::middleware('auth')->group(function () {
         return response()->json($badges);
     })->name('notifications.count');
 
-    Route::resource('users', UserController::class)->except(['create', 'edit'])->middleware('role:' . RoleEnum::ADMIN->value); // Only admin can manage users
-    Route::resource('leads', \App\Http\Controllers\LeadController::class)
+    Route::resource('users', UserController::class)->except(['create', 'edit'])->middleware('role:'.RoleEnum::ADMIN->value); // Only admin can manage users
+    Route::resource('leads', LeadController::class)
         ->except(['create', 'edit']);
-    Route::resource('deals', \App\Http\Controllers\DealController::class)
+    Route::resource('deals', DealController::class)
         ->except(['create', 'edit']);
     Route::resource('clients', ClientController::class)
         ->only(['index', 'show'])
@@ -97,4 +99,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

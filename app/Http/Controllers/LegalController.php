@@ -6,12 +6,11 @@ use App\Enums\LegalStatusEnum;
 use App\Enums\PipelineEnum;
 use App\Enums\RoleEnum;
 use App\Models\Deal;
-use App\Models\User;
 use App\Query\Legal\LegalIndexQuery;
 use App\Services\LegalService;
 use App\Services\LoanAccessService;
-use App\Services\OfficerDirectoryService;
 use App\Services\OfficerAssignmentService;
+use App\Services\OfficerDirectoryService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -87,7 +86,7 @@ class LegalController extends Controller
         ]);
 
         $this->legalService->updateLegalCase($deal, $data, $authUser);
-        $dealCode = $deal->deal_id ?? ('#' . $deal->id);
+        $dealCode = $deal->deal_id ?? ('#'.$deal->id);
         $successMessage = "Legal case for deal {$dealCode} updated successfully.";
 
         return $this->jsonOrRedirect($request, $successMessage);

@@ -17,9 +17,7 @@ class LeadController extends Controller
     public function __construct(
         private LeadService $leadService,
         private DealService $dealService
-    )
-    {
-    }
+    ) {}
 
     /**
      * Display a listing of the resource.

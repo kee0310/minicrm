@@ -62,7 +62,7 @@ class DealSeeder extends Seeder
 
                 $dealId = DB::table('deals')->insertGetId([
                     'lead_id' => $lead->id,
-                    'project_name' => $faker->city() . ' ' . $faker->randomElement([
+                    'project_name' => $faker->city().' '.$faker->randomElement([
                         'Residences',
                         'Tower',
                         'Heights',

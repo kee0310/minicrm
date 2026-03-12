@@ -46,12 +46,12 @@ class UpdateDealRequest extends FormRequest
                 'nullable',
                 'numeric',
                 'min:0',
-                Rule::requiredIf(fn () => !$isPipelineLocked && in_array($this->input('pipeline'), [PipelineEnum::BOOKING->value, PipelineEnum::SPA_SIGNED->value], true)),
+                Rule::requiredIf(fn () => ! $isPipelineLocked && in_array($this->input('pipeline'), [PipelineEnum::BOOKING->value, PipelineEnum::SPA_SIGNED->value], true)),
             ],
             'spa_date' => [
                 'nullable',
                 'date',
-                Rule::requiredIf(fn () => !$isPipelineLocked && $this->input('pipeline') === PipelineEnum::SPA_SIGNED->value),
+                Rule::requiredIf(fn () => ! $isPipelineLocked && $this->input('pipeline') === PipelineEnum::SPA_SIGNED->value),
             ],
             'deal_closing_date' => ['nullable', 'date'],
             'pipeline' => $isPipelineLocked

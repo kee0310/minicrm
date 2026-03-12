@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -12,8 +13,8 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable, HasRoles, SoftDeletes;
+    /** @use HasFactory<UserFactory> */
+    use HasFactory, HasRoles, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
 
     /**
      * The attributes that are mass assignable.
@@ -59,7 +60,7 @@ class User extends Authenticatable
      */
     public function salesLeads()
     {
-        return $this->hasMany(\App\Models\Lead::class, 'salesperson_id');
+        return $this->hasMany(Lead::class, 'salesperson_id');
     }
 
     /**
@@ -67,7 +68,7 @@ class User extends Authenticatable
      */
     public function salesDeals()
     {
-        return $this->hasMany(\App\Models\Deal::class, 'salesperson_id');
+        return $this->hasMany(Deal::class, 'salesperson_id');
     }
 
     /**
@@ -75,7 +76,7 @@ class User extends Authenticatable
      */
     public function leaderDeals()
     {
-        return $this->hasMany(\App\Models\Deal::class, 'leader_id');
+        return $this->hasMany(Deal::class, 'leader_id');
     }
 
     public function leader()

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\RoleEnum;
 use App\Models\User;
 use Carbon\Carbon;
+use Faker\Generator;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -91,7 +92,7 @@ class UserSeeder extends Seeder
         $reportingPool = $leaders
             ->merge($admins)
             ->merge(
-                $specialUsers->filter(fn(User $user) => $user->hasAnyRole([RoleEnum::ADMIN->value, RoleEnum::LEADER->value]))
+                $specialUsers->filter(fn (User $user) => $user->hasAnyRole([RoleEnum::ADMIN->value, RoleEnum::LEADER->value]))
             )
             ->values();
         for ($i = 1; $i <= $salespersonCount; $i++) {
@@ -114,7 +115,7 @@ class UserSeeder extends Seeder
         string $role,
         int $count,
         string $password,
-        \Faker\Generator $faker
+        Generator $faker
     ): Collection {
         $users = collect();
 

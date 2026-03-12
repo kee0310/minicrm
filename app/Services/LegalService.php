@@ -11,9 +11,7 @@ use App\Models\User;
 
 class LegalService
 {
-    public function __construct(private OfficerAssignmentService $officerAssignment)
-    {
-    }
+    public function __construct(private OfficerAssignmentService $officerAssignment) {}
 
     public function updateLegalCase(Deal $deal, array $data, ?User $user): LegalCase
     {

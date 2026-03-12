@@ -186,8 +186,8 @@
                                     {{ $link['label'] }}
                                 </span>
                             </span>
-                            <i class="fa-solid fa-chevron-down crm-nav-icon crm-nav-icon-sm text-xs transition-transform"
-                                x-show="sidebarExpanded" :class="{ 'rotate-180': submenu }"></i>
+                            <i class="fa-solid fa-chevron-down crm-nav-icon crm-nav-icon-sm text-xs crm-nav-chevron"
+                                x-show="sidebarExpanded" :class="{ 'is-open': submenu }"></i>
                         </button>
 
                         <!-- Expanded submenu -->
@@ -290,8 +290,8 @@
                             <i class="{{ $link['icon'] }} crm-nav-icon text-base"></i>
                             <span class="truncate whitespace-nowrap">{{ $link['label'] }}</span>
                         </span>
-                        <i class="fa-solid fa-chevron-down crm-nav-icon crm-nav-icon-sm text-xs transition"
-                            :style="`transform: rotate(${loanOpen ? 180 : 0}deg);`"></i>
+                        <i class="fa-solid fa-chevron-down crm-nav-icon crm-nav-icon-sm text-xs crm-nav-chevron"
+                            :class="{ 'is-open': loanOpen }"></i>
                     </button>
                     <div x-show="loanOpen" class="crm-nav-submenu">
                         @foreach ($link['children'] as $child)

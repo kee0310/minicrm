@@ -100,23 +100,40 @@
             transform 220ms ease-out;
     }
 
-    .crm-nav-icon {
-        width: 1.25rem;
-        min-width: 1.25rem;
-        height: 20px;
-        align-items: center;
-        justify-content: center;
-    }
+.crm-nav-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    min-width: 1.25rem;
+    height: 20px;
+    line-height: 1;
+    vertical-align: middle;
+}
 
-    .crm-nav-icon.crm-nav-icon-sm {
-        width: 1rem;
-        min-width: 1rem;
-        height: 1rem;
-    }
+.crm-nav-icon.crm-nav-icon-sm {
+    width: 1rem;
+    min-width: 1rem;
+    height: 1rem;
+}
 
-    html[data-sidebar-expanded='1'][data-sidebar-transition='0']
-        .crm-sidebar-desktop
-        [data-sidebar-label],
+.crm-nav-chevron {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transform-origin: center;
+    transform-box: fill-box;
+    transition: transform 200ms ease;
+}
+
+.crm-nav-chevron.is-open {
+    transform: rotate(180deg);
+}
+
+html[data-sidebar-expanded='1'][data-sidebar-transition='0']
+    .crm-sidebar-desktop
+    [data-sidebar-label],
     html[data-sidebar-expanded='1'][data-sidebar-transition='0']
         .crm-sidebar-desktop
         [data-sidebar-chevron] {
@@ -155,7 +172,7 @@
 }
 
 .crm-nav-item {
-    @apply flex w-full gap-3 rounded-md px-3 text-left text-[1.02rem] font-medium;
+    @apply flex w-full items-center gap-3 rounded-md px-3 text-left text-[1.02rem] font-medium;
 }
 
 .crm-nav-item-active {

@@ -16,8 +16,7 @@ class BorrowerProfileQuery
         Request $request,
         bool $canManageLoanRecords,
         ?User $user = null
-    ): Builder
-    {
+    ): Builder {
         if ($user?->hasRole(RoleEnum::LOAN_OFFICER->value) && ! $user->hasRole(RoleEnum::ADMIN->value)) {
             $query->where(function (Builder $loanOfficerQuery) use ($user) {
                 $loanOfficerQuery->whereNull('loan_officer_id')

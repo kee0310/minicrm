@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\PipelineEnum;
+use App\Enums\RoleEnum;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -133,19 +134,19 @@ class Deal extends Model
             return $query->whereRaw('1 = 0');
         }
 
-        if ($user->hasRole(\App\Enums\RoleEnum::ADMIN->value)) {
+        if ($user->hasRole(RoleEnum::ADMIN->value)) {
             return $query;
         }
 
-        if ($user->hasRole(\App\Enums\RoleEnum::LOAN_OFFICER->value)) {
+        if ($user->hasRole(RoleEnum::LOAN_OFFICER->value)) {
             return $query->where('loan_officer_id', $user->id);
         }
 
-        if ($user->hasRole(\App\Enums\RoleEnum::SALESPERSON->value)) {
+        if ($user->hasRole(RoleEnum::SALESPERSON->value)) {
             return $query->where('salesperson_id', $user->id);
         }
 
-        if ($user->hasRole(\App\Enums\RoleEnum::LEADER->value)) {
+        if ($user->hasRole(RoleEnum::LEADER->value)) {
             return $query->where('leader_id', $user->id);
         }
 

@@ -3,9 +3,6 @@
 namespace App\Query\Lead;
 
 use App\Enums\LeadStatusEnum;
-use App\Models\Deal;
-use App\Models\Lead;
-use App\Models\User;
 use App\Support\Query\ListQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -36,23 +33,23 @@ class LeadIndexQuery
             ->leftJoin('users as leaders', 'leaders.id', '=', 'leads.leader_id')
             ->leftJoin('deals as latest_deals', 'latest_deals.lead_id', '=', 'leads.id')
             ->select([
-            'leads.id',
-            'leads.name',
-            'leads.email',
-            'leads.phone',
-            'leads.source',
-            'leads.salesperson_id',
-            'leads.leader_id',
-            'leads.status',
-            'leads.age',
-            'leads.ic_passport',
-            'leads.occupation',
-            'leads.company',
-            'leads.working_years',
-            'leads.monthly_income',
-            'leads.fixed_income',
-            'leads.created_at',
-        ])
+                'leads.id',
+                'leads.name',
+                'leads.email',
+                'leads.phone',
+                'leads.source',
+                'leads.salesperson_id',
+                'leads.leader_id',
+                'leads.status',
+                'leads.age',
+                'leads.ic_passport',
+                'leads.occupation',
+                'leads.company',
+                'leads.working_years',
+                'leads.monthly_income',
+                'leads.fixed_income',
+                'leads.created_at',
+            ])
             ->addSelect([
                 'salespersons.name as salesperson_name',
                 'leaders.name as leader_name',

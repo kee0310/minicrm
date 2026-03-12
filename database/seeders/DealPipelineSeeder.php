@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Enums\PipelineEnum;
 use App\Models\Deal;
+use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -90,6 +92,7 @@ class DealPipelineSeeder extends Seeder
                     foreach (self::STAGE_COLUMNS as $index => $column) {
                         if (! is_null($payload[$column])) {
                             $cursor = $payload[$column];
+
                             continue;
                         }
 
@@ -112,11 +115,11 @@ class DealPipelineSeeder extends Seeder
             }, 'id');
     }
 
-    private function clampToSeedWindow(\Carbon\CarbonInterface $date): \Carbon\CarbonInterface
+    private function clampToSeedWindow(CarbonInterface $date): CarbonInterface
     {
         $year = (int) now()->year;
-        $start = \Carbon\Carbon::create($year, 1, 1, 0, 0, 0);
-        $end = \Carbon\Carbon::create($year, 2, 1, 23, 59, 59)->endOfMonth();
+        $start = Carbon::create($year, 1, 1, 0, 0, 0);
+        $end = Carbon::create($year, 2, 1, 23, 59, 59)->endOfMonth();
 
         if ($date->lt($start)) {
             return $start;

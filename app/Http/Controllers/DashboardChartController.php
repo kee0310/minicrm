@@ -13,8 +13,7 @@ class DashboardChartController extends Controller
 {
     public function __construct(
         private readonly DashboardService $dashboardService
-    ) {
-    }
+    ) {}
 
     public function __invoke(Request $request)
     {

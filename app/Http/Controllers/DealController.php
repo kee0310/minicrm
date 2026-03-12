@@ -13,9 +13,7 @@ use Illuminate\Support\Facades\Auth;
 
 class DealController extends Controller
 {
-    public function __construct(private DealService $dealService)
-    {
-    }
+    public function __construct(private DealService $dealService) {}
 
     public function index(Request $request)
     {
@@ -57,5 +55,4 @@ class DealController extends Controller
 
         return redirect()->route('deals.index')->with('success', "Deal {$deal->deal_id} deleted successfully.");
     }
-
 }

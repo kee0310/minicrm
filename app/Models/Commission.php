@@ -24,4 +24,3 @@ class Commission extends Model
         return $this->belongsTo(Deal::class, 'deal_id');
     }
 }
-

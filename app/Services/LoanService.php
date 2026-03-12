@@ -10,13 +10,12 @@ use App\Models\Lead;
 use App\Models\LoanBankSubmission;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class LoanService
 {
-    public function __construct(private OfficerAssignmentService $officerAssignment)
-    {
-    }
+    public function __construct(private OfficerAssignmentService $officerAssignment) {}
 
     public function syncDealPipelineByApprovalStatus(Deal $deal, string $status): void
     {
@@ -100,15 +99,15 @@ class LoanService
             'selling_price' => $deal->selling_price,
             'created_at' => optional($deal->created_at)->format('Y-m-d'),
             'pipeline_dates' => [
-                'lead_date' => $pipelineDates?->lead_date ? \Illuminate\Support\Carbon::parse($pipelineDates->lead_date)->format('Y-m-d') : null,
-                'viewing_date' => $pipelineDates?->viewing_date ? \Illuminate\Support\Carbon::parse($pipelineDates->viewing_date)->format('Y-m-d') : null,
-                'booking_date' => $pipelineDates?->booking_date ? \Illuminate\Support\Carbon::parse($pipelineDates->booking_date)->format('Y-m-d') : null,
-                'spa_signed_date' => $pipelineDates?->spa_signed_date ? \Illuminate\Support\Carbon::parse($pipelineDates->spa_signed_date)->format('Y-m-d') : null,
-                'loan_submitted_date' => $pipelineDates?->loan_submitted_date ? \Illuminate\Support\Carbon::parse($pipelineDates->loan_submitted_date)->format('Y-m-d') : null,
-                'loan_approved_date' => $pipelineDates?->loan_approved_date ? \Illuminate\Support\Carbon::parse($pipelineDates->loan_approved_date)->format('Y-m-d') : null,
-                'legal_processing_date' => $pipelineDates?->legal_processing_date ? \Illuminate\Support\Carbon::parse($pipelineDates->legal_processing_date)->format('Y-m-d') : null,
-                'completed_date' => $pipelineDates?->completed_date ? \Illuminate\Support\Carbon::parse($pipelineDates->completed_date)->format('Y-m-d') : null,
-                'commission_paid_date' => $pipelineDates?->commission_paid_date ? \Illuminate\Support\Carbon::parse($pipelineDates->commission_paid_date)->format('Y-m-d') : null,
+                'lead_date' => $pipelineDates?->lead_date ? Carbon::parse($pipelineDates->lead_date)->format('Y-m-d') : null,
+                'viewing_date' => $pipelineDates?->viewing_date ? Carbon::parse($pipelineDates->viewing_date)->format('Y-m-d') : null,
+                'booking_date' => $pipelineDates?->booking_date ? Carbon::parse($pipelineDates->booking_date)->format('Y-m-d') : null,
+                'spa_signed_date' => $pipelineDates?->spa_signed_date ? Carbon::parse($pipelineDates->spa_signed_date)->format('Y-m-d') : null,
+                'loan_submitted_date' => $pipelineDates?->loan_submitted_date ? Carbon::parse($pipelineDates->loan_submitted_date)->format('Y-m-d') : null,
+                'loan_approved_date' => $pipelineDates?->loan_approved_date ? Carbon::parse($pipelineDates->loan_approved_date)->format('Y-m-d') : null,
+                'legal_processing_date' => $pipelineDates?->legal_processing_date ? Carbon::parse($pipelineDates->legal_processing_date)->format('Y-m-d') : null,
+                'completed_date' => $pipelineDates?->completed_date ? Carbon::parse($pipelineDates->completed_date)->format('Y-m-d') : null,
+                'commission_paid_date' => $pipelineDates?->commission_paid_date ? Carbon::parse($pipelineDates->commission_paid_date)->format('Y-m-d') : null,
             ],
             'client' => [
                 'lead_id' => $deal->lead_id,
@@ -260,9 +259,9 @@ class LoanService
     {
         $bankApprovalRateRows = $scopedQuery
             ->whereNotNull('bank_name')
-            ->selectRaw("bank_name, SUM(CASE WHEN approval_status = ? THEN 1 ELSE 0 END) as approved_count", [LoanApprovalStatusEnum::APPROVED->value])
+            ->selectRaw('bank_name, SUM(CASE WHEN approval_status = ? THEN 1 ELSE 0 END) as approved_count', [LoanApprovalStatusEnum::APPROVED->value])
             ->selectRaw(
-                "SUM(CASE WHEN approval_status IN (?, ?, ?, ?) THEN 1 ELSE 0 END) as submitted_count",
+                'SUM(CASE WHEN approval_status IN (?, ?, ?, ?) THEN 1 ELSE 0 END) as submitted_count',
                 LoanApprovalStatusEnum::submittedToBank()
             )
             ->groupBy('bank_name')

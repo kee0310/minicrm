@@ -4,13 +4,14 @@ namespace Database\Factories;
 
 use App\Enums\PipelineEnum;
 use App\Enums\RoleEnum;
+use App\Models\Deal;
 use App\Models\Lead;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Deal>
+ * @extends Factory<Deal>
  */
 class DealFactory extends Factory
 {

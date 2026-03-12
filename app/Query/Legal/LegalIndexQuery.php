@@ -29,12 +29,14 @@ class LegalIndexQuery
     public static function summary(Builder $summaryBase): array
     {
         $summaryRow = (clone $summaryBase)
+            ->reorder()
+            ->select([])
             ->selectRaw('COUNT(DISTINCT deals.id) as total')
             ->selectRaw('SUM(CASE WHEN legals.id IS NULL THEN 1 ELSE 0 END) as new')
-            ->selectRaw("SUM(CASE WHEN legals.status = ? THEN 1 ELSE 0 END) as drafting", [LegalStatusEnum::DRAFTING->value])
-            ->selectRaw("SUM(CASE WHEN legals.status = ? THEN 1 ELSE 0 END) as pending_bank", [LegalStatusEnum::PENDING_BANK->value])
-            ->selectRaw("SUM(CASE WHEN legals.status = ? THEN 1 ELSE 0 END) as pending_customer_signature", [LegalStatusEnum::PENDING_CUSTOMER_SIGNATURE->value])
-            ->selectRaw("SUM(CASE WHEN legals.status = ? THEN 1 ELSE 0 END) as completed", [LegalStatusEnum::COMPLETED->value])
+            ->selectRaw('SUM(CASE WHEN legals.status = ? THEN 1 ELSE 0 END) as drafting', [LegalStatusEnum::DRAFTING->value])
+            ->selectRaw('SUM(CASE WHEN legals.status = ? THEN 1 ELSE 0 END) as pending_bank', [LegalStatusEnum::PENDING_BANK->value])
+            ->selectRaw('SUM(CASE WHEN legals.status = ? THEN 1 ELSE 0 END) as pending_customer_signature', [LegalStatusEnum::PENDING_CUSTOMER_SIGNATURE->value])
+            ->selectRaw('SUM(CASE WHEN legals.status = ? THEN 1 ELSE 0 END) as completed', [LegalStatusEnum::COMPLETED->value])
             ->first();
 
         return [

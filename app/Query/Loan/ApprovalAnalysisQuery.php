@@ -112,7 +112,7 @@ class ApprovalAnalysisQuery
                 'CASE
                     WHEN loans.applied_amount IS NULL OR loans.applied_amount = 0 OR loans.approved_amount IS NULL THEN NULL
                     ELSE ROUND(((loans.approved_amount - loans.applied_amount) / loans.applied_amount) * 100, 2)
-                END ' . $sortDir
+                END '.$sortDir
             );
 
             return;

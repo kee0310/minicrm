@@ -4,10 +4,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
-        if (!Schema::hasTable('loans')) {
+        if (! Schema::hasTable('loans')) {
             return;
         }
 
@@ -17,7 +18,7 @@ return new class extends Migration {
         }
 
         $column = DB::selectOne("SHOW COLUMNS FROM loans LIKE 'loan_id'");
-        if (!$column) {
+        if (! $column) {
             return;
         }
 
@@ -34,7 +35,7 @@ return new class extends Migration {
 
     public function down(): void
     {
-        if (!Schema::hasTable('loans')) {
+        if (! Schema::hasTable('loans')) {
             return;
         }
 
@@ -44,12 +45,12 @@ return new class extends Migration {
         }
 
         $column = DB::selectOne("SHOW COLUMNS FROM loans LIKE 'loan_id'");
-        if (!$column) {
+        if (! $column) {
             return;
         }
 
         $type = strtolower((string) ($column->Type ?? ''));
-        if (!str_contains($type, 'varchar')) {
+        if (! str_contains($type, 'varchar')) {
             return;
         }
 

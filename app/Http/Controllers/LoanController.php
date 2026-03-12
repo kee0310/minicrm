@@ -17,8 +17,8 @@ use App\Query\Loan\PreQualificationQuery;
 use App\Services\LoanAccessService;
 use App\Services\LoanNotificationService;
 use App\Services\LoanService;
-use App\Services\OfficerDirectoryService;
 use App\Services\OfficerAssignmentService;
+use App\Services\OfficerDirectoryService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -139,6 +139,7 @@ class LoanController extends Controller
 
         $deals = $query->paginate(10)->withQueryString();
         $bankOptions = BankEnum::values();
+
         return view('loans.pre-qualification', compact('deals', 'bankOptions', 'canManageLoanRecords'));
     }
 
@@ -227,7 +228,7 @@ class LoanController extends Controller
             ->firstOrFail();
         $submission = $this->loanService->createBankSubmission($deal, $data);
 
-        $dealCode = $deal->deal_id ?? ('#' . $deal->id);
+        $dealCode = $deal->deal_id ?? ('#'.$deal->id);
         $successMessage = "Bank submission for deal {$dealCode} added successfully.";
 
         return $this->jsonOrRedirect(
@@ -266,7 +267,7 @@ class LoanController extends Controller
 
         $this->loanService->updateBankSubmission($submission, $deal, $data);
 
-        $dealCode = $submission->deal?->deal_id ?? ('#' . $submission->deal_id);
+        $dealCode = $submission->deal?->deal_id ?? ('#'.$submission->deal_id);
         $successMessage = "Bank submission for deal {$dealCode} updated successfully.";
 
         return $this->jsonOrRedirect($request, $successMessage);
@@ -310,7 +311,7 @@ class LoanController extends Controller
         $data = $this->validateApprovalAnalysis($request);
         $this->loanService->persistApprovalAnalysis($deal, $data);
 
-        $dealCode = $deal->deal_id ?? ('#' . $deal->id);
+        $dealCode = $deal->deal_id ?? ('#'.$deal->id);
 
         return redirect()->route('loans.approval-analysis')->with('success', "Approval analysis for deal {$dealCode} added successfully.");
     }
@@ -325,7 +326,7 @@ class LoanController extends Controller
         $data = $this->validateApprovalAnalysis($request);
         $this->loanService->persistApprovalAnalysis($deal, $data);
 
-        $dealCode = $deal->deal_id ?? ('#' . $deal->id);
+        $dealCode = $deal->deal_id ?? ('#'.$deal->id);
 
         return redirect()->back()->with('success', "Approval analysis for deal {$dealCode} updated successfully.");
     }

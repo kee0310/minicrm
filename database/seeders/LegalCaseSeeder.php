@@ -6,6 +6,7 @@ use App\Enums\PipelineEnum;
 use App\Models\Deal;
 use App\Models\LegalCase;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -67,7 +68,7 @@ class LegalCaseSeeder extends Seeder
         }
     }
 
-    private function clampToSeedWindow(\Carbon\CarbonInterface $date): \Carbon\CarbonInterface
+    private function clampToSeedWindow(CarbonInterface $date): CarbonInterface
     {
         $year = (int) now()->year;
         $start = Carbon::create($year, 1, 1, 0, 0, 0);

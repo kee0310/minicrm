@@ -23,7 +23,7 @@ enum LeadStatusEnum: string
 
     public function badge(): string
     {
-        return "px-2 py-1 text-xs font-semibold rounded-full " . $this->color();
+        return 'px-2 py-1 text-xs font-semibold rounded-full '.$this->color();
     }
 
     public static function values(): array
@@ -31,4 +31,3 @@ enum LeadStatusEnum: string
         return array_column(self::cases(), 'value');
     }
 }
-

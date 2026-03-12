@@ -46,7 +46,7 @@ class CommissionController extends Controller
         $status = $data['payment_status'];
 
         $this->commissionService->updateCommission($commission, $paid, $status);
-        $dealCode = $commission->deal?->deal_id ?? ('#' . $commission->deal_id);
+        $dealCode = $commission->deal?->deal_id ?? ('#'.$commission->deal_id);
 
         return redirect()->back()->with('success', "Commission for deal {$dealCode} updated successfully.");
     }

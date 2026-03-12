@@ -3,13 +3,15 @@
 namespace App\Models;
 
 use App\Enums\LeadStatusEnum;
+use App\Enums\RoleEnum;
+use Database\Factories\LeadFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Lead extends Model
 {
-    /** @use HasFactory<\Database\Factories\LeadFactory> */
+    /** @use HasFactory<LeadFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -49,11 +51,11 @@ class Lead extends Model
 
     public function scopeVisibleTo(Builder $query, ?User $user): Builder
     {
-        if (! $user || $user->hasRole(\App\Enums\RoleEnum::ADMIN->value)) {
+        if (! $user || $user->hasRole(RoleEnum::ADMIN->value)) {
             return $query;
         }
 
-        if ($user->hasRole(\App\Enums\RoleEnum::LEADER->value)) {
+        if ($user->hasRole(RoleEnum::LEADER->value)) {
             return $query->where(function (Builder $roleQuery) use ($user) {
                 $roleQuery->where('salesperson_id', $user->id)
                     ->orWhere('leader_id', $user->id);

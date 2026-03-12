@@ -33,6 +33,7 @@ class DashboardService
         PipelineEnum::COMPLETED->value => 'completed_date',
         PipelineEnum::COMMISSION_PAID->value => 'commission_paid_date',
     ];
+
     public function salespeopleData(Request $request, User $user, Carbon $selectedMonth): array
     {
         $tab = (string) $request->query('tab', 'salesperson');
@@ -70,7 +71,7 @@ class DashboardService
             return round((($current - $previous) / $previous) * 100, 2);
         };
         $dashboardRoute = $dashboardMode === 'deals' ? 'dashboard.deals' : 'dashboard.sales';
-        $monthRoute = fn(Carbon $month) => route($dashboardRoute, ['month' => $month->format('Y-m')]);
+        $monthRoute = fn (Carbon $month) => route($dashboardRoute, ['month' => $month->format('Y-m')]);
         $loanStages = PipelineEnum::loanStages();
 
         $applyDealScope = function (Builder $query) use ($isAdmin, $isLeader, $isSalesperson, $user): Builder {
@@ -105,11 +106,11 @@ class DashboardService
             return $query->whereRaw('1 = 0');
         };
 
-        $dealQuery = fn() => $applyDealScope(Deal::query());
-        $leadQuery = fn() => $applyLeadScope(Lead::query());
-        $loanQuery = fn() => LoanBankSubmission::query()->whereHas('deal', fn(Builder $q) => $applyDealScope($q));
-        $legalCaseQuery = fn() => LegalCase::query()->whereHas('deal', fn(Builder $q) => $applyDealScope($q));
-        $commissionQuery = fn() => Commission::query()->whereHas('deal', fn(Builder $q) => $applyDealScope($q));
+        $dealQuery = fn () => $applyDealScope(Deal::query());
+        $leadQuery = fn () => $applyLeadScope(Lead::query());
+        $loanQuery = fn () => LoanBankSubmission::query()->whereHas('deal', fn (Builder $q) => $applyDealScope($q));
+        $legalCaseQuery = fn () => LegalCase::query()->whereHas('deal', fn (Builder $q) => $applyDealScope($q));
+        $commissionQuery = fn () => Commission::query()->whereHas('deal', fn (Builder $q) => $applyDealScope($q));
 
         $monthlyLeads = $leadQuery()
             ->whereBetween('created_at', [$startMonth, $endMonth]);
@@ -687,9 +688,9 @@ class DashboardService
             ->pluck('name', 'id');
 
         return [
-            'labels' => $rankedRows->map(fn($row) => (string) ($userNames[$row->user_id] ?? "User #{$row->user_id}"))->all(),
-            'deals' => $rankedRows->map(fn($row) => (float) ($row->deals_count ?? 0))->all(),
-            'commission' => $rankedRows->map(fn($row) => (float) ($row->total_commission ?? 0))->all(),
+            'labels' => $rankedRows->map(fn ($row) => (string) ($userNames[$row->user_id] ?? "User #{$row->user_id}"))->all(),
+            'deals' => $rankedRows->map(fn ($row) => (float) ($row->deals_count ?? 0))->all(),
+            'commission' => $rankedRows->map(fn ($row) => (float) ($row->total_commission ?? 0))->all(),
         ];
     }
 

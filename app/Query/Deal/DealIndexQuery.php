@@ -3,9 +3,6 @@
 namespace App\Query\Deal;
 
 use App\Enums\PipelineEnum;
-use App\Models\Deal;
-use App\Models\Lead;
-use App\Models\User;
 use App\Support\Query\ListQuery;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -36,21 +33,21 @@ class DealIndexQuery
             ->leftJoin('users as salespersons', 'salespersons.id', '=', 'deals.salesperson_id')
             ->leftJoin('users as leaders', 'leaders.id', '=', 'deals.leader_id')
             ->select([
-            'deals.id',
-            'deals.deal_id',
-            'deals.lead_id',
-            'deals.project_name',
-            'deals.developer',
-            'deals.unit_number',
-            'deals.selling_price',
-            'deals.commission_percentage',
-            'deals.commission_amount',
-            'deals.salesperson_id',
-            'deals.leader_id',
-            'deals.booking_fee',
-            'deals.pipeline',
-            'deals.created_at',
-        ])
+                'deals.id',
+                'deals.deal_id',
+                'deals.lead_id',
+                'deals.project_name',
+                'deals.developer',
+                'deals.unit_number',
+                'deals.selling_price',
+                'deals.commission_percentage',
+                'deals.commission_amount',
+                'deals.salesperson_id',
+                'deals.leader_id',
+                'deals.booking_fee',
+                'deals.pipeline',
+                'deals.created_at',
+            ])
             ->addSelect([
                 'leads.name as lead_name',
                 'salespersons.name as salesperson_name',

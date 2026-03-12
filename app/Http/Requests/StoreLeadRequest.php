@@ -4,9 +4,10 @@ namespace App\Http\Requests;
 
 use App\Enums\LeadStatusEnum;
 use App\Enums\RoleEnum;
+use App\Models\User;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Models\User;
 
 class StoreLeadRequest extends FormRequest
 {
@@ -21,7 +22,7 @@ class StoreLeadRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -61,13 +62,13 @@ class StoreLeadRequest extends FormRequest
                 Rule::in($salespersonIds),
             ],
             'status' => ['required', 'string', Rule::in(LeadStatusEnum::values())],
-            'age' => ['nullable', 'integer', 'min:1', 'max:120', 'required_if:status,' . LeadStatusEnum::DEAL->value],
-            'ic_passport' => ['nullable', 'string', 'max:255', 'required_if:status,' . LeadStatusEnum::DEAL->value],
-            'occupation' => ['nullable', 'string', 'max:255', 'required_if:status,' . LeadStatusEnum::DEAL->value],
-            'company' => ['nullable', 'string', 'max:255', 'required_if:status,' . LeadStatusEnum::DEAL->value],
-            'working_years' => ['nullable', 'integer', 'min:0', 'max:80', 'required_if:status,' . LeadStatusEnum::DEAL->value],
-            'monthly_income' => ['nullable', 'numeric', 'min:0', 'required_if:status,' . LeadStatusEnum::DEAL->value],
-            'fixed_income' => ['nullable', 'numeric', 'min:0', 'required_if:status,' . LeadStatusEnum::DEAL->value],
+            'age' => ['nullable', 'integer', 'min:1', 'max:120', 'required_if:status,'.LeadStatusEnum::DEAL->value],
+            'ic_passport' => ['nullable', 'string', 'max:255', 'required_if:status,'.LeadStatusEnum::DEAL->value],
+            'occupation' => ['nullable', 'string', 'max:255', 'required_if:status,'.LeadStatusEnum::DEAL->value],
+            'company' => ['nullable', 'string', 'max:255', 'required_if:status,'.LeadStatusEnum::DEAL->value],
+            'working_years' => ['nullable', 'integer', 'min:0', 'max:80', 'required_if:status,'.LeadStatusEnum::DEAL->value],
+            'monthly_income' => ['nullable', 'numeric', 'min:0', 'required_if:status,'.LeadStatusEnum::DEAL->value],
+            'fixed_income' => ['nullable', 'numeric', 'min:0', 'required_if:status,'.LeadStatusEnum::DEAL->value],
         ];
     }
 
