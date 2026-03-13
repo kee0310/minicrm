@@ -31,7 +31,7 @@
                 }),
             })">
                 <div class="crm-filter-block">
-                    <x-filter-search-row model="searchTerm" placeholder="Search project or client..."
+                    <x-filter-search-row model="searchTerm" placeholder="Search project, client or lawyer firm..."
                         :request-value="request('search', '')" />
                     <div class="crm-filter-tabs-scroll scrollbar-hide">
                         <div class="crm-filter-tabs">

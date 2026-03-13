@@ -67,17 +67,15 @@
                         {{ optional($lead->created_at)->format('Y-m-d') ?? '-' }}
                     </td>
                     <td>
-                        @if ($lead->status !== \App\Enums\LeadStatusEnum::DEAL)
-                            <form method="POST" action="{{ route('leads.destroy', $lead) }}" class="inline"
-                                data-preserve-list-state
-                                data-confirm="Confirm to delete lead {{ $lead->name }}?">
-                                @method('DELETE')
-                                @csrf
-                                <button type="submit" class="crm-action-btn-danger">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
-                            </form>
-                        @endif
+                        <form method="POST" action="{{ route('leads.destroy', $lead) }}" class="inline"
+                            data-preserve-list-state
+                            data-confirm="Confirm to delete lead {{ $lead->name }}?">
+                            @method('DELETE')
+                            @csrf
+                            <button type="submit" class="crm-action-btn-danger">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </form>
                     </td>
                 </tr>
             @empty

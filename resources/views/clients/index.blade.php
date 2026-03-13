@@ -19,7 +19,7 @@
 
                 <div class="crm-filter-block">
                     <div class="crm-filter-toolbar">
-                        <x-filter-search-row model="searchTerm" placeholder="Search client id, name, email or phone..."
+                        <x-filter-search-row model="searchTerm" placeholder="Search name, email or phone..."
                             :request-value="request('search', '')" />
                     </div>
                 </div>

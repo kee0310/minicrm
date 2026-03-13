@@ -27,8 +27,8 @@ class UserIndexQuery
         }
 
         $query->where(function (Builder $searchQuery) use ($search) {
-            $searchQuery->where('name', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%");
+            $searchQuery->where('users.name', 'like', "%{$search}%")
+                ->orWhere('users.email', 'like', "%{$search}%");
         });
     }
 

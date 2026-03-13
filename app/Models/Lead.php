@@ -49,6 +49,11 @@ class Lead extends Model
         return $this->belongsTo(User::class, 'leader_id');
     }
 
+    public function deals()
+    {
+        return $this->hasMany(Deal::class, 'lead_id');
+    }
+
     public function scopeVisibleTo(Builder $query, ?User $user): Builder
     {
         if (! $user || $user->hasRole(RoleEnum::ADMIN->value)) {
@@ -57,12 +62,12 @@ class Lead extends Model
 
         if ($user->hasRole(RoleEnum::LEADER->value)) {
             return $query->where(function (Builder $roleQuery) use ($user) {
-                $roleQuery->where('salesperson_id', $user->id)
-                    ->orWhere('leader_id', $user->id);
+                $roleQuery->where('leads.salesperson_id', $user->id)
+                    ->orWhere('leads.leader_id', $user->id);
             });
         }
 
-        return $query->where('salesperson_id', $user->id);
+        return $query->where('leads.salesperson_id', $user->id);
     }
 
     // Client profiles are stored directly on leads now.

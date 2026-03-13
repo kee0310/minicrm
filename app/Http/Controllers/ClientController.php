@@ -28,8 +28,12 @@ class ClientController extends Controller
     public function show(Lead $lead)
     {
         $this->leadService->ensureLeadAccess(auth()->user(), $lead);
+        $leadIds = Lead::query()
+            ->visibleTo(auth()->user())
+            ->where('email', $lead->email)
+            ->pluck('id');
         $deals = Deal::with(['client', 'salesperson', 'leader', 'loanOfficer', 'legalOfficer'])
-            ->where('lead_id', $lead->id)
+            ->whereIn('lead_id', $leadIds)
             ->latest('updated_at')
             ->get();
 

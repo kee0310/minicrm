@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Enums\LeadStatusEnum;
 use App\Enums\RoleEnum;
 use App\Models\Lead;
 use App\Models\User;
@@ -40,7 +39,7 @@ class LeadService
 
     public function isLockedDealLead(Lead $lead): bool
     {
-        return ($lead->status?->value ?? $lead->status) === LeadStatusEnum::DEAL->value;
+        return $lead->deals()->exists();
     }
 
     public function ensureLeadAccess(?User $user, Lead $lead): void

@@ -323,13 +323,10 @@ const enableDeleteConfirmDialog = () => {
         if (!form.hasAttribute('data-confirm')) {
             return;
         }
-        event.preventDefault();
         const message = form.getAttribute('data-confirm') || 'Are you sure you want to continue?';
         const confirmed = window.confirm(message);
-        if (confirmed) {
-            // Submit directly after confirmation to avoid double-submit loops.
-            form.removeAttribute('data-confirm');
-            form.submit();
+        if (!confirmed) {
+            event.preventDefault();
         }
     });
 };
@@ -444,6 +441,9 @@ const enableSearchableNameSelects = () => {
 
     document.querySelectorAll('select.crm-form-select, select[data-searchable-name="true"], select[data-enhanced-select="true"]').forEach((select) => {
         if (!(select instanceof HTMLSelectElement) || select.dataset.searchBound === '1') {
+            return;
+        }
+        if (select.dataset.nativeSelect === 'true') {
             return;
         }
 

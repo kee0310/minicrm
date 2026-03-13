@@ -43,6 +43,7 @@ class BankSubmissionQuery
             ]);
 
         self::applySearch($query, ListQuery::searchTerm($request));
+        self::applyBankFilter($query, $request->input('bank'));
         self::applyStatusFilter($query, $request->input('status'));
         self::applySorting($query, $request, $canManageLoanRecords);
 
@@ -100,14 +101,27 @@ class BankSubmissionQuery
         }
 
         $query->where(function (Builder $dealQuery) use ($search) {
-            $dealQuery->where('deal_id', 'like', "%{$search}%")
-                ->orWhere('project_name', 'like', "%{$search}%")
+            $dealQuery->where('deals.deal_id', 'like', "%{$search}%")
+                ->orWhere('deals.project_name', 'like', "%{$search}%")
                 ->orWhereHas('client', function (Builder $clientQuery) use ($search) {
                     $clientQuery->where('name', 'like', "%{$search}%");
                 })
+                ->orWhere('loan_officers.name', 'like', "%{$search}%")
                 ->orWhereHas('bankSubmissions', function (Builder $submissionQuery) use ($search) {
-                    $submissionQuery->where('bank_name', 'like', "%{$search}%");
+                    $submissionQuery->where('bank_name', 'like', "%{$search}%")
+                        ->orWhere('banker_contact', 'like', "%{$search}%");
                 });
+        });
+    }
+
+    protected static function applyBankFilter(Builder $query, ?string $bank): void
+    {
+        if (! $bank) {
+            return;
+        }
+
+        $query->whereHas('bankSubmissions', function (Builder $submissionQuery) use ($bank) {
+            $submissionQuery->where('bank_name', $bank);
         });
     }
 

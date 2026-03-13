@@ -28,7 +28,7 @@
                                 ];
                             @endphp
                             <button type="button" class="crm-action-btn" data-user='@json($userPayload)'
-                                @click="editUser = JSON.parse($el.dataset.user); editOpen = true">
+                                @click="openEditUser(JSON.parse($el.dataset.user))">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </button>
                         </td>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PipelineEnum;
+use App\Enums\RoleEnum;
 use App\Models\User;
 use App\Services\DashboardService;
 use Illuminate\Http\Request;
@@ -22,6 +23,9 @@ class DashboardChartController extends Controller
         abort_if(! $user, 403);
 
         $mode = (string) $request->query('mode', 'sales');
+        if ($mode === 'deals' && ! $user->hasRole(RoleEnum::ADMIN->value)) {
+            $mode = 'sales';
+        }
         $this->dashboardService->authorizeDashboardMode($user, $mode);
 
         $monthParam = (string) $request->query('month', '');
@@ -51,6 +55,9 @@ class DashboardChartController extends Controller
         abort_if(! $user, 403);
 
         $mode = (string) $request->query('mode', 'sales');
+        if ($mode === 'deals' && ! $user->hasRole(RoleEnum::ADMIN->value)) {
+            $mode = 'sales';
+        }
         $this->dashboardService->authorizeDashboardMode($user, $mode);
 
         $monthParam = (string) $request->query('month', '');

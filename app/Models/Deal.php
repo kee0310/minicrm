@@ -139,15 +139,15 @@ class Deal extends Model
         }
 
         if ($user->hasRole(RoleEnum::LOAN_OFFICER->value)) {
-            return $query->where('loan_officer_id', $user->id);
+            return $query->where('deals.loan_officer_id', $user->id);
         }
 
         if ($user->hasRole(RoleEnum::SALESPERSON->value)) {
-            return $query->where('salesperson_id', $user->id);
+            return $query->where('deals.salesperson_id', $user->id);
         }
 
         if ($user->hasRole(RoleEnum::LEADER->value)) {
-            return $query->where('leader_id', $user->id);
+            return $query->where('deals.leader_id', $user->id);
         }
 
         return $query->whereRaw('1 = 0');

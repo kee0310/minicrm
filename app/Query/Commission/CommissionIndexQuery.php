@@ -94,8 +94,8 @@ class CommissionIndexQuery
         }
 
         $query->whereHas('deal', function (Builder $dealQuery) use ($search) {
-            $dealQuery->where('deal_id', 'like', "%{$search}%")
-                ->orWhere('project_name', 'like', "%{$search}%")
+            $dealQuery->where('deals.deal_id', 'like', "%{$search}%")
+                ->orWhere('deals.project_name', 'like', "%{$search}%")
                 ->orWhereHas('salesperson', function (Builder $salespersonQuery) use ($search) {
                     $salespersonQuery->where('name', 'like', "%{$search}%");
                 });

@@ -71,10 +71,10 @@ class ClientIndexQuery
         }
 
         $query->where(function (Builder $searchQuery) use ($search) {
-            $searchQuery->where('name', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%")
-                ->orWhere('phone', 'like', "%{$search}%")
-                ->orWhere('ic_passport', 'like', "%{$search}%");
+            $searchQuery->where('leads.name', 'like', "%{$search}%")
+                ->orWhere('leads.email', 'like', "%{$search}%")
+                ->orWhere('leads.phone', 'like', "%{$search}%")
+                ->orWhere('leads.ic_passport', 'like', "%{$search}%");
         });
     }
 }

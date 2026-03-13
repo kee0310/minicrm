@@ -90,9 +90,9 @@ class LeadIndexQuery
         }
 
         $query->where(function (Builder $q) use ($search) {
-            $q->where('name', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%")
-                ->orWhere('phone', 'like', "%{$search}%")
+            $q->where('leads.name', 'like', "%{$search}%")
+                ->orWhere('leads.email', 'like', "%{$search}%")
+                ->orWhere('leads.phone', 'like', "%{$search}%")
                 ->orWhereHas('salesperson', function (Builder $salespersonQuery) use ($search) {
                     $salespersonQuery->where('name', 'like', "%{$search}%");
                 })
@@ -105,7 +105,7 @@ class LeadIndexQuery
     protected static function applyStatusFilter(Builder $query, ?string $status): void
     {
         if ($status) {
-            $query->where('status', $status);
+            $query->where('leads.status', $status);
         }
     }
 

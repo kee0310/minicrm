@@ -49,10 +49,15 @@ class DealController extends Controller
         return redirect()->back()->with('success', "Deal {$deal->deal_id} updated successfully.");
     }
 
-    public function destroy(Deal $deal)
+    public function destroy(Request $request, Deal $deal)
     {
         $this->dealService->deleteDeal($deal);
 
-        return redirect()->route('deals.index')->with('success', "Deal {$deal->deal_id} deleted successfully.");
+        return $this->redirectWithFlashToPrevious(
+            $request,
+            route('deals.index'),
+            'success',
+            "Deal {$deal->deal_id} deleted successfully."
+        );
     }
 }

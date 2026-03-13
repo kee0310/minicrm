@@ -15,8 +15,7 @@
                 }),
             })">
                 <div class="crm-filter-block">
-                    <x-filter-search-row model="searchTerm" placeholder="Search deal, project or client..."
-                        :request-value="request('search', '')" />
+                    <x-filter-search-row model="searchTerm" placeholder="Search project or client..." :request-value="request('search', '')" />
                     <div class="crm-filter-tabs-scroll scrollbar-hide">
                         <div class="crm-filter-tabs">
                             <x-filter-tab-button state-key="completionFilter" value="" label="All"
@@ -44,6 +43,3 @@
         </x-card>
     </div>
 </x-app-layout>
-
-
-

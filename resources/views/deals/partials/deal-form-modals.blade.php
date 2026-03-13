@@ -6,7 +6,7 @@
             <button type="button" class="text-gray-500 hover:text-gray-700" @click="dealFormOpen = false">X</button>
         </div>
         {{-- Unified deal form: create + edit are handled by mode, action, and _method --}}
-        <form method="POST"
+        <form method="POST" x-data="{ showBox: false }"
             :action="dealFormMode === 'edit' ? ('{{ url('deals') }}/' + (dealForm?.id ?? '')) : '{{ route('deals.store') }}'"
             data-preserve-list-state>
             @csrf
@@ -41,13 +41,16 @@
                 <div><x-input-label for="lead_id" :value="__('Linked Lead')" />
                     <select id="lead_id" name="lead_id" x-model="dealForm.lead_id" required
                         data-searchable-name="true" data-search-placeholder="Search lead..." class="crm-form-select">
-                        <option value="">Select a lead</option>
+                        <option value="">--Select lead--</option>
                         @foreach ($leads as $lead)
                             <option value="{{ $lead->id }}">
                                 {{ $lead->name }}{{ $lead->email ? ' - ' . $lead->email : '' }}
                             </option>
                         @endforeach
                     </select>
+                    <p class="mt-1 text-xs text-red-600" x-show="showBox && !dealForm.lead_id" x-cloak>
+                        Please select a lead.
+                    </p>
                 </div>
                 <div><x-input-label for="project_name" :value="__('Project Name')" /><x-text-input id="project_name"
                         class="crm-form-text" type="text" name="project_name" x-model="dealForm.project_name"
@@ -70,12 +73,13 @@
                 <div id="booking_fee_group"><x-input-label for="booking_fee" :value="__('Booking Fee')" /><x-text-input
                         id="booking_fee" class="crm-form-text" type="number" step="0.01" name="booking_fee"
                         x-model="dealForm.booking_fee" /></div>
-                <div id="spa_date_group"><x-input-label for="spa_date" :value="__('SPA Date')" /><x-text-input id="spa_date"
-                        class="crm-form-text" type="date" name="spa_date" x-model="dealForm.spa_date" /></div>
+                <div id="spa_date_group"><x-input-label for="spa_date" :value="__('SPA Date')" /><x-text-input
+                        id="spa_date" class="crm-form-text" type="date" name="spa_date"
+                        x-model="dealForm.spa_date" /></div>
             </div>
             <div class="crm-modal-footer">
                 <button type="button" @click="dealFormOpen = false" class="crm-btn-secondary">Cancel</button>
-                <button type="submit" class="crm-btn-primary"
+                <button type="submit" class="crm-btn-primary" @click="showBox = true"
                     x-text="dealFormMode === 'edit' ? 'Save' : 'Create'">Save</button>
             </div>
         </form>

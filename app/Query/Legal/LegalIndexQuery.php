@@ -88,11 +88,13 @@ class LegalIndexQuery
         }
 
         $query->where(function (Builder $dealQuery) use ($search) {
-            $dealQuery->where('deal_id', 'like', "%{$search}%")
-                ->orWhere('project_name', 'like', "%{$search}%")
+            $dealQuery->where('deals.deal_id', 'like', "%{$search}%")
+                ->orWhere('deals.project_name', 'like', "%{$search}%")
                 ->orWhereHas('client', function (Builder $clientQuery) use ($search) {
                     $clientQuery->where('name', 'like', "%{$search}%");
-                });
+                })
+                ->orWhere('legals.lawyer_firm', 'like', "%{$search}%")
+                ->orWhere('legal_officers.name', 'like', "%{$search}%");
         });
     }
 

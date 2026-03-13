@@ -202,8 +202,8 @@ const initPipelineStageModal = (payload) => {
                     <td class="whitespace-nowrap px-3 py-2 text-center">${index + 1}</td>
                     <td class="whitespace-nowrap px-3 py-2 font-medium text-slate-800">${escapeHtml(row?.deal_id ?? '-')}</td>
                     <td class="px-3 py-2">${escapeHtml(row?.project_name ?? '-')}</td>
-                    <td class="whitespace-nowrap px-3 py-2">${escapeHtml(row?.salesperson ?? '-')}</td>
-                    <td class="whitespace-nowrap px-3 py-2">${escapeHtml(row?.leader ?? '-')}</td>
+                    <td class="px-3 py-2">${escapeHtml(row?.salesperson ?? '-')}</td>
+                    <td class="px-3 py-2">${escapeHtml(row?.leader ?? '-')}</td>
                     <td class="whitespace-nowrap px-3 py-2">${escapeHtml(row?.created_date ?? '-')}</td>
                     <td class="whitespace-nowrap px-3 py-2">${escapeHtml(row?.stage_date ?? '-')}</td>
                 </tr>`,

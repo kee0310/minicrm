@@ -67,13 +67,23 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(User $user)
+    public function destroy(Request $request, User $user)
     {
         $error = $this->userService->deleteUser($user);
         if ($error) {
-            return redirect()->back()->with('warning', $error);
+            return $this->redirectWithFlashToPrevious(
+                $request,
+                route('users.index'),
+                'warning',
+                $error
+            );
         }
 
-        return redirect()->back()->with('success', "User {$user->name} deleted successfully.");
+        return $this->redirectWithFlashToPrevious(
+            $request,
+            route('users.index'),
+            'success',
+            "User {$user->name} deleted successfully."
+        );
     }
 }

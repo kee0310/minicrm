@@ -44,6 +44,7 @@ class ApprovalAnalysisQuery
             ]);
 
         self::applySearch($query, ListQuery::searchTerm($request));
+        self::applyBankFilter($query, $request->input('bank'));
         CompletionFilter::apply(
             $query,
             $request->input('completion'),
@@ -79,13 +80,23 @@ class ApprovalAnalysisQuery
 
         $query->where(function (Builder $submissionQuery) use ($search) {
             $submissionQuery->whereHas('deal', function (Builder $dealQuery) use ($search) {
-                $dealQuery->where('deal_id', 'like', "%{$search}%")
-                    ->orWhere('project_name', 'like', "%{$search}%")
+                $dealQuery->where('deals.deal_id', 'like', "%{$search}%")
+                    ->orWhere('deals.project_name', 'like', "%{$search}%")
                     ->orWhereHas('client', function (Builder $clientQuery) use ($search) {
                         $clientQuery->where('name', 'like', "%{$search}%");
                     });
-            });
+            })->orWhere('loan_officers.name', 'like', "%{$search}%")
+                ->orWhere('loans.banker_contact', 'like', "%{$search}%");
         });
+    }
+
+    protected static function applyBankFilter(Builder $query, ?string $bank): void
+    {
+        if (! $bank) {
+            return;
+        }
+
+        $query->where('loans.approved_bank', $bank);
     }
 
     protected static function applySorting(Builder $query, Request $request, bool $canManageLoanRecords): void

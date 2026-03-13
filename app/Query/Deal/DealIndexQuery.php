@@ -68,8 +68,8 @@ class DealIndexQuery
         }
 
         $query->where(function (Builder $q) use ($search) {
-            $q->where('deal_id', 'like', "%{$search}%")
-                ->orWhere('project_name', 'like', "%{$search}%")
+            $q->where('deals.deal_id', 'like', "%{$search}%")
+                ->orWhere('deals.project_name', 'like', "%{$search}%")
                 ->orWhereHas('client', function (Builder $clientQuery) use ($search) {
                     $clientQuery->where('name', 'like', "%{$search}%");
                 })

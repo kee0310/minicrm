@@ -46,21 +46,21 @@
                 initialLeadFormOpen: @js($errors->any()),
                 initialLeadFormMode: @js(old('_method') === 'PUT' ? 'edit' : 'create'),
                 initialLeadForm: @js([
-                    'id' => old('lead_id'),
-                    'name' => old('name'),
-                    'email' => old('email'),
-                    'phone' => old('phone'),
-                    'source' => old('source'),
-                    'salesperson_id' => old('salesperson_id'),
-                    'status' => old('status'),
-                    'age' => old('age'),
-                    'ic_passport' => old('ic_passport'),
-                    'occupation' => old('occupation'),
-                    'company' => old('company'),
-                    'monthly_income' => old('monthly_income'),
-                    'working_years' => old('working_years'),
-                    'fixed_income' => old('fixed_income'),
-                ]),
+    'id' => old('lead_id'),
+    'name' => old('name'),
+    'email' => old('email'),
+    'phone' => old('phone'),
+    'source' => old('source'),
+    'salesperson_id' => old('salesperson_id'),
+    'status' => old('status'),
+    'age' => old('age'),
+    'ic_passport' => old('ic_passport'),
+    'occupation' => old('occupation'),
+    'company' => old('company'),
+    'monthly_income' => old('monthly_income'),
+    'working_years' => old('working_years'),
+    'fixed_income' => old('fixed_income'),
+]),
                 searchTerm: @js(request('search', '')),
                 statusFilter: @js(request('status', '')),
                 ...tableListState({
@@ -77,9 +77,9 @@
                     this.$nextTick(() => this.toggleDealFields());
                 },
                 emptyLeadForm() {
-                    const defaultSalespersonId = this.salespersonOptions.some(user => Number(user.id) === Number(this.currentUserId))
-                        ? String(this.currentUserId)
-                        : String(this.salespersonOptions[0]?.id ?? '');
+                    const defaultSalespersonId = this.salespersonOptions.some(user => Number(user.id) === Number(this.currentUserId)) ?
+                        String(this.currentUserId) :
+                        String(this.salespersonOptions[0]?.id ?? '');
                     return {
                         id: null,
                         name: '',
@@ -124,8 +124,7 @@
                     <div class="crm-filter-toolbar">
                         <x-filter-search-row model="searchTerm" placeholder="Search name, email or phone..."
                             :request-value="request('search', '')" />
-                        <button class="crm-create-btn sm:w-full" type="button"
-                            @click="openCreateLead()">
+                        <button class="crm-create-btn sm:w-full" type="button" @click="openCreateLead()">
                             {{ __('Create Lead') }}
                         </button>
                     </div>

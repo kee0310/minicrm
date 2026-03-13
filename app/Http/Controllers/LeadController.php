@@ -83,15 +83,25 @@ class LeadController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Lead $lead)
+    public function destroy(Request $request, Lead $lead)
     {
         if ($this->leadService->isLockedDealLead($lead)) {
-            return redirect()->back()->with('warning', "Lead {$lead->name} cannot be deleted because it is already in Deal status.");
+            return $this->redirectWithFlashToPrevious(
+                $request,
+                route('leads.index'),
+                'warning',
+                "Lead {$lead->name} cannot be deleted because it has existing deals."
+            );
         }
 
         $lead->delete();
 
-        return redirect()->back()->with('success', "Lead {$lead->name} deleted successfully.");
+        return $this->redirectWithFlashToPrevious(
+            $request,
+            route('leads.index'),
+            'success',
+            "Lead {$lead->name} deleted successfully."
+        );
     }
 
     // Lead profile fields are stored directly on leads now.
