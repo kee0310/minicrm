@@ -4,7 +4,12 @@ import { defineConfig } from 'vite';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/dashboard.js'],
+            input: [
+                'resources/css/app.css',
+                'resources/js/app.js',
+                'resources/js/app.tsx',
+                'resources/js/dashboard.js',
+            ],
             refresh: true,
         }),
     ],

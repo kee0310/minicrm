@@ -28,8 +28,6 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Fortify::ignoreRoutes();
-
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();

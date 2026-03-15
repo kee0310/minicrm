@@ -11,6 +11,7 @@ use App\Query\Lead\LeadIndexQuery;
 use App\Services\DealService;
 use App\Services\LeadService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class LeadController extends Controller
 {
@@ -37,9 +38,47 @@ class LeadController extends Controller
 
         LeadIndexQuery::build($query, $request);
 
-        $leads = $query->paginate(10)->withQueryString();
+        $leads = $query->paginate(10)->withQueryString()
+            ->through(function ($lead) {
+                $statusValue = $lead->status?->value ?? null;
+                return [
+                    'id' => $lead->id,
+                    'name' => $lead->name,
+                    'email' => $lead->email,
+                    'phone' => $lead->phone,
+                    'source' => $lead->source,
+                    'salesperson_id' => $lead->salesperson_id,
+                    'leader_id' => $lead->leader_id,
+                    'status' => $statusValue,
+                    'status_badge' => $lead->status?->badge(),
+                    'age' => $lead->age,
+                    'ic_passport' => $lead->ic_passport,
+                    'occupation' => $lead->occupation,
+                    'company' => $lead->company,
+                    'working_years' => $lead->working_years,
+                    'monthly_income' => $lead->monthly_income,
+                    'fixed_income' => $lead->fixed_income,
+                    'created_at' => optional($lead->created_at)->format('Y-m-d'),
+                    'salesperson_name' => $lead->salesperson_name ?? null,
+                    'leader_name' => $lead->leader_name ?? null,
+                ];
+            });
 
-        return view('leads.index', compact('leads', 'statuses', 'salespersons', 'summary'));
+        $canEditSalesperson = $user?->hasAnyRole([
+            \App\Enums\RoleEnum::ADMIN->value,
+            \App\Enums\RoleEnum::LEADER->value,
+        ]) ?? false;
+
+        return Inertia::render('leads/index', [
+            'leads' => $leads,
+            'statuses' => $statuses,
+            'salespersons' => $salespersons->map(fn ($user) => [
+                'id' => $user->id,
+                'name' => $user->name,
+            ])->values(),
+            'summary' => $summary,
+            'canEditSalesperson' => $canEditSalesperson,
+        ]);
     }
 
     /**

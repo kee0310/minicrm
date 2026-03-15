@@ -10,6 +10,7 @@ use App\Query\User\UserIndexQuery;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
+use Inertia\Inertia;
 
 class UserController extends Controller
 {
@@ -27,7 +28,28 @@ class UserController extends Controller
         $roles = Role::orderBy('name')->pluck('name');
         $leaders = User::role([RoleEnum::LEADER->value, RoleEnum::ADMIN->value])->orderBy('name')->get(['id', 'name']);
 
-        return view('users.index', compact('users', 'roles', 'leaders'));
+        $users = $users->through(function ($user) {
+            $roleNames = $user->roles->pluck('name')->values();
+
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'roles' => $roleNames->all(),
+                'leader_id' => $user->leader_id,
+                'leader_name' => $user->leader_name,
+                'created_at' => optional($user->created_at)->format('Y-m-d'),
+            ];
+        });
+
+        return Inertia::render('users/index', [
+            'users' => $users,
+            'roles' => $roles->values(),
+            'leaders' => $leaders->map(fn ($leader) => [
+                'id' => $leader->id,
+                'name' => $leader->name,
+            ])->values(),
+        ]);
     }
 
     /**

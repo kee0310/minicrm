@@ -13,6 +13,7 @@ use App\Services\OfficerAssignmentService;
 use App\Services\OfficerDirectoryService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
 
 class LegalController extends Controller
 {
@@ -45,7 +46,40 @@ class LegalController extends Controller
         [$legalOfficers, $currentLegalOfficerId] = $this->officerDirectory
             ->listAndCurrent($authUser, RoleEnum::LEGAL_OFFICER->value);
 
-        return view('legals.index', compact('deals', 'statusOptions', 'canManageLoanRecords', 'legalOfficers', 'currentLegalOfficerId', 'summary'));
+        $isLegalOfficer = $authUser?->hasRole(RoleEnum::LEGAL_OFFICER->value) ?? false;
+
+        $deals = $deals->through(function ($deal) use ($authUser) {
+            $legal = $deal->legalCase;
+
+            return [
+                'id' => $deal->id,
+                'deal_code' => $deal->deal_id,
+                'project_name' => $deal->project_name,
+                'client_name' => $deal->client?->name,
+                'legal_officer_name' => $deal->legalOfficer?->name,
+                'legal_officer_id' => $deal->legal_officer_id ?? $authUser?->id,
+                'lawyer_firm' => $legal?->lawyer_firm,
+                'spa_date' => optional($legal?->spa_date)->format('Y-m-d'),
+                'loan_agreement_date' => optional($legal?->loan_agreement_date)->format('Y-m-d'),
+                'completion_date' => optional($legal?->completion_date)->format('Y-m-d'),
+                'stamp_duty' => $legal?->stamp_duty,
+                'status' => $legal?->status ?? 'Drafting',
+                'has_record' => ! is_null($legal),
+            ];
+        });
+
+        return Inertia::render('legals/index', [
+            'deals' => $deals,
+            'statusOptions' => $statusOptions,
+            'canManageLoanRecords' => $canManageLoanRecords,
+            'legalOfficers' => $legalOfficers->map(fn ($user) => [
+                'id' => $user->id,
+                'name' => $user->name,
+            ])->values(),
+            'currentLegalOfficerId' => $currentLegalOfficerId,
+            'summary' => $summary,
+            'isLegalOfficer' => $isLegalOfficer,
+        ]);
     }
 
     // Create/update legal details for a deal in legal workflow.

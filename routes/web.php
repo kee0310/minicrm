@@ -9,7 +9,6 @@ use App\Http\Controllers\DealController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LoanController;
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Services\LoanNotificationService;
 use Illuminate\Http\Request;
@@ -94,9 +93,6 @@ Route::middleware('auth')->group(function () {
         Route::put('/disbursement/{deal}', [LoanController::class, 'updateDisbursement'])->name('disbursement.update');
     });
 
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__.'/settings.php';

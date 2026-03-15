@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\CrmNavigationService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -35,13 +36,31 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $navigation = app(CrmNavigationService::class)->build($request);
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'crm' => [
+                'navigation' => $navigation,
+                'routeName' => $request->route()?->getName(),
+                'urls' => [
+                    'loanDetailDeal' => url('/loans/detail/__DEAL__'),
+                    'loanDetailLoan' => url('/loans/detail/by-loan/__LOAN__'),
+                    'notificationsCount' => route('notifications.count'),
+                ],
+                'flash' => [
+                    'success' => session('success'),
+                    'warning' => session('warning'),
+                    'error' => session('error'),
+                    'deleted' => session('deleted'),
+                ],
+            ],
         ];
     }
 }

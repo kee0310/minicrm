@@ -10,6 +10,7 @@ use App\Query\Deal\DealIndexQuery;
 use App\Services\DealService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class DealController extends Controller
 {
@@ -30,7 +31,56 @@ class DealController extends Controller
         $salespersons = $this->dealService->assignableSalespersons($user);
         $pipelines = PipelineEnum::creatableCases();
 
-        return view('deals.index', compact('deals', 'stages', 'leads', 'salespersons', 'pipelines', 'summary'));
+        $deals = $deals->through(function ($deal) {
+            return [
+                'id' => $deal->id,
+                'deal_code' => $deal->deal_id,
+                'lead_id' => $deal->lead_id,
+                'lead_name' => $deal->lead_name ?? null,
+                'salesperson_id' => $deal->salesperson_id,
+                'project_name' => $deal->project_name,
+                'developer' => $deal->developer,
+                'unit_number' => $deal->unit_number,
+                'selling_price' => $deal->selling_price,
+                'commission_percentage' => $deal->commission_percentage,
+                'commission_amount' => $deal->commission_amount,
+                'booking_fee' => $deal->booking_fee,
+                'spa_date' => optional($deal->spa_date)->format('Y-m-d'),
+                'pipeline' => [
+                    'value' => $deal->pipeline?->value,
+                    'badge' => $deal->pipeline?->badge(),
+                    'locked' => $deal->pipeline?->isLockedForManualEdit() ?? false,
+                ],
+                'salesperson_name' => $deal->salesperson_name ?? null,
+                'leader_name' => $deal->leader_name ?? null,
+                'created_at' => optional($deal->created_at)->format('Y-m-d'),
+            ];
+        });
+
+        $canEditSalesperson = $user?->hasAnyRole([
+            \App\Enums\RoleEnum::ADMIN->value,
+            \App\Enums\RoleEnum::LEADER->value,
+        ]) ?? false;
+
+        return Inertia::render('deals/index', [
+            'deals' => $deals,
+            'stages' => $stages,
+            'pipelines' => collect($pipelines)->map(fn ($pipeline) => [
+                'value' => $pipeline->value,
+            ])->values(),
+            'summary' => $summary,
+            'leads' => $leads->map(fn ($lead) => [
+                'id' => $lead->id,
+                'name' => $lead->name,
+                'email' => $lead->email,
+            ])->values(),
+            'salespersons' => $salespersons->map(fn ($user) => [
+                'id' => $user->id,
+                'name' => $user->name,
+            ])->values(),
+            'canEditSalesperson' => $canEditSalesperson,
+            'currentUserId' => (int) ($user?->id ?? 0),
+        ]);
     }
 
     public function store(StoreDealRequest $request)

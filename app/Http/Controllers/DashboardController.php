@@ -9,6 +9,7 @@ use App\Support\MonthFilter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
@@ -60,7 +61,7 @@ class DashboardController extends Controller
         $selectedMonth = MonthFilter::resolve($request->query('month'));
         $viewData = $this->dashboardService->salespeopleData($request, $user, $selectedMonth);
 
-        return view('dashboard.salespeople', $viewData);
+        return Inertia::render('dashboard/salespeople', $viewData);
     }
 
     private function renderDashboard(Request $request, string $dashboardMode)
@@ -85,13 +86,13 @@ class DashboardController extends Controller
         $cacheKey = $this->dashboardCacheKey($user, $dashboardMode, $selectedMonth);
         $cached = Cache::get($cacheKey);
         if (is_array($cached)) {
-            return view('dashboard.index', $cached);
+            return Inertia::render('dashboard/index', $cached);
         }
         $viewData = $this->dashboardService->buildDashboardViewData($request, $user, $dashboardMode, $selectedMonth);
 
         Cache::put($cacheKey, $viewData, now()->addSeconds(120));
 
-        return view('dashboard.index', $viewData);
+        return Inertia::render('dashboard/index', $viewData);
     }
 
     protected function dashboardCacheKey(User $user, string $dashboardMode, Carbon $selectedMonth): string

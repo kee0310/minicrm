@@ -8,6 +8,7 @@ use App\Models\Lead;
 use App\Query\Client\ClientIndexQuery;
 use App\Services\LeadService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ClientController extends Controller
 {
@@ -22,7 +23,19 @@ class ClientController extends Controller
         $query = ClientIndexQuery::build($base, $request);
         $clients = $query->paginate(10)->withQueryString();
 
-        return view('clients.index', compact('clients'));
+        $clients = $clients->through(fn ($client) => [
+            'id' => $client->id,
+            'name' => $client->name,
+            'email' => $client->email,
+            'phone' => $client->phone,
+            'age' => $client->age,
+            'occupation' => $client->occupation,
+            'company' => $client->company,
+        ]);
+
+        return Inertia::render('clients/index', [
+            'clients' => $clients,
+        ]);
     }
 
     public function show(Lead $lead)
@@ -37,9 +50,37 @@ class ClientController extends Controller
             ->latest('updated_at')
             ->get();
 
-        return view('clients.show', [
-            'client' => $lead,
-            'deals' => $deals,
+        return Inertia::render('clients/show', [
+            'client' => [
+                'id' => $lead->id,
+                'name' => $lead->name,
+                'email' => $lead->email,
+                'phone' => $lead->phone,
+                'age' => $lead->age,
+                'ic_passport' => $lead->ic_passport,
+                'occupation' => $lead->occupation,
+                'company' => $lead->company,
+                'working_years' => $lead->working_years,
+                'monthly_income' => $lead->monthly_income,
+                'fixed_income' => $lead->fixed_income,
+            ],
+            'deals' => $deals->map(fn ($deal) => [
+                'id' => $deal->id,
+                'deal_code' => $deal->deal_id,
+                'project_name' => $deal->project_name,
+                'developer' => $deal->developer,
+                'unit_number' => $deal->unit_number,
+                'selling_price' => $deal->selling_price,
+                'created_at' => optional($deal->created_at)->format('Y-m-d'),
+                'salesperson_name' => $deal->salesperson?->name,
+                'leader_name' => $deal->leader?->name,
+                'loan_officer_name' => $deal->loanOfficer?->name,
+                'legal_officer_name' => $deal->legalOfficer?->name,
+                'pipeline' => [
+                    'value' => $deal->pipeline?->value,
+                    'badge' => $deal->pipeline?->badge(),
+                ],
+            ])->values(),
         ]);
     }
 }

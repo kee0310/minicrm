@@ -1,8 +1,8 @@
 import './bootstrap';
 import '../css/app.css';
 import Alpine from 'alpinejs';
-import { createSidebarComponent, initSidebarBootAttributes } from './modules/sidebar';
 import { initNotificationPolling } from './modules/notifications';
+import { createSidebarComponent, initSidebarBootAttributes } from './modules/sidebar';
 import { initTableSortNormalization } from './modules/table-sort';
 
 window.Alpine = Alpine;
@@ -62,7 +62,7 @@ const saveListScrollPosition = (targetUrl = window.location.href, options = {}) 
                 timestamp: Date.now(),
             }),
         );
-    } catch (_error) {
+    } catch {
         // Ignore storage and URL parsing failures.
     }
 };
@@ -145,7 +145,7 @@ const restoreListScrollPosition = () => {
         window.addEventListener('DOMContentLoaded', restore, { once: true });
         window.addEventListener('load', restore, { once: true });
         window.setTimeout(clearPendingTableMask, 500);
-    } catch (_error) {
+    } catch {
         sessionStorage.removeItem(LIST_SCROLL_STATE_KEY);
         document.documentElement.setAttribute('data-pending-table-scroll', '0');
     }
@@ -262,7 +262,7 @@ Alpine.data('loanPageState', (extraState = {}) => ({
             if (this.selectedDeal) {
                 this.loanDetailCache[cacheKey] = this.selectedDeal;
             }
-        } catch (_error) {
+        } catch {
             this.selectedDeal = null;
         } finally {
             this.loanDetailLoading = false;

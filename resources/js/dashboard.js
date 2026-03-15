@@ -188,6 +188,10 @@ const initPipelineStageModal = (payload) => {
     };
 
     const openModal = () => {
+        if (typeof window.__crmOpenPipelineStageModal === 'function') {
+            window.__crmOpenPipelineStageModal();
+            return;
+        }
         window.dispatchEvent(
             new CustomEvent('open-modal', {
                 detail: 'dashboard-pipeline-stage-modal',
@@ -861,7 +865,7 @@ const renderCommissionTrend = (payload) => {
     });
 };
 
-const bootDashboard = async () => {
+export const bootDashboard = async () => {
     const payload = getDashboardData();
     if (!payload) {
         return;
@@ -898,11 +902,3 @@ const bootDashboard = async () => {
         loadingNode.classList.add('hidden');
     }
 };
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bootDashboard, {
-        once: true,
-    });
-} else {
-    bootDashboard();
-}

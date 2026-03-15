@@ -6,6 +6,7 @@ use App\Models\Commission;
 use App\Query\Commission\CommissionIndexQuery;
 use App\Services\CommissionService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class CommissionController extends Controller
 {
@@ -30,7 +31,37 @@ class CommissionController extends Controller
 
         $statusOptions = ['Unpaid', 'Paid'];
 
-        return view('commissions.index', compact('commissions', 'statusOptions', 'summary'));
+        $commissions = $commissions->through(function ($commission) {
+            $deal = $commission->deal;
+            $total = (float) ($deal?->commission_amount ?? 0);
+            $paid = (float) ($commission?->paid ?? 0);
+            $remaining = max($total - $paid, 0);
+            $paymentStatus = $commission?->payment_status ?? 'Unpaid';
+
+            return [
+                'id' => $commission->id,
+                'deal_id' => $deal?->id,
+                'deal_code' => $deal?->deal_id,
+                'project_name' => $deal?->project_name,
+                'salesperson_name' => $deal?->salesperson?->name,
+                'total' => $total,
+                'paid' => $paid,
+                'remaining' => $remaining,
+                'payment_status' => $paymentStatus,
+                'deal_completed_date' => $commission?->deal_completed_date
+                    ? \Illuminate\Support\Carbon::parse($commission->deal_completed_date)->format('Y-m-d')
+                    : null,
+                'deal_commission_paid_date' => $commission?->deal_commission_paid_date
+                    ? \Illuminate\Support\Carbon::parse($commission->deal_commission_paid_date)->format('Y-m-d')
+                    : null,
+            ];
+        });
+
+        return Inertia::render('commissions/index', [
+            'commissions' => $commissions,
+            'statusOptions' => $statusOptions,
+            'summary' => $summary,
+        ]);
     }
 
     public function update(Request $request, Commission $commission)
