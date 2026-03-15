@@ -153,7 +153,8 @@
         <div class="flex items-center justify-between border-b border-white/15 px-3 py-3">
             <a href="{{ route($homeRoute) }}" class="crm-sidebar-brand" x-show="sidebarExpanded"
                 x-transition.opacity.duration.120ms>
-                <i class="fa-light fa-house-building crm-nav-icon crm-sidebar-brand-icon text-xl"></i>
+                <span class="crm-nav-icon crm-sidebar-brand-icon text-xl"><i
+                        class="fa-light fa-house-building"></i></span>
                 <span class="font-bold tracking-wide text-white truncate">CRM Property</span>
             </a>
             <button type="button" class="crm-sidebar-toggle-btn"

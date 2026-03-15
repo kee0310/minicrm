@@ -33,45 +33,47 @@
             })">
                 {{-- Client-side search and submission status filtering --}}
                 <div class="crm-filter-block">
-                    <div class="flex flex-wrap items-end justify-between gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 justify-between gap-3">
                         <x-filter-search-row model="searchTerm" placeholder="Search project, client or banker..."
                             :request-value="request('search', '')" />
-                        <select class="crm-form-select !w-[180px]" data-native-select="true" x-model="bankFilter"
-                            @change="refreshList()">
-                            <option value="">All Banks</option>
-                            @foreach ($bankOptions as $bank)
-                                <option value="{{ $bank }}">{{ $bank }}</option>
-                            @endforeach
-                        </select>
+                        <div class="grid grid-cols-2">
+                            <div></div>
+                            <select class="crm-form-input" x-model="bankFilter" @change="refreshList()">
+                                <option value="" @selected(request('bank', '') === '')>All Banks</option>
+                                @foreach ($bankOptions as $bank)
+                                    <option value="{{ $bank }}" @selected(request('bank') === $bank)>{{ $bank }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <div class="crm-filter-tabs-scroll scrollbar-hide">
-                    <div class="crm-filter-tabs">
-                        <x-filter-tab-button state-key="statusFilter" value="" label="All" :request-value="request('status', '')"
-                            all />
-                        <x-filter-tab-button state-key="statusFilter" value="No Submission" label="New"
-                            :request-value="request('status', '')" />
-                        @foreach ($statusOptions as $status)
-                            <x-filter-tab-button state-key="statusFilter" :value="$status" :label="$status"
+                    <div class="crm-filter-tabs-scroll scrollbar-hide">
+                        <div class="crm-filter-tabs">
+                            <x-filter-tab-button state-key="statusFilter" value="" label="All"
+                                :request-value="request('status', '')" all />
+                            <x-filter-tab-button state-key="statusFilter" value="No Submission" label="New"
                                 :request-value="request('status', '')" />
-                        @endforeach
+                            @foreach ($statusOptions as $status)
+                                <x-filter-tab-button state-key="statusFilter" :value="$status" :label="$status"
+                                    :request-value="request('status', '')" />
+                            @endforeach
+                        </div>
                     </div>
                 </div>
+
+                <div id="live-table-container" @click="handleTableClick($event)">@include('loans.partials.bank-submission-tracking-table', [
+                    'deals' => $deals,
+                    'canManageLoanRecords' => $canManageLoanRecords,
+                ])</div>
+
+                {{-- Loan detail modal --}}
+                @include('deals.partials.deal-detail-modal', ['modalKey' => 'loan.bank.detail'])
+                @include('loans.partials.bank-submission-form-modal', [
+                    'canManageLoanRecords' => $canManageLoanRecords,
+                    'bankOptions' => $bankOptions,
+                    'statusOptions' => $statusOptions,
+                ])
             </div>
-
-            <div id="live-table-container" @click="handleTableClick($event)">@include('loans.partials.bank-submission-tracking-table', [
-                'deals' => $deals,
-                'canManageLoanRecords' => $canManageLoanRecords,
-            ])</div>
-
-            {{-- Loan detail modal --}}
-            @include('deals.partials.deal-detail-modal', ['modalKey' => 'loan.bank.detail'])
-            @include('loans.partials.bank-submission-form-modal', [
-                'canManageLoanRecords' => $canManageLoanRecords,
-                'bankOptions' => $bankOptions,
-                'statusOptions' => $statusOptions,
-            ])
-    </div>
-    </x-card>
+        </x-card>
     </div>
 </x-app-layout>

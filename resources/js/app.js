@@ -1,8 +1,19 @@
 import './bootstrap';
 import '../css/app.css';
 import Alpine from 'alpinejs';
+import { createSidebarComponent, initSidebarBootAttributes } from './modules/sidebar';
+import { initNotificationPolling } from './modules/notifications';
+import { initTableSortNormalization } from './modules/table-sort';
 
 window.Alpine = Alpine;
+
+const bodyDataset = document.body?.dataset ?? {};
+const loanDetailDealTemplate =
+    bodyDataset.crmLoanDetailDealUrl || window.__crmLoanDetailDealUrl || '/loans/detail/__DEAL__';
+const loanDetailLoanTemplate =
+    bodyDataset.crmLoanDetailLoanUrl || window.__crmLoanDetailLoanUrl || '/loans/detail/by-loan/__LOAN__';
+const notificationsEndpoint =
+    bodyDataset.crmNotificationsCountUrl || window.__crmNotificationsCountUrl || '/notifications/count';
 
 const LIST_SCROLL_STATE_KEY = 'crm.list.scroll.state';
 
@@ -230,11 +241,9 @@ Alpine.data('loanPageState', (extraState = {}) => ({
                 return;
             }
 
-            const dealTemplate = window.__crmLoanDetailDealUrl || '/loans/detail/__DEAL__';
-            const loanTemplate = window.__crmLoanDetailLoanUrl || '/loans/detail/by-loan/__LOAN__';
             const url = loanId
-                ? loanTemplate.replace('__LOAN__', encodeURIComponent(String(loanId)))
-                : dealTemplate.replace('__DEAL__', encodeURIComponent(String(dealId)));
+                ? loanDetailLoanTemplate.replace('__LOAN__', encodeURIComponent(String(loanId)))
+                : loanDetailDealTemplate.replace('__DEAL__', encodeURIComponent(String(dealId)));
 
             const response = await fetch(url, {
                 method: 'GET',
@@ -242,7 +251,7 @@ Alpine.data('loanPageState', (extraState = {}) => ({
                     Accept: 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                 },
-            });
+});
 
             if (!response.ok) {
                 throw new Error(`Failed to load detail (${response.status})`);
@@ -646,8 +655,9 @@ const enableFormListStatePreserve = () => {
     );
 };
 
+Alpine.data('crmLayout', () => createSidebarComponent());
+initSidebarBootAttributes();
 Alpine.start();
-
 restoreListScrollPosition();
 
 enableDeleteConfirmDialog();
@@ -655,4 +665,6 @@ enableSortableTables();
 enablePaginationTableTopRestore();
 enableSearchableNameSelects();
 enableFormListStatePreserve();
+initTableSortNormalization();
+initNotificationPolling({ endpoint: notificationsEndpoint });
 window.refreshSortableTables = enableSortableTables;

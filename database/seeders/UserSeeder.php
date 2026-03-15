@@ -22,13 +22,15 @@ class UserSeeder extends Seeder
 
     private const LEGAL_OFFICER_COUNT = 2;
 
+    private Generator $faker;
+
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
         $password = Hash::make('password');
-        $faker = fake();
+        $this->faker = app(Generator::class);
 
         $specialAccounts = [
             ['role' => RoleEnum::ADMIN->value, 'email' => 'admin@example.com', 'name' => 'Admin'],
@@ -58,28 +60,28 @@ class UserSeeder extends Seeder
             role: RoleEnum::ADMIN->value,
             count: max(0, self::ADMIN_COUNT - 1),
             password: $password,
-            faker: $faker
+            faker: $this->faker
         );
 
         $leaders = $this->createUsersByRole(
             role: RoleEnum::LEADER->value,
             count: max(0, self::LEADER_COUNT - 1),
             password: $password,
-            faker: $faker
+            faker: $this->faker
         );
 
         $this->createUsersByRole(
             role: RoleEnum::LOAN_OFFICER->value,
             count: max(0, self::LOAN_OFFICER_COUNT - 1),
             password: $password,
-            faker: $faker
+            faker: $this->faker
         );
 
         $this->createUsersByRole(
             role: RoleEnum::LEGAL_OFFICER->value,
             count: max(0, self::LEGAL_OFFICER_COUNT - 1),
             password: $password,
-            faker: $faker
+            faker: $this->faker
         );
 
         $salespersonCount = self::TOTAL_USERS
@@ -100,8 +102,8 @@ class UserSeeder extends Seeder
             $leader = $reportingPool->random();
 
             $salesperson = User::factory()->create([
-                'name' => $faker->name(),
-                'email' => $faker->unique()->safeEmail(),
+                'name' => $this->faker->name(),
+                'email' => $this->faker->unique()->safeEmail(),
                 'password' => $password,
                 'leader_id' => $leader->id,
             ]);
@@ -163,6 +165,6 @@ class UserSeeder extends Seeder
             ? $now->copy()
             : $start->copy()->endOfMonth()->setTime(20, 59, 59);
 
-        return Carbon::instance(fake()->dateTimeBetween($start, $end));
+        return Carbon::instance($this->faker->dateTimeBetween($start, $end));
     }
 }

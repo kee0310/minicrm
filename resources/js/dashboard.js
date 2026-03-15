@@ -9,6 +9,7 @@ const getDashboardData = () => {
         window.dashboardData = payload;
         return payload;
     } catch (_error) {
+        console.error(_error);
         window.dashboardData = {};
         return null;
     }
@@ -866,6 +867,11 @@ const bootDashboard = async () => {
         return;
     }
 
+    const loadingNode = document.getElementById('dashboard-loading');
+    if (loadingNode) {
+        loadingNode.classList.remove('hidden');
+    }
+
     const chartEndpoint = payload?.chartEndpoint ?? null;
     if (chartEndpoint) {
         try {
@@ -879,6 +885,7 @@ const bootDashboard = async () => {
                 renderPipelineOverview(payload);
             }
         } catch (_error) {
+            console.error(_error);
             // Keep the initial markup if chart loading fails.
         }
     }
@@ -886,6 +893,10 @@ const bootDashboard = async () => {
     renderCommissionTrend(payload);
     initPipelineStageModal(payload);
     initDashboardAnimations(payload);
+
+    if (loadingNode) {
+        loadingNode.classList.add('hidden');
+    }
 };
 
 if (document.readyState === 'loading') {

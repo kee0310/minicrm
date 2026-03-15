@@ -25,7 +25,15 @@
     @endphp
     <div id="dashboard-data" class="hidden" aria-hidden="true" data-dashboard='@json($dashboardData)'></div>
 
-    <div class="space-y-4 crm-dashboard-scroll">
+    <div id="dashboard-loading"
+        class="fixed inset-0 z-1000 flex items-center justify-center bg-white/70 backdrop-blur-sm">
+        <div
+            class="flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-4 py-2 text-sm text-slate-500 shadow-sm">
+            <span class="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600"></span>
+            <span>Loading dashboard...</span>
+        </div>
+    </div>
+    <div class="relative space-y-4 crm-dashboard-scroll">
         <!-- Month Nav -->
         <div class="flex justify-end">
             @include('dashboard.partials.month-nav')

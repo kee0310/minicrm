@@ -416,6 +416,10 @@ class DashboardService
         $legalAwaitingBankNew = (clone $legalNew)
             ->where('status', LegalStatusEnum::PENDING_BANK->value)
             ->count();
+        $legalTotal = (clone $legalAll)->count();
+        $legalCompleted = (clone $legalAll)
+            ->where('status', LegalStatusEnum::COMPLETED->value)
+            ->count();
         $legalOverdue = (clone $legalAll)
             ->where('status', '!=', LegalStatusEnum::COMPLETED->value)
             ->where('updated_at', '<', $endMonth->copy()->subDays(14))
@@ -599,10 +603,13 @@ class DashboardService
                 'awaiting_client_signature_new' => $legalAwaitingClientSignatureNew,
                 'awaiting_bank' => $legalAwaitingBank,
                 'awaiting_bank_new' => $legalAwaitingBankNew,
+                'total_cases' => $legalTotal,
+                'completed_cases' => $legalCompleted,
                 'overdue_cases' => $legalOverdue,
                 'overdue_cases_new' => $legalOverdueNew,
             ],
             'finance' => [
+                'total_commission' => $totalCommissionBeforeMonth,
                 'eligible' => $commissionEligible,
                 'eligible_new' => $commissionEligibleNew,
                 'pending_approval' => $commissionPendingApproval,
