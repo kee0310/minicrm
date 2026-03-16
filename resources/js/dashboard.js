@@ -764,6 +764,62 @@ const renderCommissionTrend = (payload) => {
         return;
     }
 
+    const clipPlugin = {
+        id: 'crmLineClip',
+        beforeDraw(chart) {
+            const progress = chart.$crmCommissionProgress;
+            if (progress == null) {
+                return;
+            }
+            const { ctx, chartArea } = chart;
+            if (!chartArea) {
+                return;
+            }
+            const width = chartArea.right - chartArea.left;
+            const height = chartArea.bottom - chartArea.top;
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(chartArea.left, chartArea.top, width * progress, height);
+            ctx.clip();
+        },
+        afterDraw(chart) {
+            if (chart.$crmCommissionProgress == null) {
+                return;
+            }
+            chart.ctx.restore();
+        },
+    };
+
+    const dotsPlugin = {
+        id: 'crmLineDots',
+        afterDraw(chart) {
+            if (!chart.$crmCommissionShowDots) {
+                return;
+            }
+            const meta = chart.getDatasetMeta(0);
+            if (!meta?.data?.length) {
+                return;
+            }
+            const radius = Number(chart.$crmCommissionDotRadius ?? 0);
+            if (radius <= 0) {
+                return;
+            }
+            const ctx = chart.ctx;
+            ctx.save();
+            ctx.fillStyle = 'sandybrown';
+            ctx.strokeStyle = 'sandybrown';
+            ctx.lineWidth = 1;
+            meta.data.forEach((point) => {
+                const { x, y } = point.getProps(['x', 'y'], true);
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            });
+            ctx.restore();
+        },
+    };
+
     window.__crmCommissionTrendChart = new window.Chart(canvas, {
         type: 'line',
         data: {
@@ -774,9 +830,11 @@ const renderCommissionTrend = (payload) => {
                     data: values,
                     borderColor: 'sandybrown',
                     backgroundColor: 'sandybrown',
-                    tension: 0.15,
+                    tension: 0.25,
                     borderWidth: 2,
-                    pointRadius: 4,
+                    pointRadius: 0,
+                    pointHoverRadius: 0,
+                    pointBackgroundColor: 'sandybrown',
                     pointBorderWidth: 1,
                 },
             ],
@@ -784,28 +842,12 @@ const renderCommissionTrend = (payload) => {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            animation: {
-                duration: 900,
-                easing: 'easeOutCubic',
-            },
-            animations: {
-                y: {
-                    type: 'number',
-                    easing: 'easeOutQuad',
-                    from: (ctx) => {
-                        const scale = ctx?.chart?.scales?.y;
-                        return scale ? scale.getPixelForValue(scale.min) : 0;
-                    },
-                    duration: 1000,
-                },
-                x: {
-                    type: 'number',
-                    easing: 'easeOutQuad',
-                    from: (ctx) => {
-                        const scale = ctx?.chart?.scales?.x;
-                        return scale ? scale.getPixelForValue(scale.min) : 0;
-                    },
-                    duration: 1000,
+            animation: false,
+            transitions: {},
+            elements: {
+                point: {
+                    radius: 0,
+                    hoverRadius: 0,
                 },
             },
 
@@ -862,7 +904,79 @@ const renderCommissionTrend = (payload) => {
                 },
             },
         },
+        plugins: [clipPlugin, dotsPlugin],
     });
+
+    const easeOutCubic = (value) => 1 - Math.pow(1 - value, 3);
+    const easeOutBack = (value) => {
+        const c1 = 1.70158;
+        const c3 = c1 + 1;
+        return 1 + c3 * Math.pow(value - 1, 3) + c1 * Math.pow(value - 1, 2);
+    };
+
+    const animateCommissionTrend = (chart) => {
+        if (!chart || chart.$crmCommissionAnimated) {
+            return;
+        }
+        const dataset = chart.data.datasets?.[0];
+        if (!dataset) {
+            return;
+        }
+
+        const baseRadius = 4;
+        dataset.pointRadius = 0;
+        chart.$crmCommissionProgress = 0;
+        chart.$crmCommissionShowDots = false;
+        chart.$crmCommissionDotRadius = 0;
+        chart.update('none');
+
+        const lineDuration = 900;
+        const dotDuration = 320;
+        const start = performance.now();
+
+        const drawLine = (now) => {
+            const raw = (now - start) / lineDuration;
+            const progress = Math.min(Math.max(raw, 0), 1);
+            chart.$crmCommissionProgress = easeOutCubic(progress);
+            chart.draw();
+
+            if (progress < 1) {
+                window.requestAnimationFrame(drawLine);
+                return;
+            }
+
+            chart.$crmCommissionProgress = null;
+            chart.$crmCommissionShowDots = true;
+            chart.draw();
+
+            const dotsStart = performance.now();
+            const popDots = (time) => {
+                const elapsed = time - dotsStart;
+                const popProgress = Math.min(
+                    Math.max(elapsed / dotDuration, 0),
+                    1,
+                );
+                chart.$crmCommissionDotRadius =
+                    baseRadius * easeOutBack(popProgress);
+                chart.update('none');
+
+                if (popProgress < 1) {
+                    window.requestAnimationFrame(popDots);
+                    return;
+                }
+
+                chart.$crmCommissionDotRadius = baseRadius;
+                chart.update('none');
+                chart.$crmCommissionAnimated = true;
+            };
+
+            window.requestAnimationFrame(popDots);
+        };
+
+        window.requestAnimationFrame(drawLine);
+    };
+
+    animateCommissionTrend(window.__crmCommissionTrendChart);
 };
 
 export const bootDashboard = async () => {

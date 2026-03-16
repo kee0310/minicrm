@@ -35,7 +35,7 @@ export function UserMenuContent({ user }: Props) {
             <DropdownMenuGroup>
                 <DropdownMenuItem asChild>
                     <Link
-                        className="block w-full cursor-pointer"
+                        className="block w-full cursor-pointer rounded-sm px-2 py-2 hover:bg-slate-100 dark:hover:bg-slate-800"
                         href={edit()}
                         prefetch
                         onClick={cleanup}
@@ -48,7 +48,7 @@ export function UserMenuContent({ user }: Props) {
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
                 <Link
-                    className="block w-full cursor-pointer"
+                    className="block w-full cursor-pointer rounded-sm px-2 py-2 hover:bg-slate-100 dark:hover:bg-slate-800"
                     href={logout()}
                     as="button"
                     onClick={handleLogout}

@@ -3,7 +3,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { FlashMessages } from '@/components/crm/flash-messages';
 import { CrmHeader } from '@/components/crm/header';
 import { CrmSidebar } from '@/components/crm/sidebar';
-import { applySidebarAttributes, initSidebarBootAttributes, persistSidebarState } from '@/modules/sidebar';
+import {
+    applySidebarAttributes,
+    initSidebarBootAttributes,
+    persistSidebarState,
+} from '@/modules/sidebar';
+import type { User } from '@/types';
 import type { CrmShared } from '@/types/crm';
 
 type Props = {
@@ -12,10 +17,20 @@ type Props = {
     headerSubtitle?: string;
 };
 
+type PageProps = {
+    auth?: {
+        user?: User | null;
+    };
+    crm?: CrmShared;
+};
+
 export default function CrmLayout({ children, header, headerSubtitle }: Props) {
-    const page = usePage();
+    const page = usePage<PageProps>();
     const crm = (page.props.crm ?? {}) as CrmShared;
-    const user = page.props.auth?.user as { name: string; email: string };
+    const user = (page.props.auth?.user ?? {
+        name: 'User',
+        email: '',
+    }) as User;
 
     const [sidebarExpanded, setSidebarExpanded] = useState<boolean>(() => {
         if (typeof window === 'undefined') {
@@ -69,7 +84,6 @@ export default function CrmLayout({ children, header, headerSubtitle }: Props) {
             <div
                 className={shellClass}
                 style={{
-                     
                     // @ts-expect-error CSS variable
                     '--crm-sidebar-width': sidebarExpanded ? '14rem' : '4rem',
                 }}
@@ -97,6 +111,9 @@ export default function CrmLayout({ children, header, headerSubtitle }: Props) {
                         user={user}
                     />
                     <main className="crm-content">{children}</main>
+                    <footer className="pointer-events-none mx-8 mb-4 text-end text-[10px] text-slate-500 opacity-50">
+                        © 2026 Chua Yun Kee. All rights reserved.
+                    </footer>
                 </div>
             </div>
         </>

@@ -39,11 +39,13 @@ export default function Clients({ clients }: ClientsProps) {
             <div className="space-y-6">
                 <div className="crm-card">
                     <div className="crm-card-body text-gray-900">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-medium">List of clients</h3>
+                        <div className="mb-4 flex items-center justify-between">
+                            <h3 className="text-lg font-medium">
+                                List of clients
+                            </h3>
                         </div>
 
-                        <div className="crm-filter-block">
+                        <div className="crm-filter-block mb-6">
                             <div className="crm-filter-toolbar">
                                 <CrmFilterSearch
                                     value={searchTerm}
@@ -57,7 +59,10 @@ export default function Clients({ clients }: ClientsProps) {
                         </div>
 
                         <div className="crm-table-wrap">
-                            <table className="crm-table" data-sortable-table="true">
+                            <table
+                                className="crm-table"
+                                data-sortable-table="true"
+                            >
                                 <thead>
                                     <tr>
                                         <th className="w-[50px]">
@@ -67,32 +72,53 @@ export default function Clients({ clients }: ClientsProps) {
                                         </th>
                                         <th data-sort-index="1">
                                             <span className="crm-sort-btn">
-                                                Name <span data-sort-indicator></span>
+                                                Name{' '}
+                                                <span
+                                                    data-sort-indicator
+                                                ></span>
                                             </span>
                                         </th>
                                         <th data-sort-index="2">
                                             <span className="crm-sort-btn">
-                                                Email <span data-sort-indicator></span>
+                                                Email{' '}
+                                                <span
+                                                    data-sort-indicator
+                                                ></span>
                                             </span>
                                         </th>
                                         <th data-sort-index="3">
                                             <span className="crm-sort-btn">
-                                                Phone <span data-sort-indicator></span>
+                                                Phone{' '}
+                                                <span
+                                                    data-sort-indicator
+                                                ></span>
                                             </span>
                                         </th>
-                                        <th data-sort-index="4" data-sort-type="number">
+                                        <th
+                                            data-sort-index="4"
+                                            data-sort-type="number"
+                                        >
                                             <span className="crm-sort-btn">
-                                                Age <span data-sort-indicator></span>
+                                                Age{' '}
+                                                <span
+                                                    data-sort-indicator
+                                                ></span>
                                             </span>
                                         </th>
                                         <th data-sort-index="5">
                                             <span className="crm-sort-btn">
-                                                Occupation <span data-sort-indicator></span>
+                                                Occupation{' '}
+                                                <span
+                                                    data-sort-indicator
+                                                ></span>
                                             </span>
                                         </th>
                                         <th data-sort-index="6">
                                             <span className="crm-sort-btn">
-                                                Company <span data-sort-indicator></span>
+                                                Company{' '}
+                                                <span
+                                                    data-sort-indicator
+                                                ></span>
                                             </span>
                                         </th>
                                     </tr>
@@ -105,7 +131,10 @@ export default function Clients({ clients }: ClientsProps) {
                                                 <td
                                                     data-sort-value={client.name?.toLowerCase()}
                                                     className="text-gray-900"
-                                                    style={{ textAlign: 'left', paddingLeft: 20 }}
+                                                    style={{
+                                                        textAlign: 'left',
+                                                        paddingLeft: 20,
+                                                    }}
                                                 >
                                                     <Link
                                                         href={`/clients/${client.id}`}
@@ -114,25 +143,35 @@ export default function Clients({ clients }: ClientsProps) {
                                                         {client.name}
                                                     </Link>
                                                 </td>
-                                                <td data-sort-value={client.email?.toLowerCase()}>
+                                                <td
+                                                    data-sort-value={client.email?.toLowerCase()}
+                                                >
                                                     {client.email}
                                                 </td>
-                                                <td data-sort-value={client.phone?.toLowerCase()}>
+                                                <td
+                                                    data-sort-value={client.phone?.toLowerCase()}
+                                                >
                                                     {client.phone}
                                                 </td>
-                                                <td data-sort-value={client.age ?? ''}>
+                                                <td
+                                                    data-sort-value={
+                                                        client.age ?? ''
+                                                    }
+                                                >
                                                     {client.age ?? '-'}
                                                 </td>
                                                 <td
                                                     data-sort-value={
-                                                        client.occupation?.toLowerCase() ?? ''
+                                                        client.occupation?.toLowerCase() ??
+                                                        ''
                                                     }
                                                 >
                                                     {client.occupation ?? '-'}
                                                 </td>
                                                 <td
                                                     data-sort-value={
-                                                        client.company?.toLowerCase() ?? ''
+                                                        client.company?.toLowerCase() ??
+                                                        ''
                                                     }
                                                 >
                                                     {client.company ?? '-'}
@@ -141,7 +180,10 @@ export default function Clients({ clients }: ClientsProps) {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={7} className="crm-table-empty">
+                                            <td
+                                                colSpan={7}
+                                                className="crm-table-empty"
+                                            >
                                                 No clients found.
                                             </td>
                                         </tr>
@@ -165,7 +207,7 @@ Clients.layout = (page: ReactNode) => (
         header={
             <div className="flex items-center justify-between gap-3">
                 <div>
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
+                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
                         Clients
                     </h2>
                 </div>

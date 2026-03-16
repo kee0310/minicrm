@@ -1,4 +1,3 @@
-
 import { Head, Link } from '@inertiajs/react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { bootDashboard } from '@/dashboard';
@@ -9,6 +8,7 @@ type DashboardProps = {
     dashboardSubtitle?: string;
     monthNav: {
         label: string;
+        current?: string;
         prev_url: string;
         next_url: string;
     };
@@ -36,8 +36,9 @@ type WindowWithCrm = Window & {
     Chart?: unknown;
 };
 
-const withAnimDelay = (delay: string): React.CSSProperties =>
-    ({ ['--crm-anim-delay' as string]: delay });
+const withAnimDelay = (delay: string): React.CSSProperties => ({
+    ['--crm-anim-delay' as string]: delay,
+});
 
 function formatNumber(value: number, decimals = 0) {
     return Number(value || 0).toLocaleString('en-US', {
@@ -139,7 +140,7 @@ function PipelineStageModal() {
                         </button>
                     </div>
                 </div>
-                <div className="max-h-[70vh] overflow-y-auto mb-2">
+                <div className="mb-2 max-h-[70vh] overflow-y-auto">
                     <div
                         id="pipeline-stage-modal-loading"
                         className="hidden py-8 text-center text-sm text-slate-500"
@@ -162,7 +163,7 @@ function PipelineStageModal() {
                         id="pipeline-stage-modal-table-wrap"
                         className="hidden overflow-x-auto px-5 py-4"
                     >
-                        <table className="w-full divide-y divide-slate-200 text-sm border border-slate-200">
+                        <table className="w-full divide-y divide-slate-200 border border-slate-200 text-sm">
                             <thead className="bg-slate-100 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
                                 <tr>
                                     <th className="px-3 py-2 text-center">
@@ -194,6 +195,12 @@ function PipelineStageModal() {
 }
 
 export default function Dashboard(props: DashboardProps) {
+    const selectedMonth = props.monthNav?.current ?? '';
+    const salespeopleHref = (tab: 'salesperson' | 'leader') =>
+        selectedMonth
+            ? `/dashboard/salespeople?tab=${tab}&month=${selectedMonth}`
+            : `/dashboard/salespeople?tab=${tab}`;
+
     useEffect(() => {
         let mounted = true;
         const init = async () => {
@@ -272,367 +279,525 @@ export default function Dashboard(props: DashboardProps) {
                 aria-hidden="true"
                 data-dashboard={JSON.stringify(dashboardData)}
             ></div>
-            <div
-                id="dashboard-loading"
-                className="fixed inset-0 z-1000 flex items-center justify-center bg-white/70 backdrop-blur-sm"
-            >
-                <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-4 py-2 text-sm text-slate-500 shadow-sm">
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600"></span>
-                    <span>Loading dashboard...</span>
-                </div>
-            </div>
-
-            <div className="relative space-y-4 crm-dashboard-scroll">
-                <div className="flex justify-end">
-                    <div className="crm-dash-month-nav inline-flex items-center rounded-lg border border-slate-300 bg-white p-1 shadow-sm">
-                        <Link
-                            href={props.monthNav.prev_url}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100"
-                        >
-                            <i className="fa-solid fa-chevron-left text-xs"></i>
-                        </Link>
-                        <span className="inline-flex min-w-28 items-center justify-center rounded-md px-3 py-1.5 text-sm font-semibold text-slate-800">
-                            {props.monthNav.label}
-                        </span>
-                        <Link
-                            href={props.monthNav.next_url}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100"
-                        >
-                            <i className="fa-solid fa-chevron-right text-xs"></i>
-                        </Link>
+            <div className="relative">
+                <div
+                    id="dashboard-loading"
+                    className="absolute inset-0 z-20 -mx-6 -my-4 flex justify-center bg-white/70 backdrop-blur-sm"
+                    style={{ pointerEvents: 'none' }}
+                >
+                    <div className="mt-[40vh] flex h-min items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-4 py-2 text-sm text-slate-500 shadow-sm">
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600"></span>
+                        <span>Loading dashboard...</span>
                     </div>
                 </div>
 
-                <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                    {kpis.map((item) => (
-                        <article
-                            key={item.label}
-                            className="crm-kpi crm-anim-fade-up"
-                        >
-                            <p className="crm-kpi-label">{item.label}</p>
-                            <p className="mt-2 text-[1.5rem] font-semibold leading-none text-slate-900 crm-countup">
-                                {item.value}
-                            </p>
-                            <TrendBadge value={Number(item.trend)} />
-                        </article>
-                    ))}
-                </section>
-
-                <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <ChartCard
-                        title="Leads by Source"
-                        className="crm-anim-pop"
-                        style={withAnimDelay('120ms')}
-                    >
-                        <div id="dashboard-leads-source"></div>
-                    </ChartCard>
-
-                    <ChartCard
-                        title="Pipeline Overview"
-                        className="crm-anim-pop"
-                        style={withAnimDelay('180ms')}
-                    >
-                        <div id="dashboard-pipeline-overview"></div>
-                    </ChartCard>
-
-                    <ChartCard
-                        title="Total Commission (Past 5 Months)"
-                        className="crm-anim-pop"
-                        style={withAnimDelay('240ms')}
-                    >
-                        <div className="h-[300px] flex items-center pt-4">
-                            <canvas id="dashboard-total-commission-line"></canvas>
-                        </div>
-                    </ChartCard>
-                </section>
-                {props.canViewMonthlyPerformance ? (
-                    <section
-                        className="crm-anim-fade-up"
-                        style={withAnimDelay('260ms')}
-                    >
-                        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                            <ChartCard
-                                className="crm-dash-chart-panel"
-                                header={
-                                    <div className="flex items-center relative h-8">
-                                        <Link
-                                            href="/dashboard/salespeople?tab=salesperson"
-                                            className="mr-3 rounded-lg border border-slate-300 bg-blue-500 px-3 py-2 text-[8px] font-semibold uppercase text-white shadow-sm transition hover:bg-white hover:text-slate-700"
-                                        >
-                                            View All
-                                        </Link>
-                                        <h3 className="absolute left-1/2 -translate-x-1/2">
-                                            Salesperson
-                                        </h3>
-                                    </div>
-                                }
+                <div className="crm-dashboard-scroll relative min-h-[calc(100vh-6rem)] space-y-4 overflow-y-auto bg-slate-50 p-4">
+                    <div className="relative z-[25] flex justify-end">
+                        <div className="crm-dash-month-nav inline-flex items-center rounded-lg border border-slate-300 bg-white p-1 shadow-sm">
+                            <Link
+                                href={props.monthNav.prev_url}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100"
                             >
-                                <div className="h-[360px] max-w-[500px] m-auto">
-                                    <canvas id="salespersonPerformanceChart"></canvas>
+                                <i className="fa-solid fa-chevron-left text-xs"></i>
+                            </Link>
+                            <span className="inline-flex min-w-28 items-center justify-center rounded-md px-3 py-1.5 text-sm font-semibold text-slate-800">
+                                {props.monthNav.label}
+                            </span>
+                            <Link
+                                href={props.monthNav.next_url}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100"
+                            >
+                                <i className="fa-solid fa-chevron-right text-xs"></i>
+                            </Link>
+                        </div>
+                    </div>
+
+                    <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                        {kpis.map((item) => (
+                            <article
+                                key={item.label}
+                                className="crm-kpi crm-anim-fade-up"
+                            >
+                                <p className="crm-kpi-label">{item.label}</p>
+                                <p className="crm-countup mt-2 text-[1.5rem] font-semibold leading-none text-slate-900">
+                                    {item.value}
+                                </p>
+                                <TrendBadge value={Number(item.trend)} />
+                            </article>
+                        ))}
+                    </section>
+
+                    <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                        <ChartCard
+                            title="Leads by Source"
+                            className="crm-anim-pop"
+                            style={withAnimDelay('120ms')}
+                        >
+                            <div id="dashboard-leads-source"></div>
+                        </ChartCard>
+
+                        <ChartCard
+                            title="Pipeline Overview"
+                            className="crm-anim-pop"
+                            style={withAnimDelay('180ms')}
+                        >
+                            <div id="dashboard-pipeline-overview"></div>
+                        </ChartCard>
+
+                        <ChartCard
+                            title="Total Commission (Past 5 Months)"
+                            className="crm-anim-pop"
+                            style={withAnimDelay('240ms')}
+                        >
+                            <div className="flex h-[300px] items-center pt-4">
+                                <canvas id="dashboard-total-commission-line"></canvas>
+                            </div>
+                        </ChartCard>
+                    </section>
+                    {props.canViewMonthlyPerformance ? (
+                        <section
+                            className="crm-anim-fade-up"
+                            style={withAnimDelay('260ms')}
+                        >
+                            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                                <ChartCard
+                                    className="crm-dash-chart-panel"
+                                    header={
+                                        <div className="relative flex h-8 items-center">
+                                            <Link
+                                                href={salespeopleHref(
+                                                    'salesperson',
+                                                )}
+                                                className="mr-3 rounded-lg border border-slate-300 bg-blue-500 px-3 py-2 text-[8px] font-semibold uppercase text-white shadow-sm transition hover:bg-white hover:text-slate-700"
+                                            >
+                                                View All
+                                            </Link>
+                                            <h3 className="absolute left-1/2 -translate-x-1/2">
+                                                Salesperson
+                                            </h3>
+                                        </div>
+                                    }
+                                >
+                                    <div className="m-auto h-[360px] max-w-[500px]">
+                                        <canvas id="salespersonPerformanceChart"></canvas>
+                                    </div>
+                                </ChartCard>
+                                <ChartCard
+                                    className="crm-dash-chart-panel"
+                                    header={
+                                        <div className="relative flex h-8 items-center">
+                                            <Link
+                                                href={salespeopleHref('leader')}
+                                                className="mr-3 rounded-lg border border-slate-300 bg-blue-500 px-3 py-2 text-[8px] font-semibold uppercase text-white shadow-sm transition hover:bg-white hover:text-slate-700"
+                                            >
+                                                View All
+                                            </Link>
+                                            <h3 className="absolute left-1/2 -translate-x-1/2">
+                                                Leader
+                                            </h3>
+                                        </div>
+                                    }
+                                >
+                                    <div className="m-auto h-[360px] max-w-[500px]">
+                                        <canvas id="leaderPerformanceChart"></canvas>
+                                    </div>
+                                </ChartCard>
+                            </div>
+                        </section>
+                    ) : null}
+
+                    <section>
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            <ChartCard
+                                title="Lead Status (All)"
+                                className="crm-anim-fade-up"
+                                style={withAnimDelay('125ms')}
+                            >
+                                <div className="crm-anim-stagger grid grid-cols-2 gap-4">
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Total Leads
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold">
+                                            {formatNumber(
+                                                props.lead?.total_leads ?? 0,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Losted Leads
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold text-rose-700">
+                                            {formatNumber(
+                                                props.lead?.total_lost_leads ??
+                                                    0,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Contacted Leads
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold">
+                                            {formatNumber(
+                                                props.lead?.contacted_leads ??
+                                                    0,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Scheduled Leads
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold">
+                                            {formatNumber(
+                                                props.lead?.scheduled_leads ??
+                                                    0,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Leads Converted
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold">
+                                            {formatNumber(
+                                                props.lead?.leads_converted ??
+                                                    0,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Leads Converted Rate
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold">
+                                            {formatNumber(
+                                                props.lead
+                                                    ?.leads_converted_rate ?? 0,
+                                                2,
+                                            )}
+                                            %
+                                        </p>
+                                    </div>
                                 </div>
                             </ChartCard>
+
                             <ChartCard
-                                className="crm-dash-chart-panel"
-                                header={
-                                    <div className="flex items-center relative h-8">
-                                        <Link
-                                            href="/dashboard/salespeople?tab=leader"
-                                            className="mr-3 rounded-lg border border-slate-300 bg-blue-500 px-3 py-2 text-[8px] font-semibold uppercase text-white shadow-sm transition hover:bg-white hover:text-slate-700"
-                                        >
-                                            View All
-                                        </Link>
-                                        <h3 className="absolute left-1/2 -translate-x-1/2">
-                                            Leader
-                                        </h3>
-                                    </div>
-                                }
+                                title="Deal Status (All)"
+                                className="crm-anim-fade-up"
+                                style={withAnimDelay('130ms')}
                             >
-                                <div className="h-[360px] max-w-[500px] m-auto">
-                                    <canvas id="leaderPerformanceChart"></canvas>
+                                <div className="crm-anim-stagger grid grid-cols-2 gap-4 md:grid-cols-2">
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Total Deals
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold">
+                                            {formatNumber(
+                                                props.deal?.total_deals ?? 0,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Deal Close Rate
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold">
+                                            {formatNumber(
+                                                props.deal?.close_rate ?? 0,
+                                                2,
+                                            )}
+                                            %
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Completed Deals
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold text-emerald-700">
+                                            {formatNumber(
+                                                props.deal?.completed_deals ??
+                                                    0,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Active Deals
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold">
+                                            {formatNumber(
+                                                props.deal?.incomplete_deals ??
+                                                    0,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Avg Complete Day
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold">
+                                            {props.deal?.avg_completion_days ===
+                                            null
+                                                ? '-'
+                                                : formatNumber(
+                                                      props.deal
+                                                          ?.avg_completion_days ??
+                                                          0,
+                                                      1,
+                                                  )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Avg Commission / Deal
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold">
+                                            RM{' '}
+                                            {formatNumber(
+                                                props.deal
+                                                    ?.avg_commission_per_deal ??
+                                                    0,
+                                                2,
+                                            )}
+                                        </p>
+                                    </div>
+                                </div>
+                            </ChartCard>
+
+                            <ChartCard
+                                title="Loan Status (All)"
+                                className="crm-anim-fade-up md:col-span-2"
+                                style={withAnimDelay('140ms')}
+                            >
+                                <div className="crm-anim-stagger grid grid-cols-2 gap-4 md:grid-cols-4">
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Total Loan Cases
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold">
+                                            {formatNumber(
+                                                props.loan?.total_cases ?? 0,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Pending Document Cases
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold">
+                                            {formatNumber(
+                                                props.loan
+                                                    ?.pending_document_cases ??
+                                                    0,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Submitted to Bank
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold">
+                                            {formatNumber(
+                                                props.loan?.submitted_to_bank ??
+                                                    0,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Approved
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold text-emerald-700">
+                                            {formatNumber(
+                                                props.loan?.approved ?? 0,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Rejected
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold text-rose-700">
+                                            {formatNumber(
+                                                props.loan?.rejected ?? 0,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Approval Rate
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold">
+                                            {formatNumber(
+                                                props.loan?.approval_rate ?? 0,
+                                                2,
+                                            )}
+                                            %
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Average Approval Days
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold">
+                                            {props.loan
+                                                ?.average_approval_days === null
+                                                ? '-'
+                                                : props.loan
+                                                      ?.average_approval_days}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            High DSR Cases
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold text-amber-700">
+                                            {formatNumber(
+                                                props.loan?.high_dsr_cases ?? 0,
+                                            )}
+                                        </p>
+                                    </div>
+                                </div>
+                            </ChartCard>
+
+                            <ChartCard
+                                title="Legal Status (All)"
+                                className="crm-anim-fade-up"
+                                style={withAnimDelay('180ms')}
+                            >
+                                <div className="crm-anim-stagger grid grid-cols-2 gap-4 md:grid-cols-2">
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Total Legal Cases
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold">
+                                            {formatNumber(
+                                                props.legal?.total_cases ?? 0,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Completed Cases
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold text-emerald-700">
+                                            {formatNumber(
+                                                props.legal?.completed_cases ??
+                                                    0,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            SPA Drafting
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold">
+                                            {formatNumber(
+                                                props.legal?.drafting ?? 0,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Awaiting Client Signature
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold">
+                                            {formatNumber(
+                                                props.legal
+                                                    ?.awaiting_client_signature ??
+                                                    0,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Awaiting Bank
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold">
+                                            {formatNumber(
+                                                props.legal?.awaiting_bank ?? 0,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Overdue Cases (&gt;14 days)
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold text-rose-700">
+                                            {formatNumber(
+                                                props.legal?.overdue_cases ?? 0,
+                                            )}
+                                        </p>
+                                    </div>
+                                </div>
+                            </ChartCard>
+
+                            <ChartCard
+                                title="Commission Status (All)"
+                                className="crm-anim-fade-up"
+                                style={withAnimDelay('220ms')}
+                            >
+                                <div className="crm-anim-stagger mb-6 grid grid-cols-2 gap-4 md:grid-cols-2">
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Total Commission
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold">
+                                            {formatNumber(
+                                                props.finance?.eligible ?? 0,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Total Ammount (RM)
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold">
+                                            RM{' '}
+                                            {formatNumber(
+                                                props.finance
+                                                    ?.total_commission ?? 0,
+                                                2,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">Paid</p>
+                                        <p className="mt-2 text-2xl font-semibold text-emerald-700">
+                                            {formatNumber(
+                                                props.finance?.paid ?? 0,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Unpaid
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold text-amber-700">
+                                            {formatNumber(
+                                                props.finance
+                                                    ?.pending_approval ?? 0,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="crm-kpi crm-kpi-2">
+                                        <p className="crm-kpi-label-2">
+                                            Clawback Cases
+                                        </p>
+                                        <p className="mt-2 text-2xl font-semibold text-rose-700">
+                                            {formatNumber(
+                                                props.finance?.clawback ?? 0,
+                                            )}
+                                        </p>
+                                    </div>
                                 </div>
                             </ChartCard>
                         </div>
                     </section>
-                ) : null}
-
-                <section>
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        <ChartCard
-                            title="Lead Status (All)"
-                            className="crm-anim-fade-up"
-                            style={withAnimDelay('125ms')}
-                        >
-                            <div className="grid grid-cols-2 gap-4 crm-anim-stagger">
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Total Leads</p>
-                                    <p className="mt-2 text-2xl font-semibold">
-                                        {formatNumber(props.lead?.total_leads ?? 0)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Losted Leads</p>
-                                    <p className="mt-2 text-2xl font-semibold text-rose-700">
-                                        {formatNumber(props.lead?.total_lost_leads ?? 0)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Contacted Leads</p>
-                                    <p className="mt-2 text-2xl font-semibold">
-                                        {formatNumber(props.lead?.contacted_leads ?? 0)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Scheduled Leads</p>
-                                    <p className="mt-2 text-2xl font-semibold">
-                                        {formatNumber(props.lead?.scheduled_leads ?? 0)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Leads Converted</p>
-                                    <p className="mt-2 text-2xl font-semibold">
-                                        {formatNumber(props.lead?.leads_converted ?? 0)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Leads Converted Rate</p>
-                                    <p className="mt-2 text-2xl font-semibold">
-                                        {formatNumber(props.lead?.leads_converted_rate ?? 0, 2)}%
-                                    </p>
-                                </div>
-                            </div>
-                        </ChartCard>
-
-                        <ChartCard
-                            title="Deal Status (All)"
-                            className="crm-anim-fade-up"
-                            style={withAnimDelay('130ms')}
-                        >
-                            <div className="grid grid-cols-2 gap-4 md:grid-cols-2 crm-anim-stagger">
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Total Deals</p>
-                                    <p className="mt-2 text-2xl font-semibold">
-                                        {formatNumber(props.deal?.total_deals ?? 0)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Deal Close Rate</p>
-                                    <p className="mt-2 text-2xl font-semibold">
-                                        {formatNumber(props.deal?.close_rate ?? 0, 2)}%
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Completed Deals</p>
-                                    <p className="mt-2 text-2xl font-semibold text-emerald-700">
-                                        {formatNumber(props.deal?.completed_deals ?? 0)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Active Deals</p>
-                                    <p className="mt-2 text-2xl font-semibold">
-                                        {formatNumber(props.deal?.incomplete_deals ?? 0)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Avg Complete Day</p>
-                                    <p className="mt-2 text-2xl font-semibold">
-                                        {props.deal?.avg_completion_days === null
-                                            ? '-'
-                                            : formatNumber(props.deal?.avg_completion_days ?? 0, 1)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Avg Commission / Deal</p>
-                                    <p className="mt-2 text-2xl font-semibold">
-                                        RM {formatNumber(props.deal?.avg_commission_per_deal ?? 0, 2)}
-                                    </p>
-                                </div>
-                            </div>
-                        </ChartCard>
-
-                        <ChartCard
-                            title="Loan Status (All)"
-                            className="crm-anim-fade-up md:col-span-2"
-                            style={withAnimDelay('140ms')}
-                        >
-                            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 crm-anim-stagger">
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Total Loan Cases</p>
-                                    <p className="mt-2 text-2xl font-semibold">
-                                        {formatNumber(props.loan?.total_cases ?? 0)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Pending Document Cases</p>
-                                    <p className="mt-2 text-2xl font-semibold">
-                                        {formatNumber(props.loan?.pending_document_cases ?? 0)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Submitted to Bank</p>
-                                    <p className="mt-2 text-2xl font-semibold">
-                                        {formatNumber(props.loan?.submitted_to_bank ?? 0)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Approved</p>
-                                    <p className="mt-2 text-2xl font-semibold text-emerald-700">
-                                        {formatNumber(props.loan?.approved ?? 0)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Rejected</p>
-                                    <p className="mt-2 text-2xl font-semibold text-rose-700">
-                                        {formatNumber(props.loan?.rejected ?? 0)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Approval Rate</p>
-                                    <p className="mt-2 text-2xl font-semibold">
-                                        {formatNumber(props.loan?.approval_rate ?? 0, 2)}%
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Average Approval Days</p>
-                                    <p className="mt-2 text-2xl font-semibold">
-                                        {props.loan?.average_approval_days === null
-                                            ? '-'
-                                            : props.loan?.average_approval_days}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">High DSR Cases</p>
-                                    <p className="mt-2 text-2xl font-semibold text-amber-700">
-                                        {formatNumber(props.loan?.high_dsr_cases ?? 0)}
-                                    </p>
-                                </div>
-                            </div>
-                        </ChartCard>
-
-                        <ChartCard
-                            title="Legal Status (All)"
-                            className="crm-anim-fade-up"
-                            style={withAnimDelay('180ms')}
-                        >
-                            <div className="grid grid-cols-2 gap-4 md:grid-cols-2 crm-anim-stagger">
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Total Legal Cases</p>
-                                    <p className="mt-2 text-2xl font-semibold">
-                                        {formatNumber(props.legal?.total_cases ?? 0)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Completed Cases</p>
-                                    <p className="mt-2 text-2xl font-semibold text-emerald-700">
-                                        {formatNumber(props.legal?.completed_cases ?? 0)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">SPA Drafting</p>
-                                    <p className="mt-2 text-2xl font-semibold">
-                                        {formatNumber(props.legal?.drafting ?? 0)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Awaiting Client Signature</p>
-                                    <p className="mt-2 text-2xl font-semibold">
-                                        {formatNumber(props.legal?.awaiting_client_signature ?? 0)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Awaiting Bank</p>
-                                    <p className="mt-2 text-2xl font-semibold">
-                                        {formatNumber(props.legal?.awaiting_bank ?? 0)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Overdue Cases (&gt;14 days)</p>
-                                    <p className="mt-2 text-2xl font-semibold text-rose-700">
-                                        {formatNumber(props.legal?.overdue_cases ?? 0)}
-                                    </p>
-                                </div>
-                            </div>
-                        </ChartCard>
-
-                        <ChartCard
-                            title="Commission Status (All)"
-                            className="crm-anim-fade-up"
-                            style={withAnimDelay('220ms')}
-                        >
-                            <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-2 crm-anim-stagger">
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Total Commission</p>
-                                    <p className="mt-2 text-2xl font-semibold">
-                                        {formatNumber(props.finance?.eligible ?? 0)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Total Ammount (RM)</p>
-                                    <p className="mt-2 text-2xl font-semibold">
-                                        RM {formatNumber(props.finance?.total_commission ?? 0, 2)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Paid</p>
-                                    <p className="mt-2 text-2xl font-semibold text-emerald-700">
-                                        {formatNumber(props.finance?.paid ?? 0)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Unpaid</p>
-                                    <p className="mt-2 text-2xl font-semibold text-amber-700">
-                                        {formatNumber(props.finance?.pending_approval ?? 0)}
-                                    </p>
-                                </div>
-                                <div className="crm-kpi crm-kpi-2">
-                                    <p className="crm-kpi-label-2">Clawback Cases</p>
-                                    <p className="mt-2 text-2xl font-semibold text-rose-700">
-                                        {formatNumber(props.finance?.clawback ?? 0)}
-                                    </p>
-                                </div>
-                            </div>
-                        </ChartCard>
-                    </div>
-                </section>
+                </div>
             </div>
 
             <PipelineStageModal />
@@ -645,14 +810,15 @@ Dashboard.layout = (page: ReactNode & { props?: DashboardProps }) => (
         header={
             <div className="flex items-center justify-between gap-3">
                 <div>
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
+                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
                         {page.props?.dashboardTitle ?? 'CRM Dashboard'}
                     </h2>
                 </div>
             </div>
         }
         headerSubtitle={
-            page.props?.dashboardSubtitle ?? 'Executive and operational overview'
+            page.props?.dashboardSubtitle ??
+            'Executive and operational overview'
         }
     >
         {page}

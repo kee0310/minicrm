@@ -31,7 +31,7 @@
 }
 
 .crm-create-btn {
-    @apply inline-flex h-9 max-w-max items-center justify-center rounded-md border border-transparent px-4 text-xs font-semibold uppercase tracking-[0.08em] text-white transition;
+    @apply inline-flex h-9 max-w-max items-center justify-center truncate rounded-md border border-transparent px-4 text-xs font-semibold uppercase tracking-[0.08em] text-white transition;
     background: linear-gradient(50deg, #16a34a 0%, #22c55e 51%, #16a34a 100%);
     background-size: 200% auto;
     box-shadow: 0 6px 14px rgba(22, 163, 74, 0.25);
@@ -116,106 +116,10 @@
     @apply relative flex w-full flex-col gap-1 sm:max-w-[220px];
 }
 
-.crm-month-picker-trigger {
-    @apply inline-flex h-9 items-center justify-between gap-2 rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-100;
-}
-
-.crm-month-picker-panel {
-    @apply absolute right-0 top-[calc(100%+6px)] z-40 w-[260px] rounded-xl border border-slate-200 bg-white p-4 shadow-xl;
-}
-
-.crm-month-picker-year {
-    @apply flex items-center justify-between gap-2 pb-3 text-sm font-semibold text-slate-700;
-}
-
-.crm-month-picker-year-btn {
-    @apply inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:bg-slate-100;
-}
-
-.crm-month-picker-year-label {
-    @apply text-base font-semibold text-slate-700;
-}
-
-.crm-month-picker-grid {
-    @apply grid grid-cols-4 gap-2;
-}
-
-.crm-month-picker-month {
-    @apply rounded-lg px-2 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100;
-}
-
-.crm-month-picker-month.is-active {
-    @apply bg-emerald-500 text-white shadow-md;
-}
-
 .crm-form-text {
     @apply w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100;
 }
 
 .crm-form-text-readonly {
     @apply bg-gray-100;
-}
-
-.crm-search-select {
-    @apply relative;
-}
-
-.crm-search-select-trigger {
-    @apply flex w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-left text-sm text-slate-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-100;
-}
-
-.crm-search-select-trigger:focus-visible {
-    @apply border-blue-500;
-}
-
-.crm-search-select-trigger-label {
-    @apply truncate text-sm text-slate-700;
-}
-
-.crm-search-select-trigger-caret {
-    @apply ml-3 text-xs text-slate-500;
-}
-
-.crm-search-select-panel {
-    @apply absolute left-0 right-0 z-[70] mt-1 rounded-xl border border-slate-200 bg-white p-3 shadow-xl;
-}
-
-.crm-search-select-search-wrap {
-    @apply relative mb-2;
-}
-
-.crm-search-select-search-icon {
-    @apply pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500;
-}
-
-.crm-search-select-search-input {
-    @apply w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm text-slate-900 shadow-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100;
-}
-
-.crm-search-select-options {
-    @apply max-h-56 overflow-y-auto;
-}
-
-.crm-search-select-option {
-    @apply flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition hover:bg-slate-50;
-}
-
-.crm-search-select-option.is-selected {
-    @apply bg-indigo-50;
-}
-
-.crm-search-select-avatar {
-    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700;
-}
-
-.crm-search-select-option-text {
-    @apply text-sm text-slate-700;
-}
-
-.crm-search-select-empty {
-    @apply px-2 py-3 text-sm text-slate-400;
-}
-
-.crm-search-select.is-disabled .crm-search-select-trigger {
-    @apply cursor-not-allowed bg-slate-100 text-slate-400;
 }

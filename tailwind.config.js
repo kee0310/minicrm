@@ -10,6 +10,8 @@ export default {
         './resources/views/**/*.blade.php',
         './resources/**/*.blade.php',
         './resources/**/*.js',
+        './resources/**/*.jsx',
+        './resources/**/*.tsx',
         './resources/**/*.vue',
     ],
 

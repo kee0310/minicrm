@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { CrmNavigation, CrmNavItem } from '@/types/crm';
 
 type Props = {
@@ -27,10 +27,28 @@ export function CrmSidebar({
         return map;
     }, [navigation.links]);
 
-    const [submenuOpen, setSubmenuOpen] = useState<Map<number, boolean>>(
-        initialOpen,
-    );
+    const [submenuOpen, setSubmenuOpen] =
+        useState<Map<number, boolean>>(initialOpen);
     const [flyoutIndex, setFlyoutIndex] = useState<number | null>(null);
+    const flyoutTimerRef = useRef<number | null>(null);
+    const loanIndex = useMemo(
+        () => navigation.links.findIndex((link) => link.label === 'Loans'),
+        [navigation.links],
+    );
+
+    const closeLoanSubmenu = useCallback(() => {
+        if (loanIndex < 0) {
+            return;
+        }
+        setSubmenuOpen((prev) => {
+            if (!prev.get(loanIndex)) {
+                return prev;
+            }
+            const next = new Map(prev);
+            next.set(loanIndex, false);
+            return next;
+        });
+    }, [loanIndex]);
 
     const toggleSubmenu = (index: number) => {
         setSubmenuOpen((prev) => {
@@ -38,6 +56,24 @@ export function CrmSidebar({
             next.set(index, !next.get(index));
             return next;
         });
+    };
+
+    const openFlyout = (index: number) => {
+        if (flyoutTimerRef.current) {
+            window.clearTimeout(flyoutTimerRef.current);
+            flyoutTimerRef.current = null;
+        }
+        setFlyoutIndex(index);
+    };
+
+    const closeFlyout = (delay = 140) => {
+        if (flyoutTimerRef.current) {
+            window.clearTimeout(flyoutTimerRef.current);
+        }
+        flyoutTimerRef.current = window.setTimeout(() => {
+            setFlyoutIndex(null);
+            flyoutTimerRef.current = null;
+        }, delay);
     };
 
     const renderLink = (link: CrmNavItem, index: number) => {
@@ -50,10 +86,10 @@ export function CrmSidebar({
                 <div
                     className="relative"
                     onMouseEnter={() =>
-                        !sidebarExpanded ? setFlyoutIndex(index) : undefined
+                        !sidebarExpanded ? openFlyout(index) : undefined
                     }
                     onMouseLeave={() =>
-                        !sidebarExpanded ? setFlyoutIndex(null) : undefined
+                        !sidebarExpanded ? closeFlyout() : undefined
                     }
                 >
                     <button
@@ -78,12 +114,12 @@ export function CrmSidebar({
                             </span>
                         </span>
                         <i
-                            className={`fa-solid fa-chevron-down crm-nav-icon crm-nav-icon-sm text-xs crm-nav-chevron ${sidebarExpanded ? '' : 'hidden'} ${isOpen ? 'is-open' : ''}`}
+                            className={`fa-solid fa-chevron-down crm-nav-icon crm-nav-icon-sm crm-nav-chevron text-xs ${sidebarExpanded ? '' : 'hidden'} ${isOpen ? 'is-open' : ''}`}
                         ></i>
                     </button>
 
                     <div
-                        className={`crm-nav-submenu origin-left mt-1 ${sidebarExpanded && isOpen ? '' : 'hidden'}`}
+                        className={`crm-nav-submenu mt-1 origin-left ${sidebarExpanded && isOpen ? 'is-open' : ''}`}
                     >
                         {link.children?.map((child) => {
                             const badgeValue = child.badge ?? 0;
@@ -93,13 +129,17 @@ export function CrmSidebar({
                                     href={child.href}
                                     className={`crm-nav-subitem ${child.active ? 'crm-nav-item-active' : 'crm-nav-item-inactive'}`}
                                 >
-                                    <span className="truncate">{child.label}</span>
+                                    <span className="truncate">
+                                        {child.label}
+                                    </span>
                                     {child.badgeKey && (
                                         <span
                                             data-nav-badge-key={child.badgeKey}
                                             className={`ml-2 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-500 px-1.5 text-[9px] font-semibold leading-none text-white ${badgeValue > 0 ? '' : 'hidden'}`}
                                         >
-                                            {badgeValue > 99 ? '99+' : badgeValue}
+                                            {badgeValue > 99
+                                                ? '99+'
+                                                : badgeValue}
                                         </span>
                                     )}
                                 </Link>
@@ -108,8 +148,15 @@ export function CrmSidebar({
                     </div>
 
                     <div
-                        className={`crm-nav-flyout origin-top absolute left-full top-0 ml-2 w-56 rounded bg-[#233b6d] shadow-lg ${!sidebarExpanded && flyoutIndex === index ? '' : 'hidden'}`}
+                        className={`crm-nav-flyout absolute left-full top-0 ml-2 w-56 origin-top rounded bg-[#233b6d] shadow-lg ${!sidebarExpanded && flyoutIndex === index ? 'is-open' : ''}`}
+                        onMouseEnter={() =>
+                            !sidebarExpanded ? openFlyout(index) : undefined
+                        }
+                        onMouseLeave={() =>
+                            !sidebarExpanded ? closeFlyout() : undefined
+                        }
                     >
+                        <span className="crm-nav-flyout-bridge" />
                         <p className="mb-2 text-sm font-semibold text-white">
                             {link.label}
                         </p>
@@ -127,7 +174,9 @@ export function CrmSidebar({
                                         </span>
                                         {child.badgeKey && (
                                             <span
-                                                data-nav-badge-key={child.badgeKey}
+                                                data-nav-badge-key={
+                                                    child.badgeKey
+                                                }
                                                 className={`ml-2 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold leading-none text-white ${badgeValue > 0 ? '' : 'hidden'}`}
                                             >
                                                 {badgeValue > 99
@@ -148,10 +197,13 @@ export function CrmSidebar({
             <Link
                 href={link.href ?? '#'}
                 className={`crm-nav-item group py-3 ${active ? 'crm-nav-item-active' : 'crm-nav-item-inactive'}`}
+                onClick={() => {
+                    if (link.label !== 'Loans') {
+                        closeLoanSubmenu();
+                    }
+                }}
             >
-                <i
-                    className={`${link.icon ?? ''} crm-nav-icon text-base`}
-                ></i>
+                <i className={`${link.icon ?? ''} crm-nav-icon text-base`}></i>
                 <span
                     className={`truncate whitespace-nowrap ${sidebarExpanded ? '' : 'hidden'}`}
                 >
@@ -162,7 +214,7 @@ export function CrmSidebar({
                         data-nav-badge-key={link.badgeKey}
                         className={`ml-2 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold leading-none text-white ${(link.badge ?? 0) > 0 ? '' : 'hidden'}`}
                     >
-                        {(link.badge ?? 0) > 99 ? '99+' : link.badge ?? 0}
+                        {(link.badge ?? 0) > 99 ? '99+' : (link.badge ?? 0)}
                     </span>
                 )}
             </Link>
@@ -174,22 +226,29 @@ export function CrmSidebar({
             <aside className="crm-sidebar-desktop fixed inset-y-0 left-0 z-40 hidden border-r border-[#395085] bg-gradient-to-b from-[#233b6d] via-[#325baf] to-[#0c8dc8] text-slate-100 lg:flex">
                 <div className="flex h-full w-full flex-col">
                     <div className="flex items-center justify-between border-b border-white/15 px-3 py-3">
-                        <Link
-                            href={navigation.homeUrl}
-                            className="crm-sidebar-brand"
-                        >
-                            <span className="crm-nav-icon crm-sidebar-brand-icon text-xl">
+                        <div className="crm-sidebar-brand flex items-center">
+                            <span
+                                className={`crm-nav-icon crm-sidebar-brand-icon text-xl transition-transform duration-200 ${
+                                    sidebarExpanded
+                                        ? 'translate-x-0 opacity-100'
+                                        : '-translate-x-2 opacity-0'
+                                }`}
+                            >
                                 <i className="fa-light fa-house-building"></i>
                             </span>
                             <span
-                                className={`font-bold tracking-wide text-white truncate ${sidebarExpanded ? '' : 'hidden'}`}
+                                className={`truncate font-bold tracking-wide text-white transition-all duration-200 ${
+                                    sidebarExpanded
+                                        ? 'ml-2 opacity-100'
+                                        : 'w-0 opacity-0'
+                                }`}
                             >
                                 CRM Property
                             </span>
-                        </Link>
+                        </div>
                         <button
                             type="button"
-                            className="crm-sidebar-toggle-btn"
+                            className="crm-sidebar-toggle-btn z-50"
                             onClick={onToggleExpand}
                         >
                             <i
@@ -203,9 +262,12 @@ export function CrmSidebar({
                         </button>
                     </div>
 
-                    <nav className="flex-1 space-y-1 p-2 scrollbar-hide transition-all">
+                    <nav className="scrollbar-hide flex-1 space-y-1 p-2 transition-all">
                         {navigation.links.map((link, index) => (
-                            <div key={`${link.label}-${index}`}>
+                            <div
+                                className="overflow-hidden"
+                                key={`${link.label}-${index}`}
+                            >
                                 {renderLink(link, index)}
                             </div>
                         ))}
@@ -242,14 +304,11 @@ export function CrmSidebar({
                         </button>
                     </div>
 
-                    <nav className="flex-1 space-y-1 overflow-y-auto p-2 scrollbar-hide">
+                    <nav className="scrollbar-hide flex-1 space-y-1 overflow-y-auto p-2">
                         {navigation.links.map((link, index) => {
-                            const hasChildren = Boolean(
-                                link.children?.length,
-                            );
+                            const hasChildren = Boolean(link.children?.length);
                             if (hasChildren) {
-                                const isOpen =
-                                    submenuOpen.get(index) ?? false;
+                                const isOpen = submenuOpen.get(index) ?? false;
                                 return (
                                     <div key={`${link.label}-${index}`}>
                                         <button
@@ -266,14 +325,15 @@ export function CrmSidebar({
                                                 </span>
                                             </span>
                                             <i
-                                                className={`fa-solid fa-chevron-down crm-nav-icon crm-nav-icon-sm text-xs crm-nav-chevron ${isOpen ? 'is-open' : ''}`}
+                                                className={`fa-solid fa-chevron-down crm-nav-icon crm-nav-icon-sm crm-nav-chevron text-xs ${isOpen ? 'is-open' : ''}`}
                                             ></i>
                                         </button>
                                         <div
-                                            className={`crm-nav-submenu ${isOpen ? '' : 'hidden'}`}
+                                            className={`crm-nav-submenu ${isOpen ? 'is-open' : ''}`}
                                         >
                                             {link.children?.map((child) => {
-                                                const badgeValue = child.badge ?? 0;
+                                                const badgeValue =
+                                                    child.badge ?? 0;
                                                 return (
                                                     <Link
                                                         key={child.href}
@@ -309,7 +369,12 @@ export function CrmSidebar({
                                     key={`${link.label}-${index}`}
                                     href={link.href ?? '#'}
                                     className={`crm-nav-item group py-3 ${link.active ? 'crm-nav-item-active' : 'crm-nav-item-inactive'}`}
-                                    onClick={onCloseMobile}
+                                    onClick={() => {
+                                        if (link.label !== 'Loans') {
+                                            closeLoanSubmenu();
+                                        }
+                                        onCloseMobile();
+                                    }}
                                 >
                                     <i
                                         className={`${link.icon ?? ''} crm-nav-icon text-base`}
@@ -324,7 +389,7 @@ export function CrmSidebar({
                                         >
                                             {(link.badge ?? 0) > 99
                                                 ? '99+'
-                                                : link.badge ?? 0}
+                                                : (link.badge ?? 0)}
                                         </span>
                                     )}
                                 </Link>

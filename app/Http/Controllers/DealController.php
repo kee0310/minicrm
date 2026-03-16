@@ -6,6 +6,7 @@ use App\Enums\PipelineEnum;
 use App\Http\Requests\StoreDealRequest;
 use App\Http\Requests\UpdateDealRequest;
 use App\Models\Deal;
+use App\Models\User;
 use App\Query\Deal\DealIndexQuery;
 use App\Services\DealService;
 use Illuminate\Http\Request;
@@ -18,7 +19,9 @@ class DealController extends Controller
 
     public function index(Request $request)
     {
+        /** @var User|null $user */
         $user = Auth::user();
+        abort_if(! $user, 403);
         $query = Deal::visibleTo($user);
         $summaryBase = Deal::visibleTo($user);
 

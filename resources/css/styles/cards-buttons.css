@@ -41,14 +41,6 @@
     @apply crm-btn border-slate-300 bg-white text-slate-700 focus:ring-slate-300;
 }
 
-.crm-btn-danger {
-    @apply crm-btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-400;
-}
-
-.crm-badge {
-    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold;
-}
-
 .crm-kpi {
     @apply relative overflow-hidden rounded-xl border bg-white p-4 shadow-sm;
     border-color: #dbe4f0;

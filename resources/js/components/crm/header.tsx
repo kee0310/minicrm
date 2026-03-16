@@ -1,6 +1,11 @@
 import { Link } from '@inertiajs/react';
 import type { ReactNode } from 'react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { logout } from '@/routes';
 import { edit as profileEdit } from '@/routes/profile';
 import type { CrmShared } from '@/types/crm';
@@ -34,11 +39,15 @@ const SUBTITLE_MAP: Record<string, string> = {
     'loans.disbursement': 'Track post-approval disbursement milestones',
 };
 
-export function CrmHeader({ title, subtitle, onToggleMobile, crm, user }: Props) {
+export function CrmHeader({
+    title,
+    subtitle,
+    onToggleMobile,
+    crm,
+    user,
+}: Props) {
     const fallbackTitle = (
-        <h2 className="text-lg font-semibold text-slate-900">
-            CRM
-        </h2>
+        <h2 className="text-lg font-semibold text-slate-900">CRM</h2>
     );
     const resolvedSubtitle =
         subtitle ??
@@ -79,7 +88,7 @@ export function CrmHeader({ title, subtitle, onToggleMobile, crm, user }: Props)
                         </div>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <button className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-600 hover:bg-slate-50">
+                                <button className="focus-visible:ring-primary inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-600 transition-colors duration-150 hover:border-transparent hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900">
                                     {initials}
                                 </button>
                             </DropdownMenuTrigger>
