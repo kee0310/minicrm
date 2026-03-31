@@ -18,10 +18,10 @@ type Props = {
 
 export default function Login({ status, canResetPassword }: Props) {
     return (
-        <AuthLayout title="" description="">
+        <AuthLayout title="CRM Property" description="">
             <Head title="Log in" />
-            <div className="flex w-full flex-col items-center">
-                <div className="w-full max-w-[350px] rounded-xl border border-slate-200 bg-white p-5 shadow-md shadow-slate-600/50">
+            <div className="flex w-full flex-col items-center py-5">
+                <div className="w-full max-w-[350px] rounded-lg border border-slate-200 bg-white p-5 shadow-md shadow-slate-500/50">
                     <Form
                         {...store.form()}
                         resetOnSuccess={['password']}

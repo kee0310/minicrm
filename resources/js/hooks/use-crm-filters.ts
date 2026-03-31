@@ -1,5 +1,5 @@
 import { router, usePage } from '@inertiajs/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 type FilterValue = string | number | boolean | null | undefined;
 
@@ -49,7 +49,9 @@ export function useCrmFilters({
 
     const params = useMemo(() => {
         const origin =
-            typeof window === 'undefined' ? 'http://localhost' : window.location.origin;
+            typeof window === 'undefined'
+                ? 'http://localhost'
+                : window.location.origin;
         return new URL(`${origin}${page.url}`).searchParams;
     }, [page.url]);
 
@@ -65,8 +67,10 @@ export function useCrmFilters({
             return;
         }
         const searchParams = new URL(window.location.href).searchParams;
-        const nextSearch = searchParams.get(searchKey) ?? defaults?.search ?? '';
-        const nextStatus = searchParams.get(statusKey) ?? defaults?.status ?? '';
+        const nextSearch =
+            searchParams.get(searchKey) ?? defaults?.search ?? '';
+        const nextStatus =
+            searchParams.get(statusKey) ?? defaults?.status ?? '';
         setSearchTerm(nextSearch);
         setStatusFilter(nextStatus);
     }, [searchKey, statusKey, defaults?.search, defaults?.status]);
