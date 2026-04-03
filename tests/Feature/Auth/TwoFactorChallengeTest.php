@@ -37,5 +37,5 @@ test('two factor challenge can be rendered', function () {
     ]);
 
     $this->get(route('two-factor.login'))
-        ->assertRedirect(route('dashboard.index', absolute: false));
+        ->assertOk();
 });
