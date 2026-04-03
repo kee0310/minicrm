@@ -133,9 +133,16 @@ export default [
             import: importPlugin,
         },
         settings: {
+            'import/parsers': {
+                '@typescript-eslint/parser': ['.ts', '.tsx'],
+            },
             'import/resolver': {
-                typescript: true,
-                node: true,
+                typescript: {
+                    project: './tsconfig.json',
+                },
+                node: {
+                    extensions: ['.js', '.jsx', '.ts', '.tsx'],
+                },
             },
         },
         rules: {

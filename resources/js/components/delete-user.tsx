@@ -1,6 +1,6 @@
 import { Form } from '@inertiajs/react';
 import { useRef, useState } from 'react';
-import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
+import { destroy } from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -58,7 +58,7 @@ export default function DeleteUser() {
                         </div>
 
                         <Form
-                            {...ProfileController.destroy.form()}
+                            {...destroy.form()}
                             options={{
                                 preserveScroll: true,
                             }}
