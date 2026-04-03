@@ -9,6 +9,7 @@
         "format": "prettier --write resources/",
         "format:check": "prettier --check resources/",
         "lint": "eslint . --fix",
+        "prelint": "php artisan wayfinder:generate --with-form",
         "types": "tsc --noEmit"
     },
     "devDependencies": {
